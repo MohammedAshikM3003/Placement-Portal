@@ -18,7 +18,7 @@ const initialFormData = {
     jobRole: '',
     branch: '',
     eligibleBranches: [],
-    rounds: 0, 
+    rounds: 0,
     package: '',
     companyType: '',
     bondPeriod: '',
@@ -30,7 +30,8 @@ const initialFormData = {
     status: '',
     visitDate: '',
     location: '',
-    roundDetails: [] 
+    roundDetails: [],
+    roundDates: []
 };
 
 // --- Success Popup Component ---
@@ -45,8 +46,8 @@ const DriveAddedPopup = ({ onClose, mode = 'create' }) => {
                 <div className={styles['Admin-Drive-AD-Success-content']}>
                     <div className={styles['Admin-Drive-AD-Success-icon-wrapper']}>
                         <svg className={styles['Admin-Drive-AD-Success-icon']} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
-                            <circle className={styles['Admin-Drive-AD-Success-icon-circle']} cx="26" cy="26" r="25" fill="none"/>
-                            <path className={styles['Admin-Drive-AD-Success-icon-check']} fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+                            <circle className={styles['Admin-Drive-AD-Success-icon-circle']} cx="26" cy="26" r="25" fill="none" />
+                            <path className={styles['Admin-Drive-AD-Success-icon-check']} fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8" />
                         </svg>
                     </div>
                     <h3 className={styles['Admin-Drive-AD-Success-title']}>
@@ -147,7 +148,6 @@ function Adcompanydrivead({ onLogout }) {
         if (!formData.companyType) missing.push({ field: 'companyType', label: 'Company Type' });
         if (!formData.bondPeriod) missing.push({ field: 'bondPeriod', label: 'Bond Period' });
         if (!formData.startingDate) missing.push({ field: 'startingDate', label: 'Start Date' });
-        if (!formData.endingDate) missing.push({ field: 'endingDate', label: 'End Date' });
 
         if (formData.rounds > 0) {
             formData.roundDetails.forEach((roundValue, index) => {
@@ -194,6 +194,57 @@ function Adcompanydrivead({ onLogout }) {
         return dateObj;
     };
 
+    const parseLocalDate = (dateStr) => {
+        if (!dateStr) return null;
+        if (typeof dateStr !== 'string') return dateStr;
+        const parts = dateStr.split('-');
+        if (parts.length !== 3) return new Date(dateStr);
+        const year = parseInt(parts[0], 10);
+        const month = parseInt(parts[1], 10) - 1;
+        const day = parseInt(parts[2], 10);
+        return new Date(year, month, day);
+    };
+
+    const calculateDuration = () => {
+        if (!formData.startingDate || !formData.endingDate) return '—';
+        const start = parseLocalDate(formData.startingDate);
+        const end = parseLocalDate(formData.endingDate);
+        if (!start || !end || Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return '—';
+        
+        start.setHours(0, 0, 0, 0);
+        end.setHours(0, 0, 0, 0);
+        
+        const dayMs = 24 * 60 * 60 * 1000;
+        const diffDays = Math.floor((end.getTime() - start.getTime()) / dayMs) + 1;
+        return diffDays >= 1 ? `${diffDays} ${diffDays > 1 ? 'Days' : 'Day'}` : '—';
+    };
+
+    const calculateDaysLeft = () => {
+        if (!formData.startingDate) return '—';
+        const start = parseLocalDate(formData.startingDate);
+        const end = formData.endingDate ? parseLocalDate(formData.endingDate) : null;
+        if (!start || Number.isNaN(start.getTime())) return '—';
+        
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        start.setHours(0, 0, 0, 0);
+        if (end) end.setHours(0, 0, 0, 0);
+        
+        const dayMs = 24 * 60 * 60 * 1000;
+        const diffDays = Math.floor((start.getTime() - today.getTime()) / dayMs);
+        
+        if (diffDays < 0) {
+            if (end && today.getTime() <= end.getTime()) {
+                return 'Active';
+            }
+            return 'Ended';
+        } else if (diffDays === 0) {
+            return 'Starts Today';
+        } else {
+            return `${diffDays} ${diffDays > 1 ? 'Days' : 'Day'}`;
+        }
+    };
+
     const mapDriveToForm = (drive = {}) => {
         const roundsFromData = typeof drive.rounds === 'number'
             ? drive.rounds
@@ -205,6 +256,10 @@ function Adcompanydrivead({ onLogout }) {
 
         const roundDetails = Array.isArray(drive.roundDetails)
             ? drive.roundDetails
+            : new Array(roundsFromData).fill('');
+
+        const roundDates = Array.isArray(drive.roundDates)
+            ? drive.roundDates
             : new Array(roundsFromData).fill('');
 
         return {
@@ -232,7 +287,8 @@ function Adcompanydrivead({ onLogout }) {
             status: drive.status || '',
             visitDate: formatDateForInput(drive.visitDate),
             location: drive.location || '',
-            roundDetails
+            roundDetails,
+            roundDates
         };
     };
 
@@ -308,7 +364,8 @@ function Adcompanydrivead({ onLogout }) {
             if (selectedCompany) {
                 const numRounds = selectedCompany.round || selectedCompany.rounds || 0;
                 const roundDetailsArray = new Array(numRounds).fill('');
-                
+                const roundDatesArray = new Array(numRounds).fill('');
+
                 setFormData(prev => ({
                     ...initialFormData, // Reset form to clear old data
                     companyName: selectedCompany.companyName || '',
@@ -321,6 +378,7 @@ function Adcompanydrivead({ onLogout }) {
                     companyType: selectedCompany.companyType || '',
                     rounds: numRounds,
                     roundDetails: roundDetailsArray,
+                    roundDates: roundDatesArray,
                     eligibleBranches: selectedCompany.eligibleBranches || [],
                     package: selectedCompany.package || '',
                     status: selectedCompany.status || '',
@@ -344,14 +402,19 @@ function Adcompanydrivead({ onLogout }) {
                 }));
             }
         } else if (name === 'rounds') {
-            const numRounds = Math.max(0, parseInt(value) || 0); 
+            const numRounds = Math.max(0, parseInt(value) || 0);
             setFormData(prev => {
-                const existingDetails = prev.roundDetails;
+                const existingDetails = prev.roundDetails || [];
+                const existingDates = prev.roundDates || [];
                 const newDetails = new Array(numRounds).fill('');
+                const newDates = new Array(numRounds).fill('');
                 for (let i = 0; i < Math.min(existingDetails.length, numRounds); i++) {
                     newDetails[i] = existingDetails[i];
                 }
-                return { ...prev, rounds: numRounds, roundDetails: newDetails };
+                for (let i = 0; i < Math.min(existingDates.length, numRounds); i++) {
+                    newDates[i] = existingDates[i];
+                }
+                return { ...prev, rounds: numRounds, roundDetails: newDetails, roundDates: newDates };
             });
         } else if (name === 'branch') {
             setFormData(prev => {
@@ -390,8 +453,39 @@ function Adcompanydrivead({ onLogout }) {
         });
     };
 
+    const handleRoundDateChange = (index, dateValue) => {
+        setFormData(prev => {
+            const newRoundDates = [...(prev.roundDates || [])];
+            const formattedDate = formatDateForCalendar(dateValue);
+            newRoundDates[index] = formattedDate;
+
+            // If changing Round 1 date (index 0), auto-sync with startingDate
+            let updatedStartingDate = prev.startingDate;
+            if (index === 0) {
+                updatedStartingDate = formattedDate;
+            }
+
+            return {
+                ...prev,
+                roundDates: newRoundDates,
+                startingDate: updatedStartingDate
+            };
+        });
+    };
+
     const handleCalendarDateChange = (fieldName, dateValue) => {
-        setFormData(prev => ({ ...prev, [fieldName]: dateValue }));
+        const formattedDate = formatDateForCalendar(dateValue);
+        setFormData(prev => {
+            const newRoundDates = [...(prev.roundDates || [])];
+            if (fieldName === 'startingDate' && newRoundDates.length > 0) {
+                newRoundDates[0] = formattedDate;
+            }
+            return {
+                ...prev,
+                [fieldName]: formattedDate,
+                ...(fieldName === 'startingDate' ? { roundDates: newRoundDates } : {})
+            };
+        });
         if (validationWarnings[fieldName]) {
             setValidationWarnings(prev => {
                 const updated = { ...prev };
@@ -431,7 +525,7 @@ function Adcompanydrivead({ onLogout }) {
     const handleAddDrive = async () => {
         // Reset validation warnings
         const warnings = {};
-        
+
         // Validate required fields and collect warnings
         if (!formData.companyName) {
             warnings.companyName = 'Please fill out this field.';
@@ -460,10 +554,7 @@ function Adcompanydrivead({ onLogout }) {
         if (!formData.startingDate) {
             warnings.startingDate = 'Please fill out this field.';
         }
-        if (!formData.endingDate) {
-            warnings.endingDate = 'Please fill out this field.';
-        }
-        
+
         // Validate all round details are filled
         const emptyRounds = formData.roundDetails.filter((round, index) => !round || round.trim() === '');
         if (emptyRounds.length > 0) {
@@ -475,7 +566,7 @@ function Adcompanydrivead({ onLogout }) {
             setValidationWarnings(warnings);
             return;
         }
-        
+
         // Clear warnings if validation passes
         setValidationWarnings({});
 
@@ -559,24 +650,28 @@ function Adcompanydrivead({ onLogout }) {
                 <Sidebar isOpen={isSidebarOpen} onLogout={onLogout} />
                 <div className={styles['Admin-Drive-AD-main-content']}>
                     <div className={styles['Admin-Drive-AD-container']}>
-                        
+
                         {/* Left Section - Add Company Drive */}
                         <div className={styles['Admin-Drive-AD-left-section']}>
                             <div className={styles['Admin-Drive-AD-header-section']}>
                                 <h2 className={styles['Admin-Drive-AD-section-title']}>
-                                    {isEditing ? 'Edit Company Drive' : 'Schedule Drive'}
+                                    {isEditing ? (
+                                        <>Edit Company <br className={styles['Admin-Drive-AD-mobile-br']} /> Drive</>
+                                    ) : (
+                                        <>Schedule <br className={styles['Admin-Drive-AD-mobile-br']} /> Drive</>
+                                    )}
                                 </h2>
-                                <button 
+                                <button
                                     className={styles['Admin-Drive-AD-back-button']}
                                     onClick={() => navigate('/admin-company-drive')}
                                     type="button"
                                     disabled={isLoading}
                                     style={isLoading ? { cursor: 'not-allowed', opacity: '0.6' } : {}}
                                 >
-                                    ← Back
+                                    Back
                                 </button>
                             </div>
-                                                     <div className={styles['Admin-Drive-AD-form-grid']} style={isLoading ? { pointerEvents: 'none', opacity: '0.6' } : {}}>
+                            <div className={styles['Admin-Drive-AD-form-grid']} style={isLoading ? { pointerEvents: 'none', opacity: '0.6' } : {}}>
                                 <div className={styles['Admin-Drive-AD-form-group']}>
                                     <label className={styles['Admin-Drive-AD-label']}>Company Name <RequiredStar /></label>
                                     <FormDropdown
@@ -624,7 +719,7 @@ function Adcompanydrivead({ onLogout }) {
                                         className={`${styles['Admin-Drive-AD-input']} ${highlightedField === 'jobRole' ? styles['Admin-Drive-AD-field-highlight'] : ''}`}
                                         required
                                         readOnly={viewMode}
-                                        disabled={viewMode} 
+                                        disabled={viewMode}
                                     />
                                 </div>
 
@@ -657,7 +752,7 @@ function Adcompanydrivead({ onLogout }) {
                                         pointerEvents: 'none'
                                     }}>
                                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <path d="M12 5v14M5 12h14" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
+                                            <path d="M12 5v14M5 12h14" stroke="white" strokeWidth="2.5" strokeLinecap="round" />
                                         </svg>
                                     </div>
                                 </div>
@@ -747,13 +842,13 @@ function Adcompanydrivead({ onLogout }) {
                                             value={formData.startingDate}
                                             onChange={(dateValue) => handleCalendarDateChange('startingDate', dateValue)}
                                             triggerClassName={highlightedField === 'startingDate' ? styles['Admin-Drive-AD-field-highlight'] : ''}
-                                            style={{ backgroundColor: '#f9fff9' }}
+                                            style={{ backgroundColor: '#f9fff9', height: '53.6px', padding: '0 0.9rem' }}
                                         />
                                     </div>
                                 </div>
 
                                 <div className={styles['Admin-Drive-AD-form-group']}>
-                                    <label className={styles['Admin-Drive-AD-label']}>End Date <RequiredStar /></label>
+                                    <label className={styles['Admin-Drive-AD-label']}>End Date</label>
                                     <div
                                         className={styles['Admin-Drive-AD-datepicker-wrapper']}
                                         style={viewMode ? { pointerEvents: 'none', opacity: '0.6' } : {}}
@@ -763,15 +858,39 @@ function Adcompanydrivead({ onLogout }) {
                                             value={formData.endingDate}
                                             onChange={(dateValue) => handleCalendarDateChange('endingDate', dateValue)}
                                             triggerClassName={highlightedField === 'endingDate' ? styles['Admin-Drive-AD-field-highlight'] : ''}
-                                            style={{ backgroundColor: '#f9fff9' }}
+                                            style={{ backgroundColor: '#f9fff9', height: '53.6px', padding: '0 0.9rem' }}
                                         />
                                     </div>
+                                </div>
+
+                                <div className={styles['Admin-Drive-AD-form-group']}>
+                                    <label className={styles['Admin-Drive-AD-label']}>Days Left</label>
+                                    <input
+                                        type="text"
+                                        value={calculateDaysLeft()}
+                                        className={styles['Admin-Drive-AD-input']}
+                                        readOnly
+                                        disabled
+                                        style={{ cursor: 'not-allowed', color: '#666666' }}
+                                    />
+                                </div>
+
+                                <div className={styles['Admin-Drive-AD-form-group']}>
+                                    <label className={styles['Admin-Drive-AD-label']}>Duration of Drive</label>
+                                    <input
+                                        type="text"
+                                        value={calculateDuration()}
+                                        className={styles['Admin-Drive-AD-input']}
+                                        readOnly
+                                        disabled
+                                        style={{ cursor: 'not-allowed', color: '#666666' }}
+                                    />
                                 </div>
                             </div>
 
                             <div className={styles['Admin-Drive-AD-round-section']}>
                                 <h3 className={styles['Admin-Drive-AD-round-title']}>Round Details</h3>
-                                
+
                                 <div className={styles['Admin-Drive-AD-round-grid']}>
                                     {formData.roundDetails.length === 0 && (
                                         <div className={styles['Admin-Drive-AD-round-placeholder']}>
@@ -781,7 +900,7 @@ function Adcompanydrivead({ onLogout }) {
 
                                     {formData.roundDetails.map((roundValue, index) => (
                                         <div className={styles['Admin-Drive-AD-round-item']} key={index}>
-                                            <label>Round {index + 1} <RequiredStar /> :</label>
+                                            <label style={{ minWidth: '85px' }}>Round {index + 1} <RequiredStar /> :</label>
                                             <input
                                                 ref={registerFieldRef(`round-${index}`)}
                                                 type="text"
@@ -792,7 +911,17 @@ function Adcompanydrivead({ onLogout }) {
                                                 required
                                                 readOnly={viewMode}
                                                 disabled={viewMode}
+                                                style={{ flex: '3' }}
                                             />
+                                            <div style={{ flex: '2', height: '100%', minWidth: '120px' }}>
+                                                <Ad_Calendar
+                                                    value={formData.roundDates ? formData.roundDates[index] : ''}
+                                                    onChange={(dateValue) => handleRoundDateChange(index, dateValue)}
+                                                    disabled={viewMode}
+                                                    style={{ height: '48px', padding: '0 0.8rem', backgroundColor: '#f9fff9' }}
+                                                    triggerClassName={highlightedField === `round-${index}` ? styles['Admin-Drive-AD-field-highlight'] : ''}
+                                                />
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
@@ -802,132 +931,134 @@ function Adcompanydrivead({ onLogout }) {
 
                             {!viewMode && (
                                 <div className={styles['Admin-Drive-AD-action-buttons']}>
-                                    <button 
+                                    <button
                                         className={styles['Admin-Drive-AD-add-btn']}
                                         onClick={handleAddDrive}
                                         disabled={isLoading || missingFields.length > 0}
                                         style={(isLoading || missingFields.length > 0) ? { cursor: 'not-allowed', opacity: '0.6' } : {}}
                                     >
                                         <svg className={styles['Admin-Drive-AD-btn-icon']} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
-                                            <path d="M12 8v8M8 12h8" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                                            <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
+                                            <path d="M12 8v8M8 12h8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
                                         </svg>
                                         <div className={styles['Admin-Drive-AD-btn-text']}>
                                             <span>{isLoading ? (isEditing ? 'Updating...' : 'Scheduling...') : isEditing ? 'Update Drive' : 'Schedule Drive'}</span>
                                         </div>
                                     </button>
 
-                                {!viewMode && (
-                                    <>
-                                        <button 
-                                            className={styles['Admin-Drive-AD-discard-btn']}
-                                            onClick={handleDiscard}
-                                            disabled={isLoading}
-                                            style={isLoading ? { cursor: 'not-allowed', opacity: '0.6' } : {}}
-                                        >
-                                            <svg className={styles['Admin-Drive-AD-btn-icon']} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
-                                                <path d="M15 9l-6 6M9 9l6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                                            </svg>
-                                            <div className={styles['Admin-Drive-AD-btn-text']}>
-                                                <span>{isEditing ? 'Reset' : 'Discard'}</span>
-                                            </div>
-                                        </button>
-                                    </>
-                                )}
+                                    {!viewMode && (
+                                        <>
+                                            <button
+                                                className={styles['Admin-Drive-AD-discard-btn']}
+                                                onClick={handleDiscard}
+                                                disabled={isLoading}
+                                                style={isLoading ? { cursor: 'not-allowed', opacity: '0.6' } : {}}
+                                            >
+                                                <svg className={styles['Admin-Drive-AD-btn-icon']} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
+                                                    <path d="M15 9l-6 6M9 9l6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                                                </svg>
+                                                <div className={styles['Admin-Drive-AD-btn-text']}>
+                                                    <span>{isEditing ? 'Reset' : 'Discard'}</span>
+                                                </div>
+                                            </button>
+                                        </>
+                                    )}
                                 </div>
                             )}
                         </div>
 
                         {/* Right Section - Company Details */}
-                        <div className={styles['Admin-Drive-AD-right-section']}>
-                            <h2 className={styles['Admin-Drive-AD-section-title']}>Company Details</h2>
-                            
-                            <div className={styles['Admin-Drive-AD-details-container']}>
-                                <div className={styles['Admin-Drive-AD-detail-row']}>
-                                    <label>Company Name</label>
-                                    <div className={styles['Admin-Drive-AD-detail-value']}>{formData.companyName || ''}</div>
-                                </div>
+                        {formData.companyName && (
+                            <div className={styles['Admin-Drive-AD-right-section']}>
+                                <h2 className={styles['Admin-Drive-AD-section-title']}>Company Details</h2>
 
-                                <div className={styles['Admin-Drive-AD-detail-row']}>
-                                    <label>Domain</label>
-                                    <div className={styles['Admin-Drive-AD-detail-value']}>{formData.domain || ''}</div>
-                                </div>
-
-                                <div className={styles['Admin-Drive-AD-detail-row']}>
-                                    <label>Job Role</label>
-                                    <div className={styles['Admin-Drive-AD-detail-value']}>{formData.jobRole || ''}</div>
-                                </div>
-
-                                <div className={styles['Admin-Drive-AD-detail-row']}>
-                                    <label>Mode</label>
-                                    <div className={styles['Admin-Drive-AD-detail-value']}>{formData.mode || ''}</div>
-                                </div>
-
-                                <div className={styles['Admin-Drive-AD-detail-row']}>
-                                    <label>HR Name</label>
-                                    <div className={styles['Admin-Drive-AD-detail-value']}>{formData.hrName || ''}</div>
-                                </div>
-
-                                <div className={styles['Admin-Drive-AD-detail-row']}>
-                                    <label>HR Contact</label>
-                                    <div className={styles['Admin-Drive-AD-detail-value']}>{formData.hrContact || ''}</div>
-                                </div>
-
-                                <div className={styles['Admin-Drive-AD-detail-row']}>
-                                    <label>{formData.rounds > 1 ? 'Rounds' : 'Round'}</label>
-                                    <div className={styles['Admin-Drive-AD-detail-value']}>{formData.rounds === 0 ? '' : formData.rounds}</div>
-                                </div>
-
-                                <div className={styles['Admin-Drive-AD-detail-row']}>
-                                    <label>Eligible Branches</label>
-                                    <div className={styles['Admin-Drive-AD-detail-value']}>
-                                        {formData.eligibleBranches && formData.eligibleBranches.length
-                                            ? formData.eligibleBranches.join(', ')
-                                            : formData.branch || '—'}
+                                <div className={styles['Admin-Drive-AD-details-container']}>
+                                    <div className={styles['Admin-Drive-AD-detail-row']}>
+                                        <label>Company Name</label>
+                                        <div className={styles['Admin-Drive-AD-detail-value']}>{formData.companyName || ''}</div>
                                     </div>
-                                </div>
 
-                                <div className={styles['Admin-Drive-AD-detail-row']}>
-                                    <label>Status</label>
-                                    <div className={styles['Admin-Drive-AD-detail-value']}>{formData.status || ''}</div>
-                                </div>
-
-                                <div className={styles['Admin-Drive-AD-detail-row']}>
-                                    <label>Visit Date</label>
-                                    <div className={styles['Admin-Drive-AD-detail-value']}>
-                                        {formData.visitDate 
-                                            ? (formData.visitDate instanceof Date 
-                                                ? formData.visitDate.toLocaleDateString('en-GB') 
-                                                : formData.visitDate)
-                                            : ''}
+                                    <div className={styles['Admin-Drive-AD-detail-row']}>
+                                        <label>Domain</label>
+                                        <div className={styles['Admin-Drive-AD-detail-value']}>{formData.domain || ''}</div>
                                     </div>
-                                </div>
 
-                                <div className={styles['Admin-Drive-AD-detail-row']}>
-                                    <label>Package</label>
-                                    <div className={styles['Admin-Drive-AD-detail-value-with-chip']}>
-                                        <span style={{ flex: 1, padding: '10px 14px', display: 'flex', alignItems: 'center', fontSize: '0.86rem', fontWeight: '500', color: '#666666', minWidth: 0 }}>{formData.package || ''}</span>
-                                        <span className={styles['Admin-Drive-AD-detail-chip']}>LPA</span>
+                                    <div className={styles['Admin-Drive-AD-detail-row']}>
+                                        <label>Job Role</label>
+                                        <div className={styles['Admin-Drive-AD-detail-value']}>{formData.jobRole || ''}</div>
                                     </div>
-                                </div>
 
-                                <div className={styles['Admin-Drive-AD-detail-row']}>
-                                    <label>Location</label>
-                                    <div className={styles['Admin-Drive-AD-detail-value']}>{formData.location || ''}</div>
-                                </div>
+                                    <div className={styles['Admin-Drive-AD-detail-row']}>
+                                        <label>Mode</label>
+                                        <div className={styles['Admin-Drive-AD-detail-value']}>{formData.mode || ''}</div>
+                                    </div>
 
-                                <div className={styles['Admin-Drive-AD-detail-row']}>
-                                    <label>Bond Period</label>
-                                    <div className={styles['Admin-Drive-AD-detail-value-with-chip']}>
-                                        <span style={{ flex: 1, padding: '10px 14px', display: 'flex', alignItems: 'center', fontSize: '0.86rem', fontWeight: '500', color: '#666666', minWidth: 0 }}>{formData.bondPeriod || ''}</span>
-                                        <span className={styles['Admin-Drive-AD-detail-chip']}>
-                                            {formData.bondPeriod > 1 ? 'Years' : 'Year'}
-                                        </span>
+                                    <div className={styles['Admin-Drive-AD-detail-row']}>
+                                        <label>HR Name</label>
+                                        <div className={styles['Admin-Drive-AD-detail-value']}>{formData.hrName || ''}</div>
+                                    </div>
+
+                                    <div className={styles['Admin-Drive-AD-detail-row']}>
+                                        <label>HR Contact</label>
+                                        <div className={styles['Admin-Drive-AD-detail-value']}>{formData.hrContact || ''}</div>
+                                    </div>
+
+                                    <div className={styles['Admin-Drive-AD-detail-row']}>
+                                        <label>{formData.rounds > 1 ? 'Rounds' : 'Round'}</label>
+                                        <div className={styles['Admin-Drive-AD-detail-value']}>{formData.rounds === 0 ? '' : formData.rounds}</div>
+                                    </div>
+
+                                    <div className={styles['Admin-Drive-AD-detail-row']}>
+                                        <label>Eligible Branches</label>
+                                        <div className={styles['Admin-Drive-AD-detail-value']}>
+                                            {formData.eligibleBranches && formData.eligibleBranches.length
+                                                ? formData.eligibleBranches.join(', ')
+                                                : formData.branch || '—'}
+                                        </div>
+                                    </div>
+
+                                    <div className={styles['Admin-Drive-AD-detail-row']}>
+                                        <label>Status</label>
+                                        <div className={styles['Admin-Drive-AD-detail-value']}>{formData.status || ''}</div>
+                                    </div>
+
+                                    <div className={styles['Admin-Drive-AD-detail-row']}>
+                                        <label>Visit Date</label>
+                                        <div className={styles['Admin-Drive-AD-detail-value']}>
+                                            {formData.visitDate
+                                                ? (formData.visitDate instanceof Date
+                                                    ? formData.visitDate.toLocaleDateString('en-GB')
+                                                    : formData.visitDate)
+                                                : ''}
+                                        </div>
+                                    </div>
+
+                                    <div className={styles['Admin-Drive-AD-detail-row']}>
+                                        <label>Package</label>
+                                        <div className={styles['Admin-Drive-AD-detail-value-with-chip']}>
+                                            <span style={{ flex: 1, padding: '0 0.9rem', display: 'flex', alignItems: 'center', fontSize: '0.95rem', fontWeight: '600', color: '#333333', minWidth: 0 }}>{formData.package || ''}</span>
+                                            <span className={styles['Admin-Drive-AD-detail-chip']}>LPA</span>
+                                        </div>
+                                    </div>
+
+                                    <div className={styles['Admin-Drive-AD-detail-row']}>
+                                        <label>Location</label>
+                                        <div className={styles['Admin-Drive-AD-detail-value']}>{formData.location || ''}</div>
+                                    </div>
+
+                                    <div className={styles['Admin-Drive-AD-detail-row']}>
+                                        <label>Bond Period</label>
+                                        <div className={styles['Admin-Drive-AD-detail-value-with-chip']}>
+                                            <span style={{ flex: 1, padding: '0 0.9rem', display: 'flex', alignItems: 'center', fontSize: '0.95rem', fontWeight: '600', color: '#333333', minWidth: 0 }}>{formData.bondPeriod || ''}</span>
+                                            <span className={styles['Admin-Drive-AD-detail-chip']}>
+                                                {formData.bondPeriod > 1 ? 'Years' : 'Year'}
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        )}
 
                     </div>
 
@@ -973,7 +1104,7 @@ function Adcompanydrivead({ onLogout }) {
             </div>
 
             {showSuccessPopup && <DriveAddedPopup onClose={handleSuccessClose} mode={successMode} />}
-            
+
             {/* Department Selection Popup */}
             {showDepartmentPopup && (
                 <div className={styles['Admin-Drive-AD-dept-popup-overlay']} onClick={handleDepartmentClose}>
@@ -990,7 +1121,7 @@ function Adcompanydrivead({ onLogout }) {
                                         : branch.branchFullName
                                     : deptValue;
                                 const isSelected = selectedDepartments.includes(deptValue);
-                                
+
                                 return (
                                     <div
                                         key={branch.id || deptValue}
@@ -1000,7 +1131,7 @@ function Adcompanydrivead({ onLogout }) {
                                         <div className={styles['Admin-Drive-AD-dept-checkbox']}>
                                             {isSelected && (
                                                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                                                    <path d="M3 8L6.5 11.5L13 5" stroke="#4EA24E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                                    <path d="M3 8L6.5 11.5L13 5" stroke="#4EA24E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                                                 </svg>
                                             )}
                                         </div>

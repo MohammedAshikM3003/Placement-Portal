@@ -5,7 +5,7 @@
 .Admin-Drive-AD-layout {
     display: flex;
     height: 100vh;
-    background-color: #f0f2f5;
+    background-color: #f6f8fb;
     overflow: hidden;
     position: fixed;
     top: 0;
@@ -17,9 +17,9 @@
 .Admin-Drive-AD-main-content {
     flex: 1 1;
     margin-left: 280px;
-    margin-top: 59px;
+    margin-top: 65px;
     padding: 10px 10px 10px 20px;
-    height: calc(100vh - 50px);
+    height: calc(100vh - 65px);
     box-sizing: border-box;
     position: relative;
     overflow-y: auto;
@@ -111,32 +111,38 @@
     border-radius: 2px;
 }
 
+.Admin-Drive-AD-mobile-br {
+    display: none;
+}
+
 .Admin-Drive-AD-back-button {
-    padding: 8px 16px;
-    background-color: #4EA24E;
-    color: white;
     border: none;
-    border-radius: 6px;
+    border-radius: 8px;
+    background: #d23b42;
+    color: #ffffff;
+    height: 44px;
+    min-width: 120px;
+    padding: 0 18px;
     font-size: 0.95rem;
-    font-weight: 600;
+    font-weight: 700;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: transform 0.15s, box-shadow 0.2s;
+    box-shadow: 0 6px 16px rgba(210, 59, 66, 0.25);
     white-space: nowrap;
 }
 
 .Admin-Drive-AD-back-button:hover {
-    background-color: #2E7D32;
-    transform: translateX(-3px);
+    transform: translateY(-1px);
 }
 
 .Admin-Drive-AD-back-button:active {
-    transform: translateX(-3px) scale(0.98);
+    transform: translateY(-1px) scale(0.98);
 }
 
 /* Form Grid */
 .Admin-Drive-AD-form-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 12px 15px;
     margin-bottom: 15px;
     flex-shrink: 0;
@@ -149,8 +155,9 @@
 }
 
 .Admin-Drive-AD-input {
-    width: 100%; 
-    padding: 0.9rem;
+    width: 100%;
+    height: 53.6px;
+    padding: 0 0.9rem;
     border: 1px solid #def4dd;
     border-radius: 8px;
     font-size: 0.95rem;
@@ -160,6 +167,11 @@
     transition: all 0.3s ease;
     font-family: inherit;
     box-sizing: border-box;
+}
+
+button.Admin-Drive-AD-input {
+    display: flex;
+    align-items: center;
 }
 
 .Admin-Drive-AD-input:hover {
@@ -191,10 +203,12 @@
     -webkit-appearance: none;
     margin: 0;
 }
+
 .Admin-Drive-AD-input[type="number"] {
     -moz-appearance: textfield;
     appearance: none;
 }
+
 /* --- End of number arrow fix --- */
 
 
@@ -284,7 +298,8 @@
     overflow: hidden;
     background-color: #f9fff9;
     box-sizing: border-box;
-    height: 48px;
+    height: 53.6px !important;
+    min-height: 53.6px !important;
     align-items: stretch;
     transition: all 0.3s ease;
 }
@@ -304,7 +319,7 @@
     border: none !important;
     border-radius: 0 !important;
     background-color: transparent !important;
-    padding: 0.9rem;
+    padding: 0 0.9rem;
     font-size: 0.95rem;
     color: #333333;
     font-family: inherit;
@@ -603,7 +618,7 @@
 
 /* Round Details Section */
 .Admin-Drive-AD-round-section {
-    background:#D2D1D1;
+    background: #D2D1D1;
     border-radius: 12px;
     padding: 18px 22px;
     margin-bottom: 15px;
@@ -630,7 +645,7 @@
 
 .Admin-Drive-AD-round-grid {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: 1fr;
     gap: 12px;
     overflow-y: scroll;
     overflow-x: hidden;
@@ -640,7 +655,7 @@
 }
 
 .Admin-Drive-AD-round-placeholder {
-    grid-column: 1 / -1; 
+    grid-column: 1 / -1;
     text-align: center;
     padding: 20px;
     font-size: 0.9rem;
@@ -653,17 +668,21 @@
 .Admin-Drive-AD-round-grid::-webkit-scrollbar {
     width: 6px;
 }
+
 .Admin-Drive-AD-round-grid::-webkit-scrollbar-track {
     background: #e0e0e0;
     border-radius: 10px;
 }
+
 .Admin-Drive-AD-round-grid::-webkit-scrollbar-thumb {
     background: #4EA24E;
     border-radius: 10px;
 }
+
 .Admin-Drive-AD-round-grid::-webkit-scrollbar-thumb:hover {
     background: #3d8a3d;
 }
+
 /* --- End of new scrollbar style --- */
 
 
@@ -685,6 +704,7 @@
     display: flex;
     align-items: center;
 }
+
 .Admin-Drive-AD-round-input {
     flex: 1;
     padding: 0.9rem;
@@ -699,10 +719,12 @@
     min-width: 0;
     height: 100%;
 }
-.Admin-Drive-AD-round-input:hover{
+
+.Admin-Drive-AD-round-input:hover {
     border-color: #4EA24E;
     box-shadow: 0 0 0 3px rgba(78, 162, 78, 0.2);
 }
+
 .Admin-Drive-AD-round-input::placeholder {
     color: #aaaaaa;
     font-size: 0.85rem;
@@ -715,6 +737,7 @@
     background-color: #f9fff9;
     color: #333333;
 }
+
 /* Action Buttons */
 .Admin-Drive-AD-action-buttons {
     display: flex;
@@ -776,12 +799,14 @@
     font-weight: 400;
     opacity: 0.9;
 }
+
 .Admin-Drive-AD-btn-subtitle1 {
     font-size: 0.68rem;
     font-weight: 400;
     line-height: 0%;
     opacity: 0.9;
 }
+
 /* Right Section - Company Details */
 .Admin-Drive-AD-right-section {
     width: 100%;
@@ -816,9 +841,9 @@
 
 /* Details Container */
 .Admin-Drive-AD-details-container {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px 15px;
     overflow-y: auto;
     flex: 1;
     padding-right: 5px;
@@ -844,33 +869,34 @@
 
 .Admin-Drive-AD-detail-row {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
     padding: 0;
     flex-shrink: 0;
 }
 
 .Admin-Drive-AD-detail-row label {
-    font-size: 0.88rem;
-    font-weight: 700;
-    color: #000000;
-    min-width: 120px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #333333;
+    min-width: 0;
     flex-shrink: 0;
 }
 
 .Admin-Drive-AD-detail-value {
-    flex: 1;
-    font-size: 0.86rem;
-    font-weight: 500;
-    color: #666666;
-    padding: 7px 12px;
+    width: 100%;
+    height: 53.6px;
+    padding: 0 0.9rem;
     background: #f9fff9;
     border-radius: 8px;
     border: 1px solid #def4dd;
-    min-height: 36px;
+    box-sizing: border-box;
     display: flex;
     align-items: center;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #333333;
     transition: all 0.3s ease;
 }
 
@@ -881,7 +907,6 @@
 
 /* Detail Value with Chip - Following detail styling */
 .Admin-Drive-AD-detail-value-with-chip {
-    flex: 1;
     display: flex;
     width: 100%;
     border: 1px solid #def4dd;
@@ -889,7 +914,8 @@
     overflow: hidden;
     background-color: #f9fff9;
     box-sizing: border-box;
-    height: 36px;
+    height: 53.6px !important;
+    min-height: 53.6px !important;
     align-items: stretch;
     transition: all 0.3s ease;
 }
@@ -916,7 +942,7 @@
     line-height: 1;
 }
 
- /* Responsive Design */
+/* Responsive Design */
 @media (max-width: 1400px) {
     .Admin-Drive-AD-container {
         flex-direction: column;
@@ -930,7 +956,8 @@
     }
 
     .Admin-Drive-AD-form-grid {
-        grid-template-columns: 1fr 1fr; /* Keep 2 columns on larger tablet/small desktop */
+        grid-template-columns: 1fr 1fr;
+        /* Keep 2 columns on larger tablet/small desktop */
     }
 
     .Admin-Drive-AD-input {
@@ -939,12 +966,12 @@
     }
 
     .Admin-Drive-AD-round-grid {
-        grid-template-columns: 1fr 1fr; /* Keep 2 columns */
+        grid-template-columns: 1fr;
     }
 
     .Admin-Drive-AD-round-item {
         /* No need to stack vertically here, as grid handles layout */
-        flex-direction: row; 
+        flex-direction: row;
         align-items: center;
     }
 
@@ -957,7 +984,12 @@
 @media (max-width: 1024px) {
     .Admin-Drive-AD-main-content {
         margin-left: 0;
-        padding: 10px 10px 10px 20px;
+        padding: 10px 10px calc(env(safe-area-inset-bottom, 0px) + 25px) 20px !important;
+        height: calc(100vh - 65px) !important;
+        height: calc(100dvh - 65px) !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        box-sizing: border-box !important;
     }
 
     .Admin-Drive-AD-form-grid,
@@ -974,22 +1006,33 @@
         width: 100%;
         box-sizing: border-box;
     }
-    
+
     .Admin-Drive-AD-round-item {
         flex-direction: column;
         align-items: flex-start;
+        height: auto !important;
+        overflow: visible !important;
+        gap: 8px;
+    }
+
+    .Admin-Drive-AD-round-item > input,
+    .Admin-Drive-AD-round-item > div {
+        width: 100% !important;
+        height: 48px !important;
+        flex: none !important;
     }
 }
 
 @media (max-width: 768px) {
     .Admin-Drive-AD-main-content {
-        padding: 10px 10px 10px 20px;
-        margin-top: 70px;
-        margin-left: 0;
-        margin-right: 0;
-        align-items: center;
-        overflow-y: auto;
-        height: calc(100vh - 70px);
+        padding: 10px 10px calc(env(safe-area-inset-bottom, 0px) + 25px) 20px !important;
+        margin-top: 70px !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        overflow-y: auto !important;
+        height: calc(100vh - 70px) !important;
+        height: calc(100dvh - 70px) !important;
+        box-sizing: border-box !important;
     }
 
     .Admin-Drive-AD-container {
@@ -1002,14 +1045,14 @@
 
     .Admin-Drive-AD-left-section,
     .Admin-Drive-AD-right-section {
-        padding: 20px 18px;
-        border-radius: 12px;
-        overflow-y: visible;
-        flex: 1;
-        width: 100%;
-        box-sizing: border-box;
+        padding: 1.75rem 1.25rem !important;
+        border-radius: 14px !important;
+        overflow-y: visible !important;
+        flex: 1 !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
     }
-    
+
     .Admin-Drive-AD-left-section::-webkit-scrollbar,
     .Admin-Drive-AD-right-section::-webkit-scrollbar {
         width: 6px;
@@ -1037,6 +1080,10 @@
         margin-bottom: 15px;
     }
 
+    .Admin-Drive-AD-mobile-br {
+        display: inline !important;
+    }
+
     .Admin-Drive-AD-form-grid {
         gap: 10px;
         margin-left: 0;
@@ -1057,13 +1104,13 @@
     .Admin-Drive-AD-round-section {
         padding: 18px 18px;
         margin-bottom: 15px;
-        max-height:230px;
+        max-height: 230px;
     }
 
     .Admin-Drive-AD-round-title {
         font-size: 1.1rem;
         margin-bottom: 15px;
-        height:23px;
+        height: 23px;
     }
 
     .Admin-Drive-AD-round-grid {
@@ -1075,9 +1122,10 @@
     .Admin-Drive-AD-round-item {
         flex-direction: column;
         align-items: flex-start;
-        gap: 6px;
+        gap: 8px;
         width: 100%;
-        height:60px;
+        height: auto !important;
+        overflow: visible !important;
     }
 
     .Admin-Drive-AD-round-item label {
@@ -1109,10 +1157,9 @@
 
     .Admin-Drive-AD-btn-icon {
         flex-shrink: 0;
-        width: 30px;
-        height: 30px;
-        position: absolute;
-        left: 18px;
+        width: 24px;
+        height: 24px;
+        position: static;
     }
 
     .Admin-Drive-AD-btn-text {
@@ -1121,10 +1168,8 @@
         align-items: center;
         justify-content: center;
         gap: 0px;
-        width: 100%;
-        position:relative;
-        left:15px;
-
+        width: auto;
+        position: static;
     }
 
     .Admin-Drive-AD-btn-title {
@@ -1138,7 +1183,7 @@
     .Admin-Drive-AD-btn-subtitle1 {
         display: none;
     }
-    
+
     .Admin-Drive-AD-right-section {
         overflow-y: auto;
         max-height: 500px;
@@ -1202,7 +1247,7 @@
     .Admin-Drive-AD-round-section {
         padding: 15px 12px;
     }
-    
+
     .Admin-Drive-AD-round-grid {
         max-height: 150px;
     }
@@ -1221,34 +1266,34 @@
 
     .Admin-Drive-AD-add-btn,
     .Admin-Drive-AD-discard-btn {
-            padding: 8px 10px;
-            width: 100%;
-            box-sizing: border-box;
-            justify-content: center;
-            gap: 6px;
-            align-items: center;
-            position: relative;
-            min-height: 36px;
-            font-size: 0.92rem;
-        }
+        padding: 8px 10px;
+        width: 100%;
+        box-sizing: border-box;
+        justify-content: center;
+        gap: 6px;
+        align-items: center;
+        position: relative;
+        min-height: 36px;
+        font-size: 0.92rem;
+    }
 
     .Admin-Drive-AD-btn-icon {
-            width: 28px;
-            height: 28px;
-            flex-shrink: 0;
-            position: absolute;
-            left: 10px;
-        }
+        width: 20px;
+        height: 20px;
+        flex-shrink: 0;
+        position: static;
+    }
 
     .Admin-Drive-AD-btn-text {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 2px;
-            width: 100%;
-            padding-left: 38px;
-        }
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 2px;
+        width: auto;
+        padding-left: 0;
+        position: static;
+    }
 
     .Admin-Drive-AD-btn-title {
         font-size: 1.2rem;
@@ -1259,8 +1304,8 @@
 
     .Admin-Drive-AD-btn-subtitle,
     .Admin-Drive-AD-btn-subtitle1 {
-            display: none;
-        }
+        display: none;
+    }
 }
 
 
@@ -1285,8 +1330,13 @@
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 
 .Admin-Drive-AD-Success-container {
@@ -1301,8 +1351,15 @@
 }
 
 @keyframes slideUp {
-    from { transform: translateY(50px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
+    from {
+        transform: translateY(50px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
 }
 
 /* Success Popup Header */
@@ -1341,8 +1398,15 @@
 }
 
 @keyframes scaleIn {
-    from { transform: scale(0); opacity: 0; }
-    to { transform: scale(1); opacity: 1; }
+    from {
+        transform: scale(0);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
 }
 
 /* SVG Icon Styles */
@@ -1475,23 +1539,25 @@
     flex-direction: column;
     gap: 10px;
 }
+
 .Admin-Drive-AD-dept-popup-content::-webkit-scrollbar {
-        width: 10px;
-    }
+    width: 10px;
+}
 
-    .Admin-Drive-AD-dept-popup-content::-webkit-scrollbar-track {
-        background: #f0f2f5;
-    }
+.Admin-Drive-AD-dept-popup-content::-webkit-scrollbar-track {
+    background: #f0f2f5;
+}
 
-    .Admin-Drive-AD-dept-popup-content::-webkit-scrollbar-thumb {
-        background-color: #4EA24E;
-        border-radius: 20px;
-        border: 3px solid #f0f2f5;
-    }
+.Admin-Drive-AD-dept-popup-content::-webkit-scrollbar-thumb {
+    background-color: #4EA24E;
+    border-radius: 20px;
+    border: 3px solid #f0f2f5;
+}
 
-    .Admin-Drive-AD-dept-popup-content::-webkit-scrollbar-thumb:hover {
-        background-color: #3d8a3d;
-    }
+.Admin-Drive-AD-dept-popup-content::-webkit-scrollbar-thumb:hover {
+    background-color: #3d8a3d;
+}
+
 .Admin-Drive-AD-dept-item {
     display: flex;
     align-items: center;
@@ -1663,19 +1729,24 @@
 
 /* Blink animation for missing fields */
 @keyframes Admin-profile-field-blink {
-    0%, 100% {
+
+    0%,
+    100% {
         background-color: transparent;
         border-color: initial;
     }
+
     25% {
         background-color: #fff9e6;
         border-color: #ffc107;
         box-shadow: 0 0 10px rgba(255, 193, 7, 0.5);
     }
+
     50% {
         background-color: transparent;
         border-color: initial;
     }
+
     75% {
         background-color: #fff9e6;
         border-color: #ffc107;
@@ -1693,6 +1764,8 @@
 .Admin-Drive-AD-dropdown-wrapper {
     --form-dropdown-bg: #f9fff9;
     --form-dropdown-border: #def4dd;
+    --form-dropdown-hover-border: #4EA24E;
+    --form-dropdown-focus-shadow: rgba(78, 162, 78, 0.2);
     width: 100%;
     position: relative;
 }
@@ -1700,4 +1773,18 @@
 .Admin-Drive-AD-dropdown-header {
     font-weight: 600 !important;
     color: #333333 !important;
+    height: 53.6px !important;
+    border-radius: 8px !important;
+}
+
+@media (max-width: 1400px) {
+    .Admin-Drive-AD-details-container {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+}
+
+@media (max-width: 1024px) {
+    .Admin-Drive-AD-details-container {
+        grid-template-columns: 1fr !important;
+    }
 }

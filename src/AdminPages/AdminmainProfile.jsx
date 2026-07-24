@@ -20,6 +20,7 @@ import Dropdown from '../components/common/Dropdown/Dropdown';
 import PageLayout from '../components/layout/PageLayout/PageLayout';
 import ContentContainer from '../components/layout/ContentContainer/ContentContainer';
 import ResponsiveGrid from '../components/layout/ResponsiveGrid/ResponsiveGrid';
+import OtpModal from '../components/dialog/OtpModal/OtpModal';
 
 // Placeholder image
 import Adminicon from "../assets/Adminicon.png";
@@ -1052,6 +1053,8 @@ function Admainprofile() {
     const [isFileSizeErrorOpen, setIsFileSizeErrorOpen] = useState(false);
     const [fileSizeErrorKB, setFileSizeErrorKB] = useState('');
     const [showLoginDetails, setShowLoginDetails] = useState(false);
+    const [isOtpOpen, setIsOtpOpen] = useState(false);
+    const [otpEmail, setOtpEmail] = useState('');
     const [showCurrentPassword, setShowCurrentPassword] = useState(false);
     const [showNewPassword, setShowNewPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -2330,7 +2333,7 @@ function Admainprofile() {
                     profilePhotoUrl = result.url;
                     setProfilePhotoBase64(profilePhotoUrl);
                     setProfilePhotoFile(null);
-                    console.log('âœ… Profile photo uploaded to GridFS:', profilePhotoUrl);
+                    console.log('✅ Profile photo uploaded to GridFS:', profilePhotoUrl);
                 } catch (uploadErr) {
                     console.error('Failed to upload profile photo:', uploadErr);
                     alert('Failed to upload profile photo. Please try again.');
@@ -2358,7 +2361,7 @@ function Admainprofile() {
                     if (result.naacCertificate) { naacCertificateUrl = result.naacCertificate.url; setNaacCertificateBase64(naacCertificateUrl); setNaacCertificateFile(null); }
                     if (result.nbaCertificate) { nbaCertificateUrl = result.nbaCertificate.url; setNbaCertificateBase64(nbaCertificateUrl); setNbaCertificateFile(null); }
                     if (result.collegeLogo) { collegeLogoUrl = result.collegeLogo.url; setCollegeLogoBase64(collegeLogoUrl); setCollegeLogoFile(null); }
-                    console.log('âœ… College images uploaded to GridFS');
+                    console.log('✅ College images uploaded to GridFS');
                 } catch (uploadErr) {
                     console.error('Failed to upload college images:', uploadErr);
                     alert('Failed to upload college images. Please try again.');
@@ -2378,29 +2381,31 @@ function Admainprofile() {
             // Prepare data to send (GridFS URLs instead of base64)
             // Send null for removed images so MongoDB clears them
             const dataToSave = {
+                firstName: formData.firstName || '',
+                lastName: formData.lastName || '',
+                dob: formData.dob || '',
+                gender: formData.gender || '',
+                emailId: formData.emailId || '',
+                domainMailId: formData.domainMailId || '',
+                phoneNumber: formData.phoneNumber || '',
+                department: formData.department || '',
                 adminLoginID: adminLoginID,
-                ...formData,
-                // Images (GridFS URLs or null if removed)
-                profilePhoto: profilePhotoUrl || null,
-                profilePhotoName: profilePhotoUrl ? 'profile.jpg' : null,
-                collegeBanner: collegeBannerUrl || null,
-                collegeBannerName: collegeBannerUrl ? (collegeBannerName || 'banner.jpg') : null,
-                naacCertificate: naacCertificateUrl || null,
-                naacCertificateName: naacCertificateUrl ? 'naac.jpg' : null,
-                nbaCertificate: nbaCertificateUrl || null,
-                nbaCertificateName: nbaCertificateUrl ? 'nba.jpg' : null,
-                collegeLogo: collegeLogoUrl || null,
-                collegeLogoName: collegeLogoUrl ? (collegeLogoName || 'logo.jpg') : null,
+                profilePhoto: profilePhotoUrl,
+                collegeBanner: collegeBannerUrl,
+                naacCertificate: naacCertificateUrl,
+                nbaCertificate: nbaCertificateUrl,
+                collegeLogo: collegeLogoUrl,
             };
 
-            // Log cleared images for debugging
+            // In case of deletion, gridfsService sets url to empty string or clears base64
+            // We ensure we send null for explicitly cleared certificates
             const clearedImages = [];
             if (dataToSave.collegeBanner === null) clearedImages.push('collegeBanner');
             if (dataToSave.naacCertificate === null) clearedImages.push('naacCertificate');
             if (dataToSave.nbaCertificate === null) clearedImages.push('nbaCertificate');
             if (dataToSave.collegeLogo === null) clearedImages.push('collegeLogo');
             if (clearedImages.length > 0) {
-                console.log(`ðŸ—‘ï¸ Sending null to clear images: ${clearedImages.join(', ')}`);
+                console.log(`🗑️ Sending null to clear images: ${clearedImages.join(', ')}`);
             }
 
             const authToken = localStorage.getItem('authToken');
@@ -2456,8 +2461,7 @@ function Admainprofile() {
 
                 setSaveStatus('saved');
 
-                // ï¿½ INSTANT SYNC: Dispatch sidebar event FIRST (before any async cache ops)
-                // This ensures the sidebar updates immediately with zero delay
+                // 🌟 INSTANT SYNC: Dispatch sidebar event FIRST (before any async cache ops)
                 const updatedAdminData = {
                     _id: result.data?._id,
                     adminLoginID: savedLoginId,
@@ -2481,9 +2485,9 @@ function Admainprofile() {
                 window.dispatchEvent(new CustomEvent('adminProfileUpdated', {
                     detail: updatedAdminData
                 }));
-                console.log('ðŸ”” Complete admin profile data sent to sidebar - ZERO DELAY (Student Pattern)');
+                console.log('🔔 Complete admin profile data sent to sidebar - ZERO DELAY');
 
-                // Update display states â€” ALWAYS set, even to null, so removed images disappear immediately
+                // Update display states
                 setProfilePhoto(profilePhotoUrl);
                 setProfilePhotoBase64(profilePhotoUrl || '');
                 setCollegeBanner(collegeBannerUrl);
@@ -2520,54 +2524,48 @@ function Admainprofile() {
                 // Show success popup
                 setIsSuccessPopupOpen(true);
 
-                // 1. Clear the specific Admin Profile Cache (stops ghosting in Admin panel)
+                // Clear the specific Admin Profile Cache
                 localStorage.removeItem('adminProfileCache');
                 localStorage.removeItem('adminProfileCacheTime');
-                console.log('ðŸ—‘ï¸ Admin profile state cache cleared');
 
-                // ðŸ–¼ï¸ Update cached profile photo URL if changed
+                // Cache profile photo
                 if (profilePhotoUrl) {
                     try {
                         const { default: adminImageCacheService } = await import('../services/adminImageCacheService.jsx');
                         await adminImageCacheService.cacheAdminProfilePhoto(savedLoginId || adminLoginID, profilePhotoUrl);
-                        console.log('âœ… Admin profile photo cache updated after save');
                     } catch (cacheError) {
-                        console.warn('âš ï¸ Failed to update admin profile photo cache after save:', cacheError);
+                        console.warn('⚠️ Failed to cache photo:', cacheError);
                     }
                 }
 
-                // 2. Clear dashboard caches (collegeImagesService)
+                // Clear dashboard caches
                 try {
                     const { clearCache } = await import('../services/collegeImagesService');
                     clearCache();
-                    console.log('âœ… College images cache cleared (dashboards)');
                 } catch (cacheError) {
-                    console.warn('âš ï¸ Failed to clear college images cache:', cacheError);
+                    console.warn('⚠️ Failed to clear college images cache:', cacheError);
                 }
 
-                // 3. Clear landing page caches
+                // Clear landing page caches
                 try {
                     const { clearCollegeImagesCache } = await import('../services/landingPageCacheService');
                     clearCollegeImagesCache();
-                    console.log('âœ… Landing page college images cache cleared');
                 } catch (cacheError) {
-                    console.warn('âš ï¸ Failed to clear landing page cache:', cacheError);
+                    console.warn('⚠️ Failed to clear landing page cache:', cacheError);
                 }
 
-                // 4. Trigger the UI Refresh event (same tab)
+                // Trigger UI Refresh event
                 window.dispatchEvent(new CustomEvent('collegeImagesUpdated', {
                     detail: { timestamp: Date.now() }
                 }));
 
-                // 5. Cross-tab signal: write a localStorage key so OTHER tabs (e.g. landing page) auto-refresh
-                // The 'storage' event only fires in OTHER tabs, the CustomEvent above handles this tab
+                // Cross-tab signal
                 localStorage.setItem('collegeImagesUpdatedSignal', Date.now().toString());
-                console.log('ðŸ”” College images update dispatched (same-tab + cross-tab)');
 
-                // Update login ID in localStorage if changed
                 if (savedLoginId) {
                     localStorage.setItem('adminLoginID', savedLoginId);
                 }
+
                 // Clear login fields
                 setLoginData({
                     currentLoginId: savedLoginId,
@@ -2578,8 +2576,6 @@ function Admainprofile() {
                     confirmPassword: '',
                 });
                 return true;
-
-                // (sidebar event + display states already dispatched above)
             } else {
                 setSaveStatus('error');
                 alert(result.message || 'Failed to save profile. Please try again.');
@@ -2589,11 +2585,10 @@ function Admainprofile() {
             console.error('Error saving profile:', error);
             setSaveStatus('error');
 
-            // Provide specific error messages
             if (error.name === 'QuotaExceededError') {
-                alert('Storage quota exceeded. Your profile has been saved to the server successfully, but some data could not be cached locally. This will not affect functionality.');
+                alert('Storage quota exceeded. Profile saved to server, but local cache failed.');
             } else if (error.message && error.message.includes('network')) {
-                alert('Network error. Please check your internet connection and try again.');
+                alert('Network error. Please check connection and try again.');
             } else {
                 alert('Error saving profile. Please try again.');
             }
@@ -3358,6 +3353,16 @@ function Admainprofile() {
             <SuccessPopup
                 isOpen={isSuccessPopupOpen}
                 onClose={() => setIsSuccessPopupOpen(false)}
+            />
+
+            {/* OTP Verification Modal */}
+            <OtpModal
+                isOpen={isOtpOpen}
+                onClose={() => setIsOtpOpen(false)}
+                role="admin"
+                email={otpEmail}
+                purpose="ADMIN_ACTION"
+                onVerifySuccess={executeSave}
             />
 
             <UnsavedChangesModal

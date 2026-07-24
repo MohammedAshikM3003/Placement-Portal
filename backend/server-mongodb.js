@@ -866,6 +866,17 @@ try {
 }
 
 // -------------------------------------------------
+// OTP Verification APIs
+// -------------------------------------------------
+try {
+    const otpRoutes = require('./routes/otp');
+    app.use('/api/auth/otp', otpRoutes);
+    console.log('✅ OTP Verification routes loaded successfully');
+} catch (error) {
+    console.error('❌ Failed to load OTP routes:', error.message);
+}
+
+// -------------------------------------------------
 // Rule-Based AI Status API
 // -------------------------------------------------
 app.get('/api/ai/status', async (req, res) => {
@@ -3192,6 +3203,41 @@ app.post('/api/eligible-students', authenticateToken, checkRole('admin', 'coordi
 
             await StudentApplication.bulkWrite(bulkOps);
             console.log(`Created/updated ${applications.length} student applications`);
+
+            // Trigger Shortlist Email for each student (non-blocking)
+            try {
+                const { sendMail, EMAIL_EVENTS } = require('./services/mail/mailService');
+                let matchedDrive = await CompanyDrive.findById(driveId);
+                if (!matchedDrive) {
+                    matchedDrive = await CompanyDrive.findOne({ companyName, startingDate: driveStartDate });
+                }
+
+                for (const student of students) {
+                    const studentRecord = await Student.findOne({ regNo: student.regNo });
+                    const studentEmail = studentRecord?.primaryEmail || studentRecord?.email || student.email;
+                    
+                    if (studentEmail) {
+                        sendMail({
+                            eventType: EMAIL_EVENTS.STUDENT_SHORTLISTED,
+                            to: studentEmail,
+                            role: 'student',
+                            data: {
+                                recipientName: student.name || `${studentRecord?.firstName} ${studentRecord?.lastName}`,
+                                companyName: companyName,
+                                jobRole: jobRole || matchedDrive?.jobRole || 'N/A',
+                                startingDate: driveStartDate,
+                                mode: matchedDrive?.mode || 'On-Campus',
+                                location: matchedDrive?.location || 'College Campus',
+                                package: matchedDrive?.package || 'As per norms',
+                                studentId: student.studentId
+                            },
+                            idempotencyKey: `SHORTLISTED:${driveId}:${student.studentId}`
+                        }).catch(mailErr => console.error(`❌ Failed to send shortlist mail to ${studentEmail}:`, mailErr.message));
+                    }
+                }
+            } catch (mailErr) {
+                console.error('❌ Failed to trigger Company Drive Shortlisted Emails:', mailErr.message);
+            }
         } catch (appError) {
             console.error('Error creating student applications:', appError);
             // Don't fail the entire request if application creation fails
@@ -3389,6 +3435,85 @@ app.post('/api/training-attendance/submit', authenticateToken, checkRole('coordi
             { new: true, upsert: true, setDefaultsOnInsert: true }
         );
 
+        // Trigger Training Attendance summary email (non-blocking)
+        try {
+            const { sendMail, EMAIL_EVENTS } = require('./services/mail/mailService');
+            const Admin = require('./models/Admin');
+
+            let coordinatorEmail = '';
+            let dept = 'General';
+            
+            if (req.user) {
+                if (req.user.role === 'coordinator') {
+                    const coord = await Coordinator.findOne({
+                        $or: [
+                            { _id: req.user.id },
+                            { coordinatorId: req.user.coordinatorId }
+                        ]
+                    });
+                    coordinatorEmail = coord?.email || coord?.domainEmail;
+                    dept = coord?.department || coord?.branch || 'General';
+                } else if (req.user.role === 'admin') {
+                    const admin = await Admin.findOne({
+                        $or: [
+                            { _id: req.user.id },
+                            { adminLoginID: req.user.adminLoginID }
+                        ]
+                    });
+                    coordinatorEmail = admin?.emailId || admin?.domainMailId;
+                    dept = admin?.department || 'Admin';
+                }
+            }
+
+            const trainingId = savedAttendance.scheduleId || savedAttendance.courseName;
+            const version = await TrainingAttendance.countDocuments({
+                courseName: savedAttendance.courseName,
+                batchName: savedAttendance.batchName,
+                phaseNumber: savedAttendance.phaseNumber
+            });
+
+            const emailData = {
+                courseName: savedAttendance.courseName,
+                batchName: savedAttendance.batchName,
+                trainer: savedAttendance.trainer,
+                phaseNumber: savedAttendance.phaseNumber || 'Phase 1',
+                attendanceDate: savedAttendance.attendanceDate ? new Date(savedAttendance.attendanceDate).toLocaleDateString('en-GB') : '',
+                totalStudents: savedAttendance.totalStudents,
+                totalPresent: savedAttendance.totalPresent,
+                totalAbsent: savedAttendance.totalAbsent,
+                percentage: savedAttendance.percentage,
+                submittedBy: savedAttendance.submittedBy || 'Coordinator'
+            };
+
+            // 1. Send RED email to Coordinator / Submitter
+            if (coordinatorEmail) {
+                sendMail({
+                    eventType: EMAIL_EVENTS.TRAINING_ATTENDANCE_SUMMARY,
+                    to: coordinatorEmail,
+                    role: 'coordinator',
+                    data: emailData,
+                    idempotencyKey: `TRAINING_ATTENDANCE:${trainingId}:${dept}:${version}`
+                }).catch(mailErr => console.error('❌ Failed to send Coordinator Training Attendance summary:', mailErr.message));
+            }
+
+            // 2. Send GREEN email to all Admins
+            const admins = await Admin.find({});
+            for (const admin of admins) {
+                const adminEmail = admin.emailId || admin.domainMailId;
+                if (adminEmail && adminEmail !== coordinatorEmail) {
+                    sendMail({
+                        eventType: EMAIL_EVENTS.TRAINING_ATTENDANCE_SUMMARY,
+                        to: adminEmail,
+                        role: 'admin',
+                        data: emailData,
+                        idempotencyKey: `ADMIN_TRAINING_ATTENDANCE:${trainingId}:${dept}:${version}:${admin._id}`
+                    }).catch(mailErr => console.error(`❌ Failed to send Admin Training Attendance summary to ${adminEmail}:`, mailErr.message));
+                }
+            }
+        } catch (mailErr) {
+            console.error('❌ Failed to trigger Training Attendance Summary Emails:', mailErr.message);
+        }
+
         return res.status(201).json({
             success: true,
             message: 'Training attendance saved successfully',
@@ -3522,6 +3647,82 @@ app.post('/api/attendance/submit', authenticateToken, checkRole('coordinator', '
             companyName: attendance.companyName,
             jobRole: attendance.jobRole
         });
+
+        // Trigger Drive Attendance summary email (non-blocking)
+        try {
+            const { sendMail, EMAIL_EVENTS } = require('./services/mail/mailService');
+            const Admin = require('./models/Admin');
+
+            let coordinatorEmail = '';
+            let dept = 'General';
+            
+            if (req.user) {
+                if (req.user.role === 'coordinator') {
+                    const coord = await Coordinator.findOne({
+                        $or: [
+                            { _id: req.user.id },
+                            { coordinatorId: req.user.coordinatorId }
+                        ]
+                    });
+                    coordinatorEmail = coord?.email || coord?.domainEmail;
+                    dept = coord?.department || coord?.branch || 'General';
+                } else if (req.user.role === 'admin') {
+                    const admin = await Admin.findOne({
+                        $or: [
+                            { _id: req.user.id },
+                            { adminLoginID: req.user.adminLoginID }
+                        ]
+                    });
+                    coordinatorEmail = admin?.emailId || admin?.domainMailId;
+                    dept = admin?.department || 'Admin';
+                }
+            }
+
+            const version = (await Attendance.countDocuments({ driveId: attendance.driveId, submittedBy: attendance.submittedBy })) + 1;
+            const submissionDate = new Date().toLocaleDateString('en-GB');
+            const submissionTime = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+
+            const emailData = {
+                companyName: attendance.companyName,
+                jobRole: attendance.jobRole,
+                startDate: attendance.startDate ? new Date(attendance.startDate).toLocaleDateString('en-GB') : '',
+                dept: dept,
+                totalStudents: attendance.totalStudents,
+                totalPresent: attendance.totalPresent,
+                totalAbsent: attendance.totalAbsent,
+                percentage: attendance.percentage,
+                submittedBy: attendance.submittedBy || 'Placement Staff',
+                time: `${submissionDate} ${submissionTime}`
+            };
+
+            // 1. Send RED email to Coordinator / Submitter
+            if (coordinatorEmail) {
+                sendMail({
+                    eventType: EMAIL_EVENTS.DRIVE_ATTENDANCE_SUMMARY,
+                    to: coordinatorEmail,
+                    role: 'coordinator',
+                    data: emailData,
+                    idempotencyKey: `DRIVE_ATTENDANCE:${attendance.driveId}:${dept}:${version}`
+                }).catch(mailErr => console.error('❌ Failed to send Coordinator Drive Attendance summary:', mailErr.message));
+            }
+
+            // 2. Send GREEN email to all Admins
+            const admins = await Admin.find({});
+            for (const admin of admins) {
+                const adminEmail = admin.emailId || admin.domainMailId;
+                if (adminEmail && adminEmail !== coordinatorEmail) {
+                    sendMail({
+                        eventType: EMAIL_EVENTS.DRIVE_ATTENDANCE_SUMMARY,
+                        to: adminEmail,
+                        role: 'admin',
+                        data: emailData,
+                        idempotencyKey: `ADMIN_DRIVE_ATTENDANCE:${attendance.driveId}:${dept}:${version}:${admin._id}`
+                    }).catch(mailErr => console.error(`❌ Failed to send Admin Drive Attendance summary to ${adminEmail}:`, mailErr.message));
+                }
+            }
+        } catch (mailErr) {
+            console.error('❌ Failed to trigger Drive Attendance Summary Emails:', mailErr.message);
+        }
 
         res.status(201).json({
             success: true,
@@ -3808,13 +4009,16 @@ app.post('/api/round-results/save', async (req, res) => {
         const Reports = mongoose.connection.collection('Reports');
         const existingDrive = await Reports.findOne({ driveId });
 
+        let message = '';
+        let writeResult;
+
         if (existingDrive) {
             // Update existing drive - update or add round
             const existingRoundIndex = existingDrive.rounds?.findIndex(r => r.roundNumber === roundNumber);
 
             if (existingRoundIndex !== undefined && existingRoundIndex >= 0) {
                 // Update existing round
-                const updateResult = await Reports.updateOne(
+                writeResult = await Reports.updateOne(
                     { driveId },
                     {
                         $set: {
@@ -3823,15 +4027,10 @@ app.post('/api/round-results/save', async (req, res) => {
                         }
                     }
                 );
-
-                res.json({
-                    success: true,
-                    message: `Round ${roundNumber} results updated successfully`,
-                    updated: updateResult.modifiedCount > 0
-                });
+                message = `Round ${roundNumber} results updated successfully`;
             } else {
                 // Add new round to existing drive
-                const updateResult = await Reports.updateOne(
+                writeResult = await Reports.updateOne(
                     { driveId },
                     {
                         $push: { rounds: roundData },
@@ -3843,16 +4042,11 @@ app.post('/api/round-results/save', async (req, res) => {
                         }
                     }
                 );
-
-                res.json({
-                    success: true,
-                    message: `Round ${roundNumber} added successfully`,
-                    updated: updateResult.modifiedCount > 0
-                });
+                message = `Round ${roundNumber} added successfully`;
             }
         } else {
             // Create new drive document with first round
-            const newDrive = await Reports.insertOne({
+            writeResult = await Reports.insertOne({
                 driveId,
                 companyName,
                 jobRole,
@@ -3863,13 +4057,84 @@ app.post('/api/round-results/save', async (req, res) => {
                 createdAt: new Date(),
                 updatedAt: new Date()
             });
-
-            res.json({
-                success: true,
-                message: 'Drive created and round results saved successfully',
-                data: { _id: newDrive.insertedId }
-            });
+            message = 'Drive created and round results saved successfully';
         }
+
+        // Trigger Round results emails asynchronously (non-blocking)
+        const triggerRoundEmails = async () => {
+            try {
+                const { sendMail, EMAIL_EVENTS } = require('./services/mail/mailService');
+                
+                // Fetch next round details if available
+                let nextRoundName = '';
+                let nextRoundDate = '';
+                const latestDriveState = await Reports.findOne({ driveId });
+                if (latestDriveState) {
+                    const nextRoundNum = Number(roundNumber) + 1;
+                    const nextRoundObj = latestDriveState.rounds?.find(r => r.roundNumber === nextRoundNum);
+                    if (nextRoundObj) {
+                        nextRoundName = nextRoundObj.roundName || `Round ${nextRoundNum}`;
+                        nextRoundDate = nextRoundObj.date ? new Date(nextRoundObj.date).toLocaleDateString('en-GB') : '';
+                    }
+                }
+
+                // 1. Process Passed Students
+                for (const student of passedStudents) {
+                    const studentRecord = await Student.findOne({ regNo: student.regNo });
+                    const email = studentRecord?.primaryEmail || studentRecord?.email || student.email;
+                    if (email) {
+                        sendMail({
+                            eventType: EMAIL_EVENTS.ROUND_PASSED,
+                            to: email,
+                            role: 'student',
+                            data: {
+                                recipientName: student.name || `${studentRecord?.firstName} ${studentRecord?.lastName}`,
+                                companyName: companyName,
+                                roundNumber: roundNumber,
+                                roundName: roundName,
+                                nextRoundName: nextRoundName || `Next Round`,
+                                nextRoundDate: nextRoundDate || 'To be scheduled',
+                                studentId: student.studentId || String(studentRecord?._id || '')
+                            },
+                            idempotencyKey: `ROUND_PASSED:${driveId}:${roundNumber}:${student.studentId || studentRecord?._id || student.regNo}`
+                        }).catch(e => console.error(`❌ Failed to send round passed email to ${email}:`, e.message));
+                    }
+                }
+
+                // 2. Process Failed/Rejected Students
+                for (const student of failedStudents) {
+                    const studentRecord = await Student.findOne({ regNo: student.regNo });
+                    const email = studentRecord?.primaryEmail || studentRecord?.email || student.email;
+                    if (email) {
+                        sendMail({
+                            eventType: EMAIL_EVENTS.STUDENT_REJECTED,
+                            to: email,
+                            role: 'student',
+                            data: {
+                                recipientName: student.name || `${studentRecord?.firstName} ${studentRecord?.lastName}`,
+                                companyName: companyName,
+                                roundNumber: roundNumber,
+                                roundName: roundName,
+                                studentId: student.studentId || String(studentRecord?._id || '')
+                            },
+                            idempotencyKey: `REJECTED:${driveId}:${roundNumber}:${student.studentId || studentRecord?._id || student.regNo}`
+                        }).catch(e => console.error(`❌ Failed to send round failed email to ${email}:`, e.message));
+                    }
+                }
+            } catch (mailErr) {
+                console.error('❌ Failed to trigger Round results emails:', mailErr.message);
+            }
+        };
+
+        // Fire emails asynchronously
+        triggerRoundEmails();
+
+        res.json({
+            success: true,
+            message,
+            updated: (writeResult && (writeResult.modifiedCount > 0 || !!writeResult.insertedId)) || false,
+            data: writeResult && writeResult.insertedId ? { _id: writeResult.insertedId } : undefined
+        });
     } catch (error) {
         console.error('Error saving round results:', error);
         res.status(500).json({
@@ -4574,6 +4839,33 @@ app.post('/api/placed-students/save', authenticateToken, checkRole('admin', 'coo
         const result = await PlacedStudents.bulkWrite(bulkOperations);
 
         console.log(`✅ Saved ${result.upsertedCount + result.modifiedCount} placed students for ${companyName} - ${jobRole}`);
+
+        // Trigger Placed Student email (non-blocking)
+        try {
+            const { sendMail, EMAIL_EVENTS } = require('./services/mail/mailService');
+            for (const student of placedStudentsData) {
+                const studentRecord = await Student.findOne({ regNo: student.regNo });
+                const email = studentRecord?.primaryEmail || studentRecord?.email || student.email;
+                if (email) {
+                    sendMail({
+                        eventType: EMAIL_EVENTS.FINAL_SELECTED,
+                        to: email,
+                        role: 'student',
+                        data: {
+                            recipientName: student.name || `${studentRecord?.firstName} ${studentRecord?.lastName}`,
+                            companyName: companyName,
+                            jobRole: jobRole,
+                            package: student.pkg || 'N/A',
+                            date: student.date || new Date().toLocaleDateString('en-GB'),
+                            studentId: student.studentId || String(studentRecord?._id || '')
+                        },
+                        idempotencyKey: `FINAL_SELECTED:${companyName}:${jobRole}:${student.studentId || studentRecord?._id || student.regNo}`
+                    }).catch(mailErr => console.error(`❌ Failed to send placed selection mail to ${email}:`, mailErr.message));
+                }
+            }
+        } catch (mailErr) {
+            console.error('❌ Failed to trigger Placed Student Emails:', mailErr.message);
+        }
 
         res.json({
             success: true,
@@ -7512,6 +7804,25 @@ app.post('/api/students', async (req, res) => {
             });
             await user.save();
             console.log('User record created successfully');
+
+            // Trigger Welcome Email (non-critical, do not block or rollback on failure)
+            try {
+                const { sendMail, EMAIL_EVENTS } = require('./services/mail/mailService');
+                const welcomeEmailAddress = studentDataWithDefaults.primaryEmail || studentDataWithDefaults.email;
+                await sendMail({
+                    eventType: EMAIL_EVENTS.WELCOME,
+                    to: welcomeEmailAddress,
+                    role: 'student',
+                    data: {
+                        regNo: student.regNo,
+                        department: student.branch,
+                        recipientName: `${student.firstName} ${student.lastName}`
+                    },
+                    idempotencyKey: `WELCOME:${student._id}`
+                });
+            } catch (mailErr) {
+                console.error('❌ Failed to send Student Welcome Email:', mailErr.message);
+            }
 
             res.status(201).json({
                 message: 'Student created successfully',
@@ -10673,6 +10984,43 @@ app.put('/api/certificates/:id', async (req, res) => {
                 fileName: certificate.fileName,
                 achievementId: certificate.achievementId
             });
+
+            // Trigger Certificate Review Email (non-blocking)
+            try {
+                const { sendMail, EMAIL_EVENTS } = require('./services/mail/mailService');
+                if (newStatus === 'approved' || newStatus === 'rejected') {
+                    const studentRecord = await Student.findOne({ regNo: certificate.regNo });
+                    const studentEmail = studentRecord?.primaryEmail || studentRecord?.email;
+
+                    if (studentEmail) {
+                        const eventType = newStatus === 'approved' 
+                            ? EMAIL_EVENTS.CERTIFICATE_APPROVED 
+                            : EMAIL_EVENTS.CERTIFICATE_REJECTED;
+
+                        const idempotencyKey = newStatus === 'approved'
+                            ? `CERT_APPROVED:${id}`
+                            : `CERT_REJECTED:${id}:${Date.now()}`;
+
+                        sendMail({
+                            eventType,
+                            to: studentEmail,
+                            role: 'student',
+                            data: {
+                                recipientName: certificate.studentName || `${studentRecord?.firstName} ${studentRecord?.lastName}`,
+                                fileName: certificate.fileName || certificate.certificateName || 'Certificate Document',
+                                date: new Date().toLocaleDateString('en-GB'),
+                                reason: updateData.changeReason || updateData.reason || 'Blurred or invalid document copy',
+                                approvedBy: updateData.verifiedBy || 'Placement Coordinator',
+                                certificateId: id
+                            },
+                            idempotencyKey
+                        }).catch(e => console.error(`❌ Failed to send certificate email to ${studentEmail}:`, e.message));
+                    }
+                }
+            } catch (mailErr) {
+                console.error('❌ Failed to trigger Certificate Review Email:', mailErr.message);
+            }
+
             res.json({ message: 'Certificate updated successfully', certificate });
         } else {
             const certificateIndex = certificates.findIndex(c => c.id === id);
@@ -10682,6 +11030,44 @@ app.put('/api/certificates/:id', async (req, res) => {
             }
             certificates[certificateIndex] = { ...certificates[certificateIndex], ...updateData };
             console.log('✅ Backend: Certificate updated successfully (in-memory)');
+
+            // Trigger in-memory Certificate Review Email (non-blocking)
+            try {
+                const { sendMail, EMAIL_EVENTS } = require('./services/mail/mailService');
+                if (newStatus === 'approved' || newStatus === 'rejected') {
+                    const certInMemory = certificates[certificateIndex];
+                    const studentRecord = await Student.findOne({ regNo: certInMemory.regNo });
+                    const studentEmail = studentRecord?.primaryEmail || studentRecord?.email;
+
+                    if (studentEmail) {
+                        const eventType = newStatus === 'approved' 
+                            ? EMAIL_EVENTS.CERTIFICATE_APPROVED 
+                            : EMAIL_EVENTS.CERTIFICATE_REJECTED;
+
+                        const idempotencyKey = newStatus === 'approved'
+                            ? `CERT_APPROVED:${id}`
+                            : `CERT_REJECTED:${id}:${Date.now()}`;
+
+                        sendMail({
+                            eventType,
+                            to: studentEmail,
+                            role: 'student',
+                            data: {
+                                recipientName: certInMemory.studentName || `${studentRecord?.firstName} ${studentRecord?.lastName}`,
+                                fileName: certInMemory.fileName || certInMemory.certificateName || 'Certificate Document',
+                                date: new Date().toLocaleDateString('en-GB'),
+                                reason: updateData.changeReason || updateData.reason || 'Blurred or invalid document copy',
+                                approvedBy: updateData.verifiedBy || 'Placement Coordinator',
+                                certificateId: id
+                            },
+                            idempotencyKey
+                        }).catch(e => console.error(`❌ Failed to send certificate email to ${studentEmail}:`, e.message));
+                    }
+                }
+            } catch (mailErr) {
+                console.error('❌ Failed to trigger Certificate Review Email:', mailErr.message);
+            }
+
             res.json({ message: 'Certificate updated successfully (in-memory)', certificate: certificates[certificateIndex] });
         }
     } catch (error) {

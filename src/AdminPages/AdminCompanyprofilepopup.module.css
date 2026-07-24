@@ -136,8 +136,8 @@
 
 .Admin-cp-page-field-label {
     font-size: 0.9rem;
-    font-weight: 700;
-    color: #4b4b4b;
+    font-weight: 600;
+    color: #333333;
     letter-spacing: 0.02em;
 }
 
@@ -527,7 +527,7 @@
     }
 
     .Admin-cp-page-header h1 {
-        font-size: 1.5rem;
+        font-size: 1.3rem;
     }
 
     .Admin-cp-page-header-back-btn {

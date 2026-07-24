@@ -18,6 +18,7 @@ import { PreviewProgressAlert, DownloadSuccessAlert, DownloadFailedAlert } from 
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import { resolveProfileUrl } from '../components/Sidebar/profileUtils';
 import API_BASE_URL from '../utils/apiConfig';
+import OtpModal from '../components/dialog/OtpModal/OtpModal';
 
 const REQUIRED_COORDINATOR_FIELDS = [
     { field: 'firstName', label: 'First Name' },
@@ -1043,6 +1044,8 @@ const [branches, setBranches] = useState([]);
     const [isInitialLoading, setIsInitialLoading] = useState(false);
     const [loadingProgress, setLoadingProgress] = useState(0);
     const [showAllErrors, setShowAllErrors] = useState(false);
+    const [isOtpOpen, setIsOtpOpen] = useState(false);
+    const [otpEmail, setOtpEmail] = useState('');
 
     const [initialData, setInitialData] = useState({
         firstName: '',
@@ -1407,7 +1410,6 @@ const [branches, setBranches] = useState([]);
         return nextErrorCount === 0;
     };
 
-    // UPDATED: Save function with backend API
     const handleConfirmSave = async () => {
         if (!validateForm()) {
             console.log("Validation failed", errors);
@@ -1415,6 +1417,40 @@ const [branches, setBranches] = useState([]);
             return;
         }
 
+        setIsSaving(true);
+
+        try {
+            // Retrieve admin email for identity verification
+            let adminEmail = '';
+            try {
+                const cachedProfile = JSON.parse(localStorage.getItem('adminProfileCache'));
+                adminEmail = cachedProfile?.domainMailId || cachedProfile?.emailId;
+            } catch (e) {}
+
+            if (!adminEmail) {
+                const adminLoginID = localStorage.getItem('adminLoginID') || 'admin';
+                const profile = await mongoDBService.getAdminProfile(adminLoginID);
+                adminEmail = profile?.domainMailId || profile?.emailId;
+            }
+
+            if (!adminEmail) {
+                alert('Admin email address is required to proceed with identity verification.');
+                setIsSaving(false);
+                return;
+            }
+
+            setOtpEmail(adminEmail);
+            setIsOtpOpen(true);
+        } catch (err) {
+            console.error('Error fetching admin profile for OTP:', err);
+            alert('Failed to initialize verification system. Please try again.');
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const executeConfirmSave = async () => {
+        setIsOtpOpen(false);
         setIsSaving(true);
         setSaveStatus('saving');
 
@@ -1450,21 +1486,21 @@ const [branches, setBranches] = useState([]);
             profilePhotoName: photoDetails.fileName,
         };
 
-        // Upload profile photo to GridFS if a File object is available
-        if (profilePhotoData instanceof File) {
-            const gridfsService = (await import('../services/gridfsService')).default;
-            const coordId = formData.coordinatorId || editIdParam;
-            const result = await gridfsService.uploadProfileImage(profilePhotoData, coordId, 'coordinator');
-            payload.profilePhotoData = result.url; // GridFS URL
-        }
-
-        // Include password fields when creating or when editing credentials
-        if (!isViewMode && formData.password && formData.confirmPassword) {
-            payload.password = formData.password;
-            payload.confirmPassword = formData.confirmPassword;
-        }
-
         try {
+            // Upload profile photo to GridFS if a File object is available
+            if (profilePhotoData instanceof File) {
+                const gridfsService = (await import('../services/gridfsService')).default;
+                const coordId = formData.coordinatorId || editIdParam;
+                const result = await gridfsService.uploadProfileImage(profilePhotoData, coordId, 'coordinator');
+                payload.profilePhotoData = result.url; // GridFS URL
+            }
+
+            // Include password fields when creating or when editing credentials
+            if (!isViewMode && formData.password && formData.confirmPassword) {
+                payload.password = formData.password;
+                payload.confirmPassword = formData.confirmPassword;
+            }
+
             let response;
             if (isEditMode) {
                 response = await mongoDBService.updateCoordinator(editIdParam, payload);
@@ -2477,6 +2513,16 @@ const [branches, setBranches] = useState([]);
                 isOpen={isFileSizeErrorOpen}
                 onClose={() => setIsFileSizeErrorOpen(false)}
                 fileSizeKB={fileSizeErrorKB}
+            />
+
+            {/* OTP Verification Modal */}
+            <OtpModal
+                isOpen={isOtpOpen}
+                onClose={() => setIsOtpOpen(false)}
+                role="admin"
+                email={otpEmail}
+                purpose="ADMIN_ACTION"
+                onVerifySuccess={executeConfirmSave}
             />
 
             <UnsavedChangesModal

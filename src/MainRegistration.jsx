@@ -22,6 +22,7 @@ import styles from "./MainRegistration.module.css";
 import mongoDBService from './services/mongoDBService';
 import gridfsService from './services/gridfsService';
 import DOBDatePicker from './components/Calendar/DOBDatePicker';
+import OtpModal from './components/dialog/OtpModal/OtpModal';
 import { changeFavicon, FAVICON_TYPES } from './utils/faviconUtils';
 import ConfettiSideCannons from './components/Confetti/ConfettiSideCannons';
 import Dropdown from "./components/common/Dropdown/Dropdown";
@@ -712,6 +713,9 @@ function MainRegistration() {
   const [selectedBranch, setSelectedBranch] = useState("");
   const [activeSection, setActiveSection] = useState("personal");
   const [completedSections, setCompletedSections] = useState({});
+  const [isOtpOpen, setIsOtpOpen] = useState(false);
+  const [pendingStudentData, setPendingStudentData] = useState(null);
+  const [registrationEmail, setRegistrationEmail] = useState('');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [dob, setDob] = useState('');
   const [studyCategory, setStudyCategory] = useState("12th");
@@ -1758,6 +1762,44 @@ function MainRegistration() {
           loginPassword,
         };
 
+        setPendingStudentData(studentData);
+        setRegistrationEmail(studentData.primaryEmail || studentData.email);
+        setIsOtpOpen(true);
+        setIsRegistering(false);
+      } catch (error) {
+        console.error("Error preparing student data:", error);
+        setValidationErrorMessage(`Error preparing data: ${error.message}. Check console for details.`);
+        setValidationErrorPopupOpen(true);
+      } finally {
+        setIsRegistering(false);
+      }
+    },
+    [
+      currentSemester,
+      currentYear,
+      dob,
+      profilePhotoFile,
+      profileImage,
+      selectedCompanyTypes,
+      selectedJobLocations,
+      studyCategory,
+      uploadInfo,
+      willingToSignBond,
+      preferredModeOfDrive,
+      residentialStatus,
+      quota,
+      firstGraduate,
+    ]
+  );
+
+  const handleOtpSuccess = useCallback(
+    async () => {
+      setIsOtpOpen(false);
+      setIsRegistering(true);
+      try {
+        const studentData = pendingStudentData;
+        if (!studentData) return;
+
         // Create student first
         const createResponse = await mongoDBService.createStudent(studentData);
         console.log('[MainRegistration] Create student response:', createResponse);
@@ -1798,7 +1840,6 @@ function MainRegistration() {
             }
           } catch (uploadErr) {
             console.error('[MainRegistration] Failed to upload profile photo:', uploadErr);
-            // Don't fail registration — just log
           }
         }
 
@@ -1815,28 +1856,19 @@ function MainRegistration() {
           triggerConfetti();
         }, 250);
       } catch (error) {
-        console.error("Error saving student data:", error);
+        console.error("Error saving student data after OTP:", error);
         setValidationErrorMessage(`Error saving data: ${error.message}. Check console for details.`);
         setValidationErrorPopupOpen(true);
       } finally {
         setIsRegistering(false);
+        setPendingStudentData(null);
       }
     },
     [
-      currentSemester,
-      currentYear,
-      dob,
+      pendingStudentData,
       profilePhotoFile,
       profileImage,
-      selectedCompanyTypes,
-      selectedJobLocations,
-      studyCategory,
-      uploadInfo,
-      willingToSignBond,
-      preferredModeOfDrive,
-      residentialStatus,
-      quota,
-      firstGraduate,
+      uploadInfo
     ]
   );
 
@@ -2667,6 +2699,14 @@ function MainRegistration() {
       <FileFormatErrorPopup isOpen={isFileFormatErrorOpen} onClose={closeFileFormatErrorPopup} fileName={invalidFileName} />
       <URLValidationErrorPopup isOpen={isURLErrorPopupOpen} onClose={closeURLErrorPopup} urlType={urlErrorType} invalidUrl={invalidUrl} />
       <ValidationErrorPopup isOpen={isValidationErrorPopupOpen} onClose={() => setValidationErrorPopupOpen(false)} message={validationErrorMessage} />
+      <OtpModal
+        isOpen={isOtpOpen}
+        onClose={() => setIsOtpOpen(false)}
+        role="student"
+        email={registrationEmail}
+        purpose="EMAIL_VERIFICATION"
+        onVerifySuccess={handleOtpSuccess}
+      />
       <ImagePreviewModal src={profileImage} isOpen={isImagePreviewOpen} onClose={() => setImagePreviewOpen(false)} />
       <CropImageModal
         isOpen={isCropModalOpen}
