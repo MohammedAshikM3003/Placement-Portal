@@ -44,6 +44,15 @@ router.post('/send', async (req, res) => {
 
     const normalizedEmail = email.toLowerCase().trim();
 
+    // Safe diagnostic log (never prints secrets)
+    console.log('[OTP Send Diagnostic]:', {
+        provider: process.env.MAIL_PROVIDER || 'gmail',
+        userConfigured: Boolean(process.env.MAIL_USER),
+        passwordConfigured: Boolean(process.env.MAIL_PASSWORD),
+        fromConfigured: Boolean(process.env.MAIL_FROM_ADDRESS || process.env.MAIL_USER),
+        environment: process.env.NODE_ENV || 'development'
+    });
+
     try {
         // 1. Check for active OTP and Cooldown
         const existingOtp = await Otp.findOne({ email: normalizedEmail, purpose, role });
@@ -74,31 +83,7 @@ router.post('/send', async (req, res) => {
         const hashedOtp = await bcrypt.hash(otpVal, 10);
         const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes validity
 
-        // 3. Save or Update OTP
-        if (existingOtp) {
-            existingOtp.hashedOtp = hashedOtp;
-            existingOtp.expiresAt = expiresAt;
-            existingOtp.attempts = 0;
-            existingOtp.maxAttempts = 5;
-            existingOtp.resendCount += 1;
-            await existingOtp.save();
-        } else {
-            const newOtp = new Otp({
-                email: normalizedEmail,
-                hashedOtp,
-                purpose,
-                role,
-                expiresAt,
-                resendCount: 0,
-                maxAttempts: 5
-            });
-            await newOtp.save();
-        }
-
-        // 4. Send the Email (using Gmail app pass in dev, SMTP in prod)
-        // Note: do not log plaintext OTP value in production logs
-        console.log(`[OTP] Generating verification code for recipient role ${role}`);
-        
+        // 3. Resolve Recipient Name
         let resolvedName = name || '';
         if (!resolvedName) {
             try {
@@ -124,6 +109,8 @@ router.post('/send', async (req, res) => {
             resolvedName = normalizedEmail.split('@')[0];
         }
 
+        // 4. Dispatch Email FIRST (ensures no orphaned OTP state on dispatch failure)
+        console.log(`[OTP] Generating verification code for recipient role ${role}`);
         await sendMail({
             eventType: EMAIL_EVENTS.OTP_VERIFICATION,
             to: normalizedEmail,
@@ -134,6 +121,27 @@ router.post('/send', async (req, res) => {
             }
         });
 
+        // 5. Save or Update OTP in DB ONLY after successful mail dispatch
+        if (existingOtp) {
+            existingOtp.hashedOtp = hashedOtp;
+            existingOtp.expiresAt = expiresAt;
+            existingOtp.attempts = 0;
+            existingOtp.maxAttempts = 5;
+            existingOtp.resendCount += 1;
+            await existingOtp.save();
+        } else {
+            const newOtp = new Otp({
+                email: normalizedEmail,
+                hashedOtp,
+                purpose,
+                role,
+                expiresAt,
+                resendCount: 0,
+                maxAttempts: 5
+            });
+            await newOtp.save();
+        }
+
         return res.json({
             success: true,
             message: 'If a valid account is associated or eligible, a verification code has been sent.',
@@ -141,8 +149,17 @@ router.post('/send', async (req, res) => {
         });
 
     } catch (error) {
-        console.error('[OTP Send Error]:', error);
-        return res.status(500).json({ success: false, error: 'Failed to dispatch verification code', details: error.message });
+        console.error('[OTP Send Failure]:', {
+            code: error.code || 'UNKNOWN',
+            responseCode: error.responseCode || 'N/A',
+            command: error.command || 'N/A',
+            message: error.message
+        });
+        return res.status(500).json({
+            success: false,
+            error: 'Unable to send verification code. Please try again.',
+            details: error.message
+        });
     }
 });
 
