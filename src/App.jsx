@@ -23,6 +23,7 @@ import LandingPage from "./LandingPage.jsx";
 import PlacementPortalLogin from "./mainlogin.jsx";
 import MainSignUp from "./MainSignUp.jsx";
 import MainRegistration from "./MainRegistration.jsx";
+import MailStatusPage from "./MailStatusPage.jsx";
 import AdminEsstudapp from "./AdminPages/AdminEsstudapp.jsx";
 import AdminEligiblestudents from "./AdminPages/AdminEligiblestudents.jsx";
 // Dev-only component playground (only loaded in development)
@@ -326,6 +327,7 @@ function AppContent() {
       <Route path="/mainlogin" element={<PlacementPortalLogin onLogin={handleStudentLogin} onNavigateToSignUp={() => navigate("/signup")} />} />
       <Route path="/signup" element={<MainSignUp onNavigateToLogin={() => navigate("/mainlogin")} onStartRegistration={() => navigate("/registration")} />} />
       <Route path="/registration" element={<MainRegistration onNavigateToLogin={() => navigate("/mainlogin")} />} />
+      <Route path="/mail-status" element={<MailStatusPage />} />
       <Route path="/registration-debug" element={<RegistrationDebug />} />
       <Route path="/sastu-page" element={<RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading Page..." showAnimatedDots={true} />}><SastuPage /></Suspense></RouteErrorBoundary>} />
       <Route path="/sacoo-page" element={<RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading Page..." showAnimatedDots={true} />}><SaCooPage /></Suspense></RouteErrorBoundary>} />

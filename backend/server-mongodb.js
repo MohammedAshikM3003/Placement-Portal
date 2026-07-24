@@ -810,6 +810,7 @@ try {
     app.use('/api/marksheets', authenticateToken, marksheetsUploadRoutes);
     app.use('/api/v1/ocr', authenticateToken, ocrV1Routes);
     app.use('/api/v1/health', healthRoutes);
+    app.use('/api/health', healthRoutes);
 
     console.log('✅ Marksheet upload, versioned OCR v1, and health monitoring routes loaded successfully');
     logRouteDebug('Mounted /api/marksheets/* (POST /upload, POST /confirm), /api/v1/ocr/* (POST /upload), /api/v1/health/* (GET /liveness, GET /readiness)');
