@@ -93,7 +93,8 @@ function OtpModal({
 
             const result = await response.json();
             if (!response.ok || !result.success) {
-                throw new Error(result.error || 'Failed to dispatch verification code');
+                const detailedError = result.details ? `${result.error} (${result.details})` : (result.error || 'Failed to dispatch verification code');
+                throw new Error(detailedError);
             }
 
             setMaskedEmail(result.maskedEmail || email);

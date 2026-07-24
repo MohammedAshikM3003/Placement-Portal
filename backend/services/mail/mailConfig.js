@@ -15,10 +15,15 @@ function createTransporter() {
 
     if (provider.toLowerCase() === 'gmail') {
         return nodemailer.createTransport({
-            service: 'gmail',
+            host: 'smtp.gmail.com',
+            port: 465,
+            secure: true,
             auth: {
                 user: user,
                 pass: pass
+            },
+            tls: {
+                rejectUnauthorized: false
             }
         });
     } else {
