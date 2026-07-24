@@ -2226,13 +2226,12 @@ function Admainprofile() {
         }
     };
 
-    const handleSave = async () => {
-        if (isSaving || changedFields.length === 0) return false;
+    const executeSave = async () => {
+        setIsOtpOpen(false);
+        setIsSaving(true);
+        setSaveStatus(null);
 
         try {
-            setIsSaving(true);
-            setSaveStatus(null);
-
             // Upload any new files to GridFS first
             const storedAdminLoginID = normalizeValue(getAdminLoginID());
             const currentLoginId = normalizeValue(loginData.currentLoginId);
@@ -2249,50 +2248,50 @@ function Admainprofile() {
                 if (!currentLoginId) {
                     alert('Current Login ID is required to update login details.');
                     setIsSaving(false);
-                    return;
+                    return false;
                 }
 
                 if (storedAdminLoginID && currentLoginId !== storedAdminLoginID) {
                     alert('Current Login ID does not match your signed-in account.');
                     setIsSaving(false);
-                    return;
+                    return false;
                 }
 
                 if (!currentPassword) {
                     alert('Current Password is required to update login details.');
                     setIsSaving(false);
-                    return;
+                    return false;
                 }
 
                 if (loginIdChangeRequested) {
                     if (!newLoginId) {
                         alert('New Login ID is required.');
                         setIsSaving(false);
-                        return;
+                        return false;
                     }
 
                     if (!confirmLoginId) {
                         alert('Confirm Login ID is required.');
                         setIsSaving(false);
-                        return;
+                        return false;
                     }
 
                     if (newLoginId !== confirmLoginId) {
                         alert('New Login ID and Confirm Login ID must match.');
                         setIsSaving(false);
-                        return;
+                        return false;
                     }
 
                     if (newLoginId === currentLoginId) {
                         alert('New Login ID must be different from the Current Login ID.');
                         setIsSaving(false);
-                        return;
+                        return false;
                     }
 
                     if (!isLoginIdMatch) {
                         alert('New Login ID and Confirm Login ID must match.');
                         setIsSaving(false);
-                        return;
+                        return false;
                     }
                 }
 
@@ -2300,25 +2299,25 @@ function Admainprofile() {
                     if (!enteredNewPassword || !enteredConfirmPassword) {
                         alert('New Password and Confirm Password are required.');
                         setIsSaving(false);
-                        return;
+                        return false;
                     }
 
                     if (enteredNewPassword !== enteredConfirmPassword) {
                         alert('New Password and Confirm Password must match.');
                         setIsSaving(false);
-                        return;
+                        return false;
                     }
 
                     if (!dobPasswordHint) {
                         alert('DOB is required to validate the password.');
                         setIsSaving(false);
-                        return;
+                        return false;
                     }
 
                     if (enteredNewPassword !== dobPasswordHint) {
                         alert(`Password should be: ${dobPasswordHint} (based on DOB)`);
                         setIsSaving(false);
-                        return;
+                        return false;
                     }
                 }
             }
@@ -2338,7 +2337,7 @@ function Admainprofile() {
                     console.error('Failed to upload profile photo:', uploadErr);
                     alert('Failed to upload profile photo. Please try again.');
                     setIsSaving(false);
-                    return;
+                    return false;
                 }
             }
 
@@ -2366,7 +2365,7 @@ function Admainprofile() {
                     console.error('Failed to upload college images:', uploadErr);
                     alert('Failed to upload college images. Please try again.');
                     setIsSaving(false);
-                    return;
+                    return false;
                 }
             }
 
@@ -2397,7 +2396,6 @@ function Admainprofile() {
                 collegeLogo: collegeLogoUrl,
             };
 
-            // In case of deletion, gridfsService sets url to empty string or clears base64
             // We ensure we send null for explicitly cleared certificates
             const clearedImages = [];
             if (dataToSave.collegeBanner === null) clearedImages.push('collegeBanner');
@@ -2575,6 +2573,11 @@ function Admainprofile() {
                     newPassword: '',
                     confirmPassword: '',
                 });
+
+                if (pendingNavView) {
+                    performViewChange(pendingNavView);
+                    setPendingNavView(null);
+                }
                 return true;
             } else {
                 setSaveStatus('error');
@@ -2592,6 +2595,107 @@ function Admainprofile() {
             } else {
                 alert('Error saving profile. Please try again.');
             }
+            return false;
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const handleSave = async () => {
+        if (isSaving || changedFields.length === 0) return false;
+
+        const storedAdminLoginID = normalizeValue(getAdminLoginID());
+        const currentLoginId = normalizeValue(loginData.currentLoginId);
+        const newLoginId = normalizeValue(loginData.newLoginId);
+        const confirmLoginId = normalizeValue(loginData.confirmLoginId);
+        const currentPassword = normalizeValue(loginData.currentPassword);
+        const enteredNewPassword = normalizeValue(loginData.newPassword);
+        const enteredConfirmPassword = normalizeValue(loginData.confirmPassword);
+        const loginIdChangeRequested = Boolean(newLoginId || confirmLoginId);
+        const passwordChangeRequested = Boolean(enteredNewPassword || enteredConfirmPassword || shouldShowLoginPasswordFields);
+        const loginDetailsChangeRequested = loginIdChangeRequested || passwordChangeRequested;
+
+        if (loginDetailsChangeRequested) {
+            if (!currentLoginId) {
+                alert('Current Login ID is required to update login details.');
+                return false;
+            }
+
+            if (storedAdminLoginID && currentLoginId !== storedAdminLoginID) {
+                alert('Current Login ID does not match your signed-in account.');
+                return false;
+            }
+
+            if (!currentPassword) {
+                alert('Current Password is required to update login details.');
+                return false;
+            }
+
+            if (loginIdChangeRequested) {
+                if (!newLoginId) {
+                    alert('New Login ID is required.');
+                    return false;
+                }
+
+                if (!confirmLoginId) {
+                    alert('Confirm Login ID is required.');
+                    return false;
+                }
+
+                if (newLoginId !== confirmLoginId) {
+                    alert('New Login ID and Confirm Login ID must match.');
+                    return false;
+                }
+
+                if (newLoginId === currentLoginId) {
+                    alert('New Login ID must be different from the Current Login ID.');
+                    return false;
+                }
+
+                if (!isLoginIdMatch) {
+                    alert('New Login ID and Confirm Login ID must match.');
+                    return false;
+                }
+            }
+
+            if (passwordChangeRequested) {
+                if (!enteredNewPassword || !enteredConfirmPassword) {
+                    alert('New Password and Confirm Password are required.');
+                    return false;
+                }
+
+                if (enteredNewPassword !== enteredConfirmPassword) {
+                    alert('New Password and Confirm Password must match.');
+                    return false;
+                }
+
+                if (!dobPasswordHint) {
+                    alert('DOB is required to validate the password.');
+                    return false;
+                }
+
+                if (enteredNewPassword !== dobPasswordHint) {
+                    alert(`Password should be: ${dobPasswordHint} (based on DOB)`);
+                    return false;
+                }
+            }
+        }
+
+        setIsSaving(true);
+        try {
+            const adminEmail = savedDataRef.current?.domainMailId || savedDataRef.current?.emailId || formData.domainMailId || formData.emailId;
+            if (!adminEmail) {
+                alert('Admin email address is required to proceed with identity verification.');
+                setIsSaving(false);
+                return false;
+            }
+
+            setOtpEmail(adminEmail);
+            setIsOtpOpen(true);
+            return true;
+        } catch (err) {
+            console.error('Error initiating OTP verification:', err);
+            alert('Failed to initialize verification system. Please try again.');
             return false;
         } finally {
             setIsSaving(false);
@@ -2731,12 +2835,9 @@ function Admainprofile() {
 
         const targetView = pendingNavView;
         setShowUnsavedModal(false);
-        const didSave = await handleSave();
+        const didInitiate = await handleSave();
 
-        if (didSave && targetView) {
-            setPendingNavView(null);
-            performViewChange(targetView);
-        } else if (!didSave) {
+        if (!didInitiate) {
             setPendingNavView(targetView);
         }
     };
