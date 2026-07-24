@@ -134,11 +134,11 @@ export default function MailStatusPage() {
                     </div>
 
                     <div className={styles.card}>
-                        <div className={styles.cardLabel}>Mail Provider</div>
+                        <div className={styles.cardLabel}>Mail Provider & Port</div>
                         <div className={styles.cardValue}>
-                            {statusData?.config?.provider || 'gmail'} (Port 465 SSL)
+                            {statusData?.config?.provider || 'gmail'} (Port {statusData?.config?.mailPort || 587} {statusData?.config?.secure ? 'SSL' : 'STARTTLS'})
                         </div>
-                        <div className={styles.cardSubtext}>Direct SSL Transport</div>
+                        <div className={styles.cardSubtext}>{statusData?.config?.mailHost || 'smtp.gmail.com'}</div>
                     </div>
 
                     <div className={styles.card}>
