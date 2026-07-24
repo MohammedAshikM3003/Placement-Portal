@@ -34,7 +34,7 @@
     width: 90%;
     max-width: 500px;
     overflow: hidden;
-    font-family: Arial, sans-serif;
+    font-family: 'Poppins', Arial, sans-serif;
 }
 
 .modal-header {
@@ -48,7 +48,7 @@
 
 .note-heading {
     margin: 0;
-    font-weight: bold;
+    font-weight: 600;
     letter-spacing: 2px;
 }
 
@@ -70,6 +70,7 @@
     color: var(--dark-text);
     position: relative;
     padding-left: 40px;
+    font-weight: 500;
 }
 
 .note-list li::before {
@@ -114,6 +115,7 @@
     color: var(--dark-text);
     position: relative;
     padding-left: 30px;
+    font-weight: 500;
 }
 
 .checkbox-container label::before {
@@ -152,7 +154,7 @@
 
 .button-container {
     display: flex;
-    justify-content: flex-end;
+    justify-content: center;
     gap: 15px;
 }
 
@@ -162,7 +164,8 @@
     border-radius: 8px;
     font-size: 1em;
     cursor: pointer;
-    font-weight: bold;
+    font-weight: 600;
+    font-family: inherit;
     transition: background-color 0.3s, opacity 0.3s;
 }
 

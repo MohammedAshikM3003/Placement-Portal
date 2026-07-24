@@ -1,52 +1,76 @@
 require('dotenv').config();
-const { createTransporter, fromEmail } = require('../services/mail/mailConfig');
+const nodemailer = require('nodemailer');
 const { generateTemplate } = require('../services/mail/mailTemplates');
 const EMAIL_EVENTS = require('../services/mail/emailEvents');
 
-async function testGmailIntegration() {
-    console.log('=== STEP 1: CONFIGURATION AUDIT ===');
+async function runDiagnostics() {
+    console.log('=== SMTP CONNECTION STRATEGY DIAGNOSTICS ===');
     
-    const provider = process.env.MAIL_PROVIDER;
     const user = process.env.MAIL_USER;
     const pass = process.env.MAIL_PASSWORD;
-    const fromName = process.env.MAIL_FROM_NAME;
-    const fromAddress = process.env.MAIL_FROM_ADDRESS;
     const testRecipient = process.env.TEST_RECIPIENT_EMAIL;
 
-    console.log(`MAIL_PROVIDER: ${provider ? provider : '[MISSING]'}`);
-    console.log(`MAIL_USER: ${user ? user : '[MISSING]'}`);
-    console.log(`MAIL_PASSWORD: ${pass ? '[CONFIGURED]' : '[MISSING]'}`);
-    console.log(`MAIL_FROM_NAME: ${fromName ? fromName : '[MISSING]'}`);
-    console.log(`MAIL_FROM_ADDRESS: ${fromAddress ? fromAddress : '[MISSING]'}`);
-    console.log(`TEST_RECIPIENT_EMAIL: ${testRecipient ? testRecipient : '[MISSING]'}`);
-
-    if (!provider || !user || !pass) {
-        console.error('\n❌ ERROR: Mail configuration is incomplete. Please ensure MAIL_PROVIDER, MAIL_USER, and MAIL_PASSWORD are saved in your backend/.env file.');
+    if (!user || !pass || !testRecipient) {
+        console.error('Missing configuration variables in backend/.env.');
         process.exit(1);
     }
 
-    if (!testRecipient) {
-        console.error('\n❌ ERROR: TEST_RECIPIENT_EMAIL is not configured. Please add it to your backend/.env to specify where the test email should go.');
+    const strategies = [
+        {
+            name: 'Strategy 1: Nodemailer Built-in Gmail Service',
+            config: {
+                service: 'gmail',
+                auth: { user, pass }
+            }
+        },
+        {
+            name: 'Strategy 2: Direct SMTP SSL (Host: smtp.gmail.com, Port: 465)',
+            config: {
+                host: 'smtp.gmail.com',
+                port: 465,
+                secure: true,
+                auth: { user, pass }
+            }
+        },
+        {
+            name: 'Strategy 3: Direct SMTP STARTTLS (Host: smtp.gmail.com, Port: 587)',
+            config: {
+                host: 'smtp.gmail.com',
+                port: 587,
+                secure: false,
+                auth: { user, pass }
+            }
+        }
+    ];
+
+    let authenticatedStrategy = null;
+    let transporterToUse = null;
+
+    for (const strategy of strategies) {
+        console.log(`\nTesting ${strategy.name}...`);
+        try {
+            const transporter = nodemailer.createTransport(strategy.config);
+            await transporter.verify();
+            console.log(`✅ SUCCESS: ${strategy.name} authenticated successfully!`);
+            authenticatedStrategy = strategy.name;
+            transporterToUse = transporter;
+            break; // Stop on first success
+        } catch (err) {
+            console.log(`❌ FAILED: ${strategy.name}`);
+            console.log(`   Error: ${err.message}`);
+        }
+    }
+
+    if (!transporterToUse) {
+        console.error('\n❌ ALL STRATEGIES FAILED. Gmail continues to reject the credentials (535 BadCredentials).');
+        console.log('Please double check that you generated the App Password on the CORRECT account and copied it exactly.');
         process.exit(1);
     }
 
-    console.log('\n=== STEP 2: SMTP CONNECTION TEST ===');
-    let transporter;
-    try {
-        transporter = createTransporter();
-        console.log('Connecting to SMTP server...');
-        await transporter.verify();
-        console.log('SMTP Authentication: PASS');
-    } catch (authErr) {
-        console.log('SMTP Authentication: FAIL');
-        console.error('Sanitized Connection Error:', authErr.message || authErr);
-        process.exit(1);
-    }
-
-    console.log('\n=== STEP 3: SEND ONE CONTROLLED TEST EMAIL ===');
+    console.log(`\n=== SENDING TEST EMAIL USING ${authenticatedStrategy} ===`);
     try {
         const mailOptions = {
-            from: fromEmail,
+            from: `"K S R College of Engineering - Placement Portal" <${user}>`,
             to: testRecipient.trim(),
             subject: 'Placement Portal - Mail Service Test',
             html: `
@@ -65,7 +89,7 @@ async function testGmailIntegration() {
     <div class="card">
         <h2>Placement Portal</h2>
         <p>This is a development test email from the Placement Portal mail service. No action is required.</p>
-        <p>Sender: <strong>${fromEmail}</strong></p>
+        <p>Strategy Used: <strong>${authenticatedStrategy}</strong></p>
         <p>Recipient: <strong>${testRecipient}</strong></p>
     </div>
 </body>
@@ -73,20 +97,14 @@ async function testGmailIntegration() {
             `
         };
 
-        console.log(`Sending controlled test email to: ${testRecipient}...`);
-        const info = await transporter.sendMail(mailOptions);
-        console.log('Gmail Accepted Message: PASS');
-        console.log(`Provider Message ID: ${info.messageId}`);
-        console.log('\n=== STEP 4: RESULT SUMMARY ===');
-        console.log('SMTP Authentication: PASS');
+        const info = await transporterToUse.sendMail(mailOptions);
         console.log('Gmail Accepted Message: PASS');
         console.log(`Provider Message ID: ${info.messageId}`);
         console.log('Inbox Delivery: REQUIRES MANUAL CONFIRMATION');
     } catch (sendErr) {
         console.log('Gmail Accepted Message: FAIL');
-        console.error('Sanitized Send Error:', sendErr.message || sendErr);
-        process.exit(1);
+        console.error('Send Error:', sendErr.message);
     }
 }
 
-testGmailIntegration();
+runDiagnostics();

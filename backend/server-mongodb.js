@@ -6247,6 +6247,23 @@ app.post('/api/coordinators', async (req, res) => {
             try {
                 const coordinatorDoc = await Coordinator.create(coordinatorPayload);
 
+                // Trigger Welcome Email (non-critical, do not block or rollback on failure)
+                try {
+                    const { sendMail, EMAIL_EVENTS } = require('./services/mail/mailService');
+                    sendMail({
+                        eventType: EMAIL_EVENTS.WELCOME,
+                        to: coordinatorDoc.domainEmail || coordinatorDoc.email,
+                        role: 'coordinator',
+                        data: {
+                            username: coordinatorDoc.username || coordinatorDoc.coordinatorId,
+                            department: coordinatorDoc.department,
+                            recipientName: coordinatorDoc.fullName
+                        }
+                    }).catch(err => console.error('Error sending coordinator welcome email background:', err));
+                } catch (emailErr) {
+                    console.error('Error loading mail service for coordinator welcome:', emailErr);
+                }
+
                 return res.status(201).json({
                     message: 'Coordinator created successfully',
                     coordinator: sanitizeCoordinator(coordinatorDoc)
@@ -6348,6 +6365,48 @@ app.patch('/api/coordinators/:coordinatorId/block', async (req, res) => {
                 { coordinatorId },
                 { isBlocked }
             );
+
+            // Trigger emails in background (non-blocking)
+            try {
+                const { sendMail, EMAIL_EVENTS } = require('./services/mail/mailService');
+                const coordEmail = coordinator.domainEmail || coordinator.email;
+                if (coordEmail) {
+                    sendMail({
+                        eventType: isBlocked ? EMAIL_EVENTS.ACCOUNT_BLOCKED : EMAIL_EVENTS.ACCOUNT_UNBLOCKED,
+                        to: coordEmail,
+                        role: 'coordinator',
+                        data: {
+                            username: coordinator.username || coordinator.coordinatorId,
+                            email: coordEmail,
+                            recipientName: coordinator.fullName,
+                            reason: blockedReason || 'Please contact the Placement Office for details.',
+                            date: new Date().toLocaleDateString('en-GB')
+                        }
+                    }).catch(e => console.error('[BlockEmail] Coordinator self-email failed:', e.message));
+                }
+
+                // Notify Admins
+                const admins = await Admin.find({ isBlocked: { $ne: true } }).lean();
+                for (const admin of admins) {
+                    const adminEmail = admin.domainMailId || admin.emailId || admin.email;
+                    if (adminEmail) {
+                        sendMail({
+                            eventType: isBlocked ? EMAIL_EVENTS.ACCOUNT_BLOCKED : EMAIL_EVENTS.ACCOUNT_UNBLOCKED,
+                            to: adminEmail,
+                            role: 'admin',
+                            data: {
+                                username: coordinator.username || coordinator.coordinatorId,
+                                email: coordEmail,
+                                recipientName: admin.name || 'Admin',
+                                reason: blockedReason || 'Suspension by administration.',
+                                date: new Date().toLocaleDateString('en-GB')
+                            }
+                        }).catch(e => console.error('[BlockEmail] Admin notify coordinator block failed:', e.message));
+                    }
+                }
+            } catch (emailErr) {
+                console.error('Error initiating coordinator block emails:', emailErr);
+            }
 
             return res.json({
                 message: 'Coordinator block status updated',
@@ -11621,6 +11680,81 @@ app.post('/api/block-notifications', authenticateToken, checkRole('admin', 'coor
 
         if (!notificationRecords.length) {
             return res.json({ success: true, created: 0, notifications: [] });
+        }
+
+        // Trigger block/unblock emails in the background (non-blocking)
+        try {
+            const { sendMail, EMAIL_EVENTS } = require('./services/mail/mailService');
+            
+            // Resolve students from MongoDB to get email addresses
+            const studentIdsOrRegs = effectiveStudents.map(s => s.studentId || s.regNo).filter(Boolean);
+            Student.find({
+                $or: [
+                    { _id: { $in: studentIdsOrRegs.filter(id => mongoose.Types.ObjectId.isValid(id)) } },
+                    { regNo: { $in: studentIdsOrRegs } }
+                ]
+            }).lean().then(async (studentDocs) => {
+                for (const studentDoc of studentDocs) {
+                    const studentEmail = studentDoc.email || studentDoc.primaryEmail;
+                    if (studentEmail) {
+                        sendMail({
+                            eventType: effectiveActionType === 'blocked' ? EMAIL_EVENTS.ACCOUNT_BLOCKED : EMAIL_EVENTS.ACCOUNT_UNBLOCKED,
+                            to: studentEmail,
+                            role: 'student',
+                            data: {
+                                regNo: studentDoc.regNo,
+                                recipientName: `${studentDoc.firstName} ${studentDoc.lastName}`.trim(),
+                                reason: studentDoc.blockedReason || 'Please contact the Placement Office for details.',
+                                date: new Date().toLocaleDateString('en-GB')
+                            }
+                        }).catch(e => console.error('[BlockEmail] Student email failed:', e.message));
+                    }
+
+                    // Query branch coordinators
+                    const coordinators = await Coordinator.find({ department: studentDoc.branch, isBlocked: { $ne: true } }).lean();
+                    for (const coord of coordinators) {
+                        const coordEmail = coord.domainEmail || coord.email;
+                        if (coordEmail) {
+                            sendMail({
+                                eventType: effectiveActionType === 'blocked' ? EMAIL_EVENTS.ACCOUNT_BLOCKED : EMAIL_EVENTS.ACCOUNT_UNBLOCKED,
+                                to: coordEmail,
+                                role: 'coordinator',
+                                data: {
+                                    regNo: studentDoc.regNo,
+                                    username: studentDoc.regNo,
+                                    email: studentDoc.email || studentDoc.primaryEmail,
+                                    recipientName: coord.fullName,
+                                    reason: studentDoc.blockedReason || 'Suspension by administration.',
+                                    date: new Date().toLocaleDateString('en-GB')
+                                }
+                            }).catch(e => console.error('[BlockEmail] Coordinator email failed:', e.message));
+                        }
+                    }
+
+                    // Query admins
+                    const admins = await Admin.find({ isBlocked: { $ne: true } }).lean();
+                    for (const admin of admins) {
+                        const adminEmail = admin.domainMailId || admin.emailId || admin.email;
+                        if (adminEmail) {
+                            sendMail({
+                                eventType: effectiveActionType === 'blocked' ? EMAIL_EVENTS.ACCOUNT_BLOCKED : EMAIL_EVENTS.ACCOUNT_UNBLOCKED,
+                                to: adminEmail,
+                                role: 'admin',
+                                data: {
+                                    regNo: studentDoc.regNo,
+                                    username: studentDoc.regNo,
+                                    email: studentDoc.email || studentDoc.primaryEmail,
+                                    recipientName: admin.name || 'Admin',
+                                    reason: studentDoc.blockedReason || 'Suspension by administration.',
+                                    date: new Date().toLocaleDateString('en-GB')
+                                }
+                            }).catch(e => console.error('[BlockEmail] Admin email failed:', e.message));
+                        }
+                    }
+                }
+            }).catch(dbErr => console.error('Error fetching students for block notifications:', dbErr));
+        } catch (emailErr) {
+            console.error('Error initiating block emails:', emailErr);
         }
 
         if (isMongoConnected) {

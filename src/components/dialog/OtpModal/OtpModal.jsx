@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import styles from './OtpModal.module.css';
+import { API_BASE_URL } from '../../../utils/apiConfig';
 
 /**
  * Reusable, role-aware OTP Verification Modal.
@@ -19,12 +20,15 @@ function OtpModal({
     role = 'student',
     email = '',
     purpose = 'EMAIL_VERIFICATION',
-    onVerifySuccess
+    onVerifySuccess,
+    name = '',
+    onAttemptsExceeded
 }) {
     const [otpValues, setOtpValues] = useState(['', '', '', '', '', '']);
     const [errorMsg, setErrorMsg] = useState('');
     const [isSending, setIsSending] = useState(false);
     const [isVerifying, setIsVerifying] = useState(false);
+    const [isRegisteringStage, setIsRegisteringStage] = useState(false);
     const [cooldown, setCooldown] = useState(0);
     const [expiryTime, setExpiryTime] = useState(300); // 5 minutes in seconds
     const [maskedEmail, setMaskedEmail] = useState('');
@@ -52,9 +56,8 @@ function OtpModal({
             setExpiryTime(300);
             sendOtp();
         }
-    }, [isOpen, email]);
+    }, [isOpen, email, name]);
 
-    // 2. Expiry and Cooldown intervals
     useEffect(() => {
         let timer = null;
         if (isOpen && expiryTime > 0) {
@@ -82,11 +85,10 @@ function OtpModal({
         setIsSending(true);
         setErrorMsg('');
         try {
-            const apiBaseUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
-            const response = await fetch(`${apiBaseUrl}/api/auth/otp/send`, {
+            const response = await fetch(`${API_BASE_URL}/auth/otp/send`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, purpose, role })
+                body: JSON.stringify({ email, purpose, role, name })
             });
 
             const result = await response.json();
@@ -116,8 +118,7 @@ function OtpModal({
         setIsVerifying(true);
         setErrorMsg('');
         try {
-            const apiBaseUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
-            const response = await fetch(`${apiBaseUrl}/api/auth/otp/verify`, {
+            const response = await fetch(`${API_BASE_URL}/auth/otp/verify`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, otp: otpString, purpose, role })
@@ -125,16 +126,24 @@ function OtpModal({
 
             const result = await response.json();
             if (!response.ok || !result.success) {
-                throw new Error(result.error || 'Invalid verification code.');
+                const errMsg = result.error || 'Invalid verification code.';
+                if (errMsg.includes('Attempts exceeded') || errMsg.includes('Too many verification attempts')) {
+                    if (onAttemptsExceeded) {
+                        onAttemptsExceeded();
+                    }
+                }
+                throw new Error(errMsg);
             }
 
             if (onVerifySuccess) {
-                onVerifySuccess();
+                setIsRegisteringStage(true);
+                await onVerifySuccess();
             }
         } catch (err) {
             setErrorMsg(err.message || 'OTP verification failed.');
         } finally {
             setIsVerifying(false);
+            setIsRegisteringStage(false);
         }
     };
 
@@ -190,39 +199,38 @@ function OtpModal({
     const isVerifyDisabled = otpValues.some(v => v === '') || isVerifying || expiryTime === 0;
 
     return (
-        <div className={styles.overlay} onClick={onClose}>
+        <div className={styles.overlay}>
             <div 
                 className={styles.container} 
-                onClick={e => e.stopPropagation()}
                 style={{ '--role-primary': roleColors[role] }}
             >
                 {/* Colored Header */}
                 <div className={styles.header}>OTP Verification</div>
 
-                <div className={styles.body}>
-                    {/* Security Icon */}
-                    <div className={styles.iconContainer}>
-                        <svg 
-                            className={styles.icon} 
-                            fill="none" 
-                            stroke="currentColor" 
-                            viewBox="0 0 24 24" 
-                            xmlns="http://www.w3.org/2000/svg"
-                        >
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
-                        </svg>
-                    </div>
+                <form onSubmit={handleVerify}>
+                    <div className={styles.body}>
+                        {/* Security Icon - Animated Green Circle & Lock Icon */}
+                        <div className={styles.successIconWrapper}>
+                            <svg className={styles.successIcon} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                                <circle className={styles.successIconCircle} cx="26" cy="26" r="25" fill="none"/>
+                            </svg>
+                            <div className={styles.lockIconOverlay}>
+                                <svg className={styles.lockIconAnimated} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                    <path d="M0 0h24v24H0z" fill="none" />
+                                    <path fill="currentColor" d="M12 17a2 2 0 0 1-2-2c0-1.11.89-2 2-2a2 2 0 0 1 2 2a2 2 0 0 1-2 2m6 3V10H6v10zm0-12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V10c0-1.11.89-2 2-2h1V6a5 5 0 0 1 5-5a5 5 0 0 1 5 5v2zm-6-5a3 3 0 0 0-3 3v2h6V6a3 3 0 0 0-3-3" />
+                                </svg>
+                            </div>
+                        </div>
 
-                    <h2 className={styles.title}>Verify Your Email</h2>
-                    <p className={styles.message}>
-                        We sent a 6-digit verification code to <br />
-                        <span className={styles.email}>{maskedEmail || email}</span>
-                    </p>
+                        <h2 className={styles.title}>Verify Your Email</h2>
+                        <p className={styles.message}>
+                            We sent a 6-digit verification code to <br />
+                            <span className={styles.email}>{maskedEmail || email}</span>
+                        </p>
 
-                    {errorMsg && <div className={styles.errorBox}>⚠️ {errorMsg}</div>}
+                        {errorMsg && <div className={styles.errorBox}>{errorMsg}</div>}
 
-                    {/* Inputs */}
-                    <form onSubmit={handleVerify}>
+                        {/* Inputs */}
                         <div className={styles.inputGrid}>
                             {otpValues.map((value, idx) => (
                                 <input
@@ -265,34 +273,34 @@ function OtpModal({
                                 </button>
                             )}
                         </div>
+                    </div>
 
-                        {/* Action buttons */}
-                        <div className={styles.footer}>
-                            <button 
-                                type="button" 
-                                onClick={onClose} 
-                                className={`${styles.btn} ${styles.cancelBtn}`}
-                                disabled={isVerifying}
-                            >
-                                Cancel
-                            </button>
-                            <button 
-                                type="submit" 
-                                className={`${styles.btn} ${styles.verifyBtn}`}
-                                disabled={isVerifyDisabled}
-                            >
-                                {isVerifying ? (
-                                    <>
-                                        <div className={styles.spinner} />
-                                        Verifying...
-                                    </>
-                                ) : (
-                                    'Verify Code'
-                                )}
-                            </button>
-                        </div>
-                    </form>
-                </div>
+                    {/* Action buttons */}
+                    <div className={styles.footer}>
+                        <button 
+                            type="button" 
+                            onClick={onClose} 
+                            className={`${styles.btn} ${styles.cancelBtn}`}
+                            disabled={isVerifying}
+                        >
+                            Cancel
+                        </button>
+                        <button 
+                            type="submit" 
+                            className={`${styles.btn} ${styles.verifyBtn}`}
+                            disabled={isVerifyDisabled}
+                        >
+                            {isVerifying ? (
+                                <>
+                                    <div className={styles.spinner} />
+                                    {isRegisteringStage ? 'Registering...' : 'Verifying...'}
+                                </>
+                            ) : (
+                                'Verify Code'
+                            )}
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     );

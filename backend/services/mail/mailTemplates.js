@@ -176,6 +176,25 @@ function buildCta(label, url, role) {
 }
 
 /**
+ * Returns a clean, responsive inline SVG icon for the email body content.
+ */
+function getIconSvg(type, color) {
+    const svgs = {
+        lock: `<svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: block; margin: 0 auto;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>`,
+        welcome: `<svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: block; margin: 0 auto;"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path></svg>`,
+        shortlist: `<svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: block; margin: 0 auto;"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect><path d="M9 14h6"></path><path d="M9 18h6"></path><path d="M9 10h6"></path></svg>`,
+        passed: `<svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: block; margin: 0 auto;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>`,
+        rejected: `<svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: block; margin: 0 auto;"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>`,
+        placed: `<svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: block; margin: 0 auto;"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M10 14.66V17c0 .55-.45 1-1 1H4v2h16v-2h-5c-.55 0-1-.45-1-1v-2.34"></path><path d="M12 2a4 4 0 0 1 4 4v7a4 4 0 0 1-4 4 4 4 0 0 1-4-4V6a4 4 0 0 1 4-4z"></path></svg>`,
+        approved: `<svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: block; margin: 0 auto;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>`,
+        attendance: `<svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: block; margin: 0 auto;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>`,
+        shieldAlert: `<svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: block; margin: 0 auto;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>`,
+        shieldCheck: `<svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: block; margin: 0 auto;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><polyline points="9 11 11 13 15 9"></polyline></svg>`,
+    };
+    return svgs[type] || svgs.welcome;
+}
+
+/**
  * Generate Event-specific Email Subjects and HTML Contents
  */
 function generateTemplate(eventType, role, data) {
@@ -185,15 +204,41 @@ function generateTemplate(eventType, role, data) {
     let detailsCardHtml = '';
     let ctaHtml = '';
     let subject = '';
+    let attachments = undefined;
     
     const portalUrl = process.env.PORTAL_URL || 'http://localhost:3000';
     const recipientName = data.recipientName || 'Member';
+
+    const roleColors = {
+        student: '#2085F6',
+        coordinator: '#D23B42',
+        admin: '#4EA24E'
+    };
+    const primaryColor = roleColors[role] || '#2085F6';
 
     switch (eventType) {
         case EMAIL_EVENTS.OTP_VERIFICATION:
             subject = 'Your Placement Portal Verification Code';
             title = 'OTP Verification';
-            statusIcon = '🔒';
+            
+            // Map the role to the correct local PNG path
+            let otpIconPath = 'd:/Placement-Portal/src/assets/stuotp.png';
+            if (role === 'admin') {
+                otpIconPath = 'd:/Placement-Portal/src/assets/adotp.png';
+            } else if (role === 'coordinator') {
+                otpIconPath = 'd:/Placement-Portal/src/assets/coootp.png';
+            }
+            
+            // Reference the image using cid (Content ID)
+            statusIcon = `<img src="cid:otp-role-icon" width="64" height="64" style="display: block; margin: 0 auto; object-fit: contain;" alt="OTP verification icon" />`;
+            
+            // Add to attachments array
+            attachments = [{
+                filename: `${role}-otp.png`,
+                path: otpIconPath,
+                cid: 'otp-role-icon'
+            }];
+
             contentHtml = 'We received a request to verify your identity for the Placement Portal.';
             detailsCardHtml = `
                 ${buildRow('Verification Code', `<span style="font-size: 24px; font-weight: 800; color: #111111; letter-spacing: 2px;">${data.otp}</span>`)}
@@ -205,7 +250,16 @@ function generateTemplate(eventType, role, data) {
         case EMAIL_EVENTS.WELCOME:
             subject = 'Welcome to KSRCE Placement Portal!';
             title = 'Account Activated Successfully';
-            statusIcon = '🎉';
+            
+            // Reference the registration success image using cid
+            statusIcon = `<img src="cid:welcome-success-icon" width="64" height="64" style="display: block; margin: 0 auto; object-fit: contain;" alt="Account activated success icon" />`;
+            
+            attachments = [{
+                filename: 'regsucess.png',
+                path: 'd:/Placement-Portal/src/assets/regsucess.png',
+                cid: 'welcome-success-icon'
+            }];
+
             contentHtml = 'Welcome to the K S R College of Engineering Placement Portal. Your profile has been successfully registered and active in our placement database.';
             detailsCardHtml = `
                 ${buildRow('Username / ID', data.regNo || data.username || data.email)}
@@ -218,7 +272,7 @@ function generateTemplate(eventType, role, data) {
         case EMAIL_EVENTS.STUDENT_SHORTLISTED:
             subject = `Shortlisted for ${data.companyName} recruitment drive`;
             title = 'Eligible Drive Shortlist';
-            statusIcon = '📋';
+            statusIcon = getIconSvg('shortlist', primaryColor);
             contentHtml = `Congratulations! You have been selected / shortlisted as eligible to participate in the upcoming recruitment drive for <strong>${data.companyName}</strong>.`;
             detailsCardHtml = `
                 ${buildRow('Company Name', data.companyName)}
@@ -234,7 +288,7 @@ function generateTemplate(eventType, role, data) {
         case EMAIL_EVENTS.ROUND_PASSED:
             subject = `Recruitment Update: Passed Round for ${data.companyName}`;
             title = 'Congratulations! Passed Round';
-            statusIcon = '✔';
+            statusIcon = getIconSvg('passed', primaryColor);
             contentHtml = `We are pleased to inform you that you have qualified / passed <strong>Round ${data.roundNumber}: ${data.roundName}</strong> for the drive of <strong>${data.companyName}</strong>.`;
             detailsCardHtml = `
                 ${buildRow('Company Name', data.companyName)}
@@ -250,7 +304,7 @@ function generateTemplate(eventType, role, data) {
         case EMAIL_EVENTS.STUDENT_REJECTED:
             subject = `Recruitment Drive Update: ${data.companyName}`;
             title = 'Recruitment Process Update';
-            statusIcon = '✉';
+            statusIcon = getIconSvg('rejected', primaryColor);
             contentHtml = `Thank you for your active participation in the recruitment process for <strong>${data.companyName}</strong>. We regret to inform you that you have not progressed to the subsequent round at this stage. We appreciate your efforts and wish you the best in other upcoming drives.`;
             detailsCardHtml = `
                 ${buildRow('Company Name', data.companyName)}
@@ -261,8 +315,8 @@ function generateTemplate(eventType, role, data) {
 
         case EMAIL_EVENTS.FINAL_SELECTED:
             subject = `Placed! Congratulations on your selection at ${data.companyName}`;
-            title = 'Placed in Campus Drive! 🎓';
-            statusIcon = '🥳';
+            title = 'Placed in Campus Drive!';
+            statusIcon = getIconSvg('placed', primaryColor);
             contentHtml = `Outstanding accomplishment! We are thrilled to share that you have been officially selected and placed at <strong>${data.companyName}</strong>. K S R College of Engineering congratulates you on this massive achievement!`;
             detailsCardHtml = `
                 ${buildRow('Placed Company', data.companyName)}
@@ -276,7 +330,7 @@ function generateTemplate(eventType, role, data) {
         case EMAIL_EVENTS.CERTIFICATE_APPROVED:
             subject = `Certificate Approved: ${data.fileName}`;
             title = 'Academic Verification Approved';
-            statusIcon = '✅';
+            statusIcon = getIconSvg('approved', primaryColor);
             contentHtml = `Your uploaded achievement/academic document <strong>${data.fileName}</strong> has been successfully verified and approved by the department coordinator.`;
             detailsCardHtml = `
                 ${buildRow('Certificate Name', data.fileName)}
@@ -288,7 +342,7 @@ function generateTemplate(eventType, role, data) {
         case EMAIL_EVENTS.CERTIFICATE_REJECTED:
             subject = `Action Required: Certificate Rejected (${data.fileName})`;
             title = 'Academic Verification Rejected';
-            statusIcon = '❌';
+            statusIcon = getIconSvg('rejected', primaryColor);
             contentHtml = `Your uploaded achievement/academic document <strong>${data.fileName}</strong> was rejected during verification. Action is required to re-upload the correct copy.`;
             detailsCardHtml = `
                 ${buildRow('Certificate Name', data.fileName)}
@@ -301,7 +355,7 @@ function generateTemplate(eventType, role, data) {
         case EMAIL_EVENTS.DRIVE_ATTENDANCE_SUMMARY:
             subject = `Drive Attendance Summary: ${data.companyName} (${data.dept})`;
             title = 'Drive Attendance Submitted';
-            statusIcon = '📊';
+            statusIcon = getIconSvg('attendance', primaryColor);
             contentHtml = `Coordinator ${data.submittedBy} has submitted / finalized the student branch attendance for the drive of <strong>${data.companyName}</strong>.`;
             detailsCardHtml = `
                 ${buildRow('Company Name', data.companyName)}
@@ -319,7 +373,7 @@ function generateTemplate(eventType, role, data) {
         case EMAIL_EVENTS.TRAINING_ATTENDANCE_SUMMARY:
             subject = `Training Attendance Summary: ${data.courseName} - ${data.batchName}`;
             title = 'Training Attendance Finalized';
-            statusIcon = '📝';
+            statusIcon = getIconSvg('attendance', primaryColor);
             contentHtml = `Coordinator ${data.submittedBy} has finalized the training attendance summary.`;
             detailsCardHtml = `
                 ${buildRow('Training Course', data.courseName)}
@@ -332,6 +386,33 @@ function generateTemplate(eventType, role, data) {
                 ${buildRow('Absent Count', data.totalAbsent)}
                 ${buildRow('Attendance Rate', `${data.percentage}%`)}
             `;
+            break;
+
+        case EMAIL_EVENTS.ACCOUNT_BLOCKED:
+            subject = `Placement Portal - Account Access Suspended`;
+            title = 'Account Suspended';
+            statusIcon = getIconSvg('shieldAlert', primaryColor);
+            contentHtml = `This is to inform you that access to the Placement Portal has been suspended / blocked by the administration.`;
+            detailsCardHtml = `
+                ${buildRow('Account ID', data.regNo || data.username || data.email)}
+                ${buildRow('Action Performed', 'Account Blocked')}
+                ${buildRow('Suspension Reason', data.reason || 'Please contact the Placement Office for details.')}
+                ${buildRow('Effective Date', data.date || new Date().toLocaleDateString('en-GB'))}
+            `;
+            break;
+
+        case EMAIL_EVENTS.ACCOUNT_UNBLOCKED:
+            subject = `Placement Portal - Account Access Restored`;
+            title = 'Account Restored';
+            statusIcon = getIconSvg('shieldCheck', primaryColor);
+            contentHtml = `We are pleased to inform you that access to the Placement Portal has been restored. You can now login using your registered credentials.`;
+            detailsCardHtml = `
+                ${buildRow('Account ID', data.regNo || data.username || data.email)}
+                ${buildRow('Action Performed', 'Account Restored')}
+                ${buildRow('Status', 'Active')}
+                ${buildRow('Effective Date', data.date || new Date().toLocaleDateString('en-GB'))}
+            `;
+            ctaHtml = buildCta('Login to Portal', portalUrl, role);
             break;
 
         default:
@@ -352,7 +433,8 @@ function generateTemplate(eventType, role, data) {
 
     return {
         subject,
-        htmlBody
+        htmlBody,
+        attachments
     };
 }
 

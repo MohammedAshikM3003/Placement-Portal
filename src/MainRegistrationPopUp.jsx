@@ -32,6 +32,9 @@ const MainRegistrationPopup = ({ onContinue, onBack }) => {
                             Photo size: (100-500 KB)<br />
                             Photo Format: (JPEG, WebP)
                         </li>
+                        <li>
+                            An OTP will be sent to your entered domain mail ID for verification
+                        </li>
                     </ol>
                     <div className={styles['checkbox-container']}>
                         <input

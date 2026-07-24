@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { HashLink } from 'react-router-hash-link';
+import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 // 1. Import CSS Module
 import styles from './LandingPage.module.css';
 import { fetchAllLandingData, clearCollegeImagesCache, clearCompanyDrivesCache, fetchCollegeImagesPublic, fetchCompanyDrives, getCachedLandingData } from './services/landingPageCacheService';
@@ -204,9 +205,230 @@ const PlacementPage = ({ placedStudentsData, isMobile }) => {
     };
   }, [shouldAnimate, students]);
 
-  const speed = isMobile ? 60 : 80;
-  const duration = rowWidth > 0 ? rowWidth / speed : 15;
-  const animationStyle = shouldAnimate ? { animationDuration: `${duration}s` } : {};
+  // Refs for hardware-accelerated transform transitions
+  const scrollWrapperRef = useRef(null);
+  const gridRef = useRef(null);
+  const currentOffsetRef = useRef(0);
+  const targetOffsetRef = useRef(0);
+  const isDraggingRef = useRef(false);
+  const isTouchRef = useRef(false);
+  const startX = useRef(0);
+  const startOffset = useRef(0);
+  const isTimeoutActiveRef = useRef(false);
+  const autoScrollRef = useRef(null);
+  const resumeTimeoutRef = useRef(null);
+  const lastTimeRef = useRef(performance.now());
+  const rowWidthRef = useRef(0);
+
+  useEffect(() => {
+    rowWidthRef.current = rowWidth;
+  }, [rowWidth]);
+
+  // Cooldown helper
+  const triggerCooldown = () => {
+    isTimeoutActiveRef.current = true;
+    if (resumeTimeoutRef.current) clearTimeout(resumeTimeoutRef.current);
+    resumeTimeoutRef.current = setTimeout(() => {
+      isTimeoutActiveRef.current = false;
+    }, 1000);
+  };
+
+  // Center initial offset when rowWidth is loaded
+  useEffect(() => {
+    if (rowWidth > 0 && shouldAnimate) {
+      currentOffsetRef.current = -rowWidth;
+      targetOffsetRef.current = currentOffsetRef.current;
+      if (gridRef.current) {
+        gridRef.current.style.transform = `translateX(${currentOffsetRef.current}px)`;
+      }
+    }
+  }, [rowWidth, shouldAnimate]);
+
+  // Frame-rate independent auto-scroll loop
+  const startAutoScroll = () => {
+    if (autoScrollRef.current) return;
+    lastTimeRef.current = performance.now();
+
+    const scroll = (timestamp) => {
+      const delta = Math.min(timestamp - lastTimeRef.current, 100); // cap delta at 100ms to avoid jumps when tab is inactive
+      lastTimeRef.current = timestamp;
+
+      const shouldScrollNormally =
+        !isDraggingRef.current &&
+        !isTouchRef.current &&
+        !isTimeoutActiveRef.current;
+
+      if (gridRef.current && rowWidthRef.current > 0) {
+        if (shouldScrollNormally) {
+          const pixelsToScroll = (50 * delta) / 1000;
+          currentOffsetRef.current -= pixelsToScroll;
+          targetOffsetRef.current = currentOffsetRef.current;
+        } else {
+          // Lerp currentOffset towards targetOffset for smooth arrow click transitions
+          const k = 0.008;
+          const rate = 1 - Math.exp(-k * delta);
+          currentOffsetRef.current += (targetOffsetRef.current - currentOffsetRef.current) * rate;
+        }
+
+        // Seamless wrap around:
+        const thresholdMax = -1.5 * rowWidthRef.current;
+        const thresholdMin = -0.5 * rowWidthRef.current;
+
+        if (currentOffsetRef.current < thresholdMax) {
+          currentOffsetRef.current += rowWidthRef.current;
+          targetOffsetRef.current += rowWidthRef.current;
+        } else if (currentOffsetRef.current > thresholdMin) {
+          currentOffsetRef.current -= rowWidthRef.current;
+          targetOffsetRef.current -= rowWidthRef.current;
+        }
+
+        gridRef.current.style.transform = `translateX(${currentOffsetRef.current}px)`;
+      }
+      autoScrollRef.current = requestAnimationFrame(scroll);
+    };
+    autoScrollRef.current = requestAnimationFrame(scroll);
+  };
+
+  const stopAutoScroll = () => {
+    if (autoScrollRef.current) {
+      cancelAnimationFrame(autoScrollRef.current);
+      autoScrollRef.current = null;
+    }
+  };
+
+  useEffect(() => {
+    if (shouldAnimate) {
+      startAutoScroll();
+    }
+    return () => {
+      stopAutoScroll();
+      if (resumeTimeoutRef.current) clearTimeout(resumeTimeoutRef.current);
+    };
+  }, [shouldAnimate]);
+
+  // Mouse drag event handlers
+  const handleMouseDown = (e) => {
+    if (!shouldAnimate || !gridRef.current) return;
+    isDraggingRef.current = true;
+    startX.current = e.pageX;
+    startOffset.current = currentOffsetRef.current;
+  };
+
+  const handleMouseMove = (e) => {
+    if (!isDraggingRef.current || !gridRef.current) return;
+    e.preventDefault();
+    const x = e.pageX;
+    const walk = (x - startX.current) * 1.2;
+    currentOffsetRef.current = startOffset.current + walk;
+
+    const thresholdMax = -1.5 * rowWidthRef.current;
+    const thresholdMin = -0.5 * rowWidthRef.current;
+    if (currentOffsetRef.current < thresholdMax) {
+      currentOffsetRef.current += rowWidthRef.current;
+      startX.current += rowWidthRef.current / 1.2;
+      startOffset.current = currentOffsetRef.current - (x - startX.current) * 1.2;
+    } else if (currentOffsetRef.current > thresholdMin) {
+      currentOffsetRef.current -= rowWidthRef.current;
+      startX.current -= rowWidthRef.current / 1.2;
+      startOffset.current = currentOffsetRef.current - (x - startX.current) * 1.2;
+    }
+
+    gridRef.current.style.transform = `translateX(${currentOffsetRef.current}px)`;
+    targetOffsetRef.current = currentOffsetRef.current;
+  };
+
+  const handleMouseUp = () => {
+    if (isDraggingRef.current) {
+      isDraggingRef.current = false;
+      triggerCooldown();
+    }
+  };
+
+  // Touch event handlers
+  const handleTouchStart = (e) => {
+    if (!shouldAnimate || !gridRef.current) return;
+    isTouchRef.current = true;
+    startX.current = e.touches[0].pageX;
+    startOffset.current = currentOffsetRef.current;
+    if (resumeTimeoutRef.current) clearTimeout(resumeTimeoutRef.current);
+  };
+
+  const handleTouchMove = (e) => {
+    if (!isTouchRef.current || !gridRef.current) return;
+    const touchX = e.touches[0].pageX;
+    const walk = (touchX - startX.current) * 1.2;
+    currentOffsetRef.current = startOffset.current + walk;
+
+    const thresholdMax = -1.5 * rowWidthRef.current;
+    const thresholdMin = -0.5 * rowWidthRef.current;
+    if (currentOffsetRef.current < thresholdMax) {
+      currentOffsetRef.current += rowWidthRef.current;
+      startX.current += rowWidthRef.current / 1.2;
+      startOffset.current = currentOffsetRef.current - (touchX - startX.current) * 1.2;
+    } else if (currentOffsetRef.current > thresholdMin) {
+      currentOffsetRef.current -= rowWidthRef.current;
+      startX.current -= rowWidthRef.current / 1.2;
+      startOffset.current = currentOffsetRef.current - (touchX - startX.current) * 1.2;
+    }
+
+    gridRef.current.style.transform = `translateX(${currentOffsetRef.current}px)`;
+    targetOffsetRef.current = currentOffsetRef.current;
+  };
+
+  const handleTouchEnd = () => {
+    if (isTouchRef.current) {
+      isTouchRef.current = false;
+      triggerCooldown();
+    }
+  };
+
+  // Global listeners release
+  useEffect(() => {
+    const handleGlobalMouseUp = () => {
+      if (isDraggingRef.current) {
+        isDraggingRef.current = false;
+        triggerCooldown();
+      }
+    };
+
+    const handleGlobalTouchEnd = () => {
+      if (isTouchRef.current) {
+        isTouchRef.current = false;
+        triggerCooldown();
+      }
+    };
+
+    window.addEventListener('mouseup', handleGlobalMouseUp);
+    window.addEventListener('touchend', handleGlobalTouchEnd);
+
+    return () => {
+      window.removeEventListener('mouseup', handleGlobalMouseUp);
+      window.removeEventListener('touchend', handleGlobalTouchEnd);
+    };
+  }, []);
+
+  // Hover zone handlers
+  const handleSectionMouseLeave = () => {
+    if (isDraggingRef.current) {
+      isDraggingRef.current = false;
+      triggerCooldown();
+    }
+  };
+
+  // Arrow click handlers
+  const handleArrowLeft = () => {
+    if (rowWidthRef.current <= 0) return;
+    const cardWidth = 250;
+    targetOffsetRef.current += cardWidth;
+    triggerCooldown();
+  };
+
+  const handleArrowRight = () => {
+    if (rowWidthRef.current <= 0) return;
+    const cardWidth = 250;
+    targetOffsetRef.current -= cardWidth;
+    triggerCooldown();
+  };
 
   return (
     <div className={styles['placement-container-wrapper']} id="about">
@@ -234,8 +456,35 @@ const PlacementPage = ({ placedStudentsData, isMobile }) => {
             </div>
           </>
         )}
-        <div className={styles['placed-students-section']}>
-          <h2 className={styles['placed-students-title']}>PLACED STUDENTS</h2>
+        <div 
+          className={styles['placed-students-section']}
+          onMouseLeave={handleSectionMouseLeave}
+        >
+          {shouldAnimate && !isMobile ? (
+            <div className={styles['title-container']}>
+              <button 
+                type="button"
+                className={styles['circle-arrow']} 
+                onClick={handleArrowLeft} 
+                aria-label="Scroll Left"
+              >
+                <FaChevronLeft />
+              </button>
+              <h2 className={styles['placed-students-title']}>PLACED STUDENTS</h2>
+              <button 
+                type="button"
+                className={styles['circle-arrow']} 
+                onClick={handleArrowRight} 
+                aria-label="Scroll Right"
+              >
+                <FaChevronRight />
+              </button>
+            </div>
+          ) : (
+            <div className={styles['mobile-title-container']}>
+              <h2 className={styles['placed-students-title']}>PLACED STUDENTS</h2>
+            </div>
+          )}
           {isLoading ? (
             <div style={{ marginTop: '80px' }}>
               <PlacedStudentsSkeleton count={5} />
@@ -245,10 +494,20 @@ const PlacementPage = ({ placedStudentsData, isMobile }) => {
               <p>No placed students data available at this time.</p>
             </div>
           ) : (
-            <div className={styles['students-scroll-wrapper']}>
+            <div 
+              ref={scrollWrapperRef}
+              className={styles['students-scroll-wrapper']}
+              onMouseDown={handleMouseDown}
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={handleMouseUp}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+            >
               <div
+                ref={gridRef}
                 className={`${styles['students-grid']} ${shouldAnimate ? styles['animate-scroll'] : styles['static-grid']}`}
-                style={animationStyle}
               >
                 <div
                   ref={rowRef}

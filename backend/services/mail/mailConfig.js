@@ -10,7 +10,7 @@ function createTransporter() {
     const pass = process.env.MAIL_PASSWORD;
 
     if (!user || !pass) {
-        console.warn('⚠️ Mail configuration warning: MAIL_USER or MAIL_PASSWORD not set.');
+        console.warn('Mail configuration warning: MAIL_USER or MAIL_PASSWORD not set.');
     }
 
     if (provider.toLowerCase() === 'gmail') {

@@ -52,15 +52,18 @@ async function sendMail({ eventType, to, role, data = {}, idempotencyKey = null 
     }
 
     // 3. Create or prepare log entry
-    let logDoc = new EmailLog({
+    const logPayload = {
         eventType,
         recipient: to,
         role,
         relatedEntityId: data.studentId || data.driveId || data.certificateId || data.trainingId || null,
         status: 'pending',
-        provider,
-        idempotencyKey
-    });
+        provider
+    };
+    if (idempotencyKey) {
+        logPayload.idempotencyKey = idempotencyKey;
+    }
+    let logDoc = new EmailLog(logPayload);
 
     // 4. Send email using Nodemailer
     try {
@@ -71,6 +74,9 @@ async function sendMail({ eventType, to, role, data = {}, idempotencyKey = null 
             subject: emailDetails.subject,
             html: emailDetails.htmlBody
         };
+        if (emailDetails.attachments) {
+            mailOptions.attachments = emailDetails.attachments;
+        }
 
         console.log(`[MailService] Dispatching email. Event: ${eventType}, To: ${to}, Role: ${role}`);
         const info = await transporter.sendMail(mailOptions);

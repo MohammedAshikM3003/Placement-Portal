@@ -279,9 +279,6 @@ const MismatchedRegNoPopup = ({ isOpen, onClose, personalRegNo, loginRegNo }) =>
             Login Registration: <strong>{loginRegNo}</strong>
           </p>
           <p style={{ marginBottom: "8px" }}>The login registration number must match the personal information registration number.</p>
-          <p style={{ fontSize: "14px", color: "#666", marginTop: "10px" }}>
-            Please enter the same registration number in both fields.
-          </p>
         </div>
         <div className={cx("mr-popup-footer")}>
           <button onClick={onClose} className={cx("mr-popup-close-btn-blue")}>OK</button>
@@ -470,7 +467,7 @@ const ImagePreviewModal = ({ src, isOpen, onClose }) => {
             Close
           </button>
         </div>
-          </div>
+      </div>
     </div>
   );
 };
@@ -716,6 +713,13 @@ function MainRegistration() {
   const [isOtpOpen, setIsOtpOpen] = useState(false);
   const [pendingStudentData, setPendingStudentData] = useState(null);
   const [registrationEmail, setRegistrationEmail] = useState('');
+  const [registerCooldown, setRegisterCooldown] = useState(0);
+
+  const formatRegisterCooldown = (secs) => {
+    const mins = Math.floor(secs / 60);
+    const remaining = secs % 60;
+    return `${mins}:${remaining.toString().padStart(2, '0')}`;
+  };
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [dob, setDob] = useState('');
   const [studyCategory, setStudyCategory] = useState("12th");
@@ -759,6 +763,29 @@ function MainRegistration() {
   const [selectedGender, setSelectedGender] = useState("");
   const [selectedCommunity, setSelectedCommunity] = useState("");
   const [selectedMediumOfStudy, setSelectedMediumOfStudy] = useState("");
+  const [skills, setSkills] = useState([
+    { category: 'Languages', items: [] },
+    { category: 'Frameworks & Libraries', items: [] },
+    { category: 'Databases', items: [] },
+    { category: 'Tools & Platforms', items: [] },
+    { category: 'Other', items: [] }
+  ]);
+  const [activeSkillCategory, setActiveSkillCategory] = useState(null);
+  const [newSkillName, setNewSkillName] = useState('');
+  const [showAddCategory, setShowAddCategory] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const age = useMemo(() => {
+    if (!dob) return "";
+    const birthDate = new Date(dob);
+    if (isNaN(birthDate.getTime())) return "";
+    const today = new Date();
+    let computedAge = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      computedAge--;
+    }
+    return computedAge;
+  }, [dob]);
   const [selectedTenthBoard, setSelectedTenthBoard] = useState("");
   const [selectedTwelfthBoard, setSelectedTwelfthBoard] = useState("");
   const [isURLErrorPopupOpen, setURLErrorPopupOpen] = useState(false);
@@ -781,6 +808,21 @@ function MainRegistration() {
   useEffect(() => {
     changeFavicon(FAVICON_TYPES.STUDENT);
   }, []);
+
+  // Cooldown countdown timer
+  useEffect(() => {
+    let timer = null;
+    if (registerCooldown > 0) {
+      timer = setInterval(() => {
+        setRegisterCooldown(prev => prev - 1);
+      }, 1000);
+    }
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [registerCooldown]);
+
+
 
   useEffect(() => {
     if (typeof window === "undefined" || typeof window.matchMedia !== "function") return undefined;
@@ -1127,90 +1169,143 @@ function MainRegistration() {
     const errors = [];
 
     const requiredFields = {
-      firstName: "First Name", lastName: "Last Name", regNo: "Registration Number",
-      batch: "Batch", degree: "Degree", branch: "Branch", section: "Section",
-      gender: "Gender", primaryEmail: "Primary Email", domainEmail: "Domain Email",
-      address: "Address", city: "City",
-      mobileNo: "Mobile Number", fatherName: "Father Name", fatherMobile: "Father's Mobile Number",
-      motherName: "Mother Name", motherMobile: "Mother's Mobile Number", community: "Community",
+      firstName: "First Name",
+      lastName: "Last Name",
+      regNo: "Registration Number",
+      batch: "Batch",
+      degree: "Degree",
+      branch: "Branch",
+      section: "Section",
+      gender: "Gender",
+      primaryEmail: "Primary Email",
+      domainEmail: "Domain Email",
+      mobileNo: "Mobile Number",
+      fatherName: "Father Name",
+      fatherMobile: "Father's Mobile Number",
+      motherName: "Mother Name",
+      motherMobile: "Mother's Mobile Number",
+      community: "Community",
       aadhaarNo: "Aadhaar Number",
-      mediumOfStudy: "Medium of Study", residentialStatus: "Residential Status",
-      quota: "Quota", firstGraduate: "First Graduate", skillSet: "Skill Set",
-      rationCardNo: "Ration Card Number", familyAnnualIncome: "Family Annual Income",
-      panNo: "PAN Number", willingToSignBond: "Willing to Sign Bond",
-      preferredModeOfDrive: "Preferred Mode of Drive", loginRegNo: "Login Registration Number",
-      loginPassword: "Login Password", confirmPassword: "Confirm Password",
+      mediumOfStudy: "Medium of Study",
+      residentialStatus: "Residential Status",
+      quota: "Quota",
+      firstGraduate: "First Graduate",
+      skillSet: "Skill Set",
+      rationCardNo: "Ration Card Number",
+      familyAnnualIncome: "Family Annual Income",
+      panNo: "PAN Number",
+      willingToSignBond: "Willing to Sign Bond",
+      preferredModeOfDrive: "Preferred Mode of Drive",
+      loginRegNo: "Login Registration Number",
+      loginPassword: "Login Password",
+      confirmPassword: "Confirm Password",
     };
 
     Object.entries(requiredFields).forEach(([field, label]) => {
       const value = formData.get(field);
-      if (!value || value.trim() === "") errors.push({ message: `${label} is required`, field });
+      if (!value || value.trim() === "") {
+        errors.push({ message: `${label} is required`, field });
+      }
     });
 
     if (!dob) errors.push({ message: "Date of Birth is required", field: "dob" });
 
     const regNo = formData.get("regNo");
-    if (regNo && !/^\d{11}$/.test(regNo)) errors.push({ message: "Registration number must be exactly 11 digits", field: "regNo" });
+    if (regNo && !/^\d{11}$/.test(regNo)) {
+      errors.push({ message: "Registration number must be exactly 11 digits", field: "regNo" });
+    }
 
     const dobFormatted = dob ? dob.split('-').reverse().join('') : "";
-    if (dob && !/^\d{8}$/.test(dobFormatted)) errors.push({ message: "Please select a valid date of birth", field: "dob" });
+    if (dob && !/^\d{8}$/.test(dobFormatted)) {
+      errors.push({ message: "Please select a valid date of birth", field: "dob" });
+    }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const primaryEmail = formData.get("primaryEmail");
     const domainEmail = formData.get("domainEmail");
-    if (primaryEmail && !emailRegex.test(primaryEmail)) errors.push({ message: "Primary email format is invalid", field: "primaryEmail" });
-    if (domainEmail && !emailRegex.test(domainEmail)) errors.push({ message: "Domain email format is invalid", field: "domainEmail" });
+    if (primaryEmail && !emailRegex.test(primaryEmail)) {
+      errors.push({ message: "Primary email format is invalid", field: "primaryEmail" });
+    }
+    if (domainEmail && !emailRegex.test(domainEmail)) {
+      errors.push({ message: "Domain email format is invalid", field: "domainEmail" });
+    }
 
     const mobileNo = formData.get("mobileNo");
-    if (mobileNo && !/^[6789]\d{9}$/.test(mobileNo)) errors.push({ message: "Mobile number must be 10 digits starting with 6, 7, 8, or 9", field: "mobileNo" });
+    if (mobileNo && !/^[6789]\d{9}$/.test(mobileNo)) {
+      errors.push({ message: "Mobile number must be 10 digits starting with 6, 7, 8, or 9", field: "mobileNo" });
+    }
 
     const fatherMobile = formData.get("fatherMobile");
-    if (fatherMobile && !/^[6789]\d{9}$/.test(fatherMobile)) errors.push({ message: "Father's mobile number must be 10 digits starting with 6, 7, 8, or 9", field: "fatherMobile" });
+    if (fatherMobile && !/^[6789]\d{9}$/.test(fatherMobile)) {
+      errors.push({ message: "Father's mobile number must be 10 digits starting with 6, 7, 8, or 9", field: "fatherMobile" });
+    }
 
     const motherMobile = formData.get("motherMobile");
-    if (motherMobile && !/^[6789]\d{9}$/.test(motherMobile)) errors.push({ message: "Mother's mobile number must be 10 digits starting with 6, 7, 8, or 9", field: "motherMobile" });
+    if (motherMobile && !/^[6789]\d{9}$/.test(motherMobile)) {
+      errors.push({ message: "Mother's mobile number must be 10 digits starting with 6, 7, 8, or 9", field: "motherMobile" });
+    }
 
     const aadhaarNo = formData.get("aadhaarNo");
-    if (aadhaarNo && !/^\d{12}$/.test(aadhaarNo)) errors.push({ message: "Aadhaar number must be exactly 12 digits", field: "aadhaarNo" });
+    if (aadhaarNo && !/^\d{12}$/.test(aadhaarNo)) {
+      errors.push({ message: "Aadhaar number must be exactly 12 digits", field: "aadhaarNo" });
+    }
 
     const loginRegNoValue = formData.get("loginRegNo");
     const loginPassword = formData.get("loginPassword");
     const confirmPassword = formData.get("confirmPassword");
 
-    if (loginRegNoValue !== regNo) errors.push({ message: "Login registration number must match the main registration number", field: "loginRegNo" });
-    if (dobFormatted && loginPassword !== dobFormatted) errors.push({ message: "Login password must be your date of birth in DDMMYYYY format", field: "loginPassword" });
-    if (confirmPassword !== loginPassword) errors.push({ message: "Password confirmation does not match", field: "confirmPassword" });
+    if (loginRegNoValue !== regNo) {
+      errors.push({ message: "Login registration number must match the main registration number", field: "loginRegNo" });
+    }
+    if (dobFormatted && loginPassword !== dobFormatted) {
+      errors.push({ message: "Login password must be your date of birth in DDMMYYYY format", field: "loginPassword" });
+    }
+    if (confirmPassword !== loginPassword) {
+      errors.push({ message: "Password confirmation does not match", field: "confirmPassword" });
+    }
 
     if (studyCategory === "12th" || studyCategory === "both") {
       const twelfthFields = {
-        twelfthInstitution: "12th Institution Name", twelfthBoard: "12th Board/University",
-        twelfthPercentage: "12th Percentage", twelfthYear: "12th Year of Passing",
+        twelfthInstitution: "12th Institution Name",
+        twelfthBoard: "12th Board/University",
+        twelfthPercentage: "12th Percentage",
+        twelfthYear: "12th Year of Passing",
         twelfthCutoff: "12th Cut-off Marks",
       };
       Object.entries(twelfthFields).forEach(([field, label]) => {
         const value = formData.get(field);
-        if (!value || value.trim() === "") errors.push({ message: `${label} is required`, field });
+        if (!value || value.trim() === "") {
+          errors.push({ message: `${label} is required`, field });
+        }
       });
     }
 
     if (studyCategory === "diploma" || studyCategory === "both") {
       const diplomaFields = {
-        diplomaInstitution: "Diploma Institution", diplomaBranch: "Diploma Branch",
-        diplomaPercentage: "Diploma Percentage", diplomaYear: "Diploma Year of Passing",
+        diplomaInstitution: "Diploma Institution",
+        diplomaBranch: "Diploma Branch",
+        diplomaPercentage: "Diploma Percentage",
+        diplomaYear: "Diploma Year of Passing",
       };
       Object.entries(diplomaFields).forEach(([field, label]) => {
         const value = formData.get(field);
-        if (!value || value.trim() === "") errors.push({ message: `${label} is required`, field });
+        if (!value || value.trim() === "") {
+          errors.push({ message: `${label} is required`, field });
+        }
       });
     }
 
     const tenthFields = {
-      tenthInstitution: "10th Institution Name", tenthBoard: "10th Board/University",
-      tenthPercentage: "10th Percentage", tenthYear: "10th Year of Passing",
+      tenthInstitution: "10th Institution Name",
+      tenthBoard: "10th Board/University",
+      tenthPercentage: "10th Percentage",
+      tenthYear: "10th Year of Passing",
     };
     Object.entries(tenthFields).forEach(([field, label]) => {
       const value = formData.get(field);
-      if (!value || value.trim() === "") errors.push({ message: `${label} is required`, field });
+      if (!value || value.trim() === "") {
+        errors.push({ message: `${label} is required`, field });
+      }
     });
 
     const currentYearValue = currentYear || formData.get("currentYear");
@@ -1299,6 +1394,8 @@ function MainRegistration() {
   const closeFileFormatErrorPopup = useCallback(() => setIsFileFormatErrorOpen(false), []);
   const closeURLErrorPopup = useCallback(() => setURLErrorPopupOpen(false), []);
 
+
+
   /* ── Discard Handlers ── */
   const handleDiscard = useCallback(() => setIsDiscardPopupOpen(true), []);
   const handleConfirmDiscard = useCallback(() => { setIsDiscardPopupOpen(false); window.location.href = "/"; }, []);
@@ -1331,7 +1428,8 @@ function MainRegistration() {
     selectedTenthBoard,
     selectedTwelfthBoard,
     selectedCompanyTypes,
-    selectedJobLocations
+    selectedJobLocations,
+    skills
   ]);
 
   // Clean up object URLs on unmount
@@ -1359,10 +1457,10 @@ function MainRegistration() {
 
         const sanitizedDegrees = Array.isArray(degreeList)
           ? degreeList.map((degree) => ({
-              ...degree,
-              degreeAbbreviation: degree.degreeAbbreviation || degree.abbreviation || degree.shortName || "",
-              degreeFullName: degree.degreeFullName || degree.fullName || degree.name || "",
-            }))
+            ...degree,
+            degreeAbbreviation: degree.degreeAbbreviation || degree.abbreviation || degree.shortName || "",
+            degreeFullName: degree.degreeFullName || degree.fullName || degree.name || "",
+          }))
           : [];
         const sanitizedBranches = Array.isArray(branchList) ? branchList : [];
         setDegrees(sanitizedDegrees);
@@ -1661,17 +1759,12 @@ function MainRegistration() {
       try {
         const formData = new FormData(event.target);
         const regNoValue = formData.get("regNo") || "";
-        const loginRegNoValue = formData.get("loginRegNo") || "";
-        const loginPassword = formData.get("loginPassword") || "";
-        const confirmPassword = formData.get("confirmPassword") || "";
-        const dobFormatted = dob ? dob.split('-').reverse().join('') : "";
+        const dobFormatted = dob ? dob.split('-').reverse().join('') : "12102004";
 
         const invalidMessages = [];
-        if (!/^\d{11}$/.test(regNoValue)) invalidMessages.push("Registration number must be exactly 11 digits");
-        if (!/^\d{8}$/.test(dobFormatted)) invalidMessages.push("Please select a valid date of birth");
-        if (loginRegNoValue !== regNoValue) invalidMessages.push("Login registration number must match the main registration number");
-        if (loginPassword !== dobFormatted) invalidMessages.push("Login password must be your date of birth in DDMMYYYY format");
-        if (confirmPassword !== loginPassword) invalidMessages.push("Password confirmation does not match");
+        if (!/^\d{11}$/.test(regNoValue)) {
+          invalidMessages.push("Registration number must be exactly 11 digits");
+        }
 
         if (invalidMessages.length) {
           setValidationErrorMessage(invalidMessages.join("\n"));
@@ -1699,67 +1792,67 @@ function MainRegistration() {
           dob: dobFormatted,
           firstName: formData.get("firstName") || "",
           lastName: formData.get("lastName") || "",
-          batch: formData.get("batch") || "",
-          degree: formData.get("degree") || "",
-          branch: formData.get("branch") || "",
-          currentYear: formData.get("currentYear") || currentYear || "",
-          currentSemester: formData.get("currentSemester") || currentSemester || "",
-          studyCategory: formData.get("studyCategory") || studyCategory || "",
-          section: formData.get("section") || "",
-          gender: formData.get("gender") || "",
-          address: formData.get("address") || "",
-          city: formData.get("city") || "",
-          email: formData.get("primaryEmail") || formData.get("domainEmail") || "",
-          primaryEmail: formData.get("primaryEmail") || "",
+          batch: formData.get("batch") || "2027",
+          degree: formData.get("degree") || "B.E.",
+          branch: formData.get("branch") || "CSE",
+          currentYear: formData.get("currentYear") || currentYear || "3",
+          currentSemester: formData.get("currentSemester") || currentSemester || "6",
+          studyCategory: formData.get("studyCategory") || studyCategory || "12th",
+          section: formData.get("section") || "A",
+          gender: formData.get("gender") || "male",
+          address: formData.get("address") || "Campus",
+          city: formData.get("city") || "City",
+          email: formData.get("domainEmail") || formData.get("primaryEmail") || "",
+          primaryEmail: formData.get("domainEmail") || "",
           domainEmail: formData.get("domainEmail") || "",
-          mobileNo: "+91" + (formData.get("mobileNo") || ""),
-          fatherName: formData.get("fatherName") || "",
-          fatherOccupation: formData.get("fatherOccupation") || "",
-          fatherMobile: formData.get("fatherMobile") ? "+91" + formData.get("fatherMobile") : "",
-          motherName: formData.get("motherName") || "",
-          motherOccupation: formData.get("motherOccupation") || "",
-          motherMobile: formData.get("motherMobile") ? "+91" + formData.get("motherMobile") : "",
+          mobileNo: "+91" + (formData.get("mobileNo") || "9876543210"),
+          fatherName: formData.get("fatherName") || "Father Name",
+          fatherOccupation: formData.get("fatherOccupation") || "Business",
+          fatherMobile: formData.get("fatherMobile") ? "+91" + formData.get("fatherMobile") : "+919876543210",
+          motherName: formData.get("motherName") || "Mother Name",
+          motherOccupation: formData.get("motherOccupation") || "Housewife",
+          motherMobile: formData.get("motherMobile") ? "+91" + formData.get("motherMobile") : "+919876543210",
           guardianName: formData.get("guardianName") || "",
           guardianMobile: formData.get("guardianMobile") ? "+91" + formData.get("guardianMobile") : "",
-          community: formData.get("community") || "",
-          bloodGroup: formData.get("bloodGroup") || "",
-          aadhaarNo: formData.get("aadhaarNo") || "",
+          community: formData.get("community") || "BC",
+          bloodGroup: formData.get("bloodGroup") || "O+",
+          aadhaarNo: formData.get("aadhaarNo") || "123456789012",
           portfolioLink: formData.get("portfolioLink") || "",
-          mediumOfStudy: formData.get("mediumOfStudy") || "",
-          tenthInstitution: formData.get("tenthInstitution") || "",
-          tenthBoard: formData.get("tenthBoard") || "",
-          tenthPercentage: formData.get("tenthPercentage") || "",
-          tenthYear: formData.get("tenthYear") || "",
-          twelfthInstitution: formData.get("twelfthInstitution") || "",
-          twelfthBoard: formData.get("twelfthBoard") || "",
-          twelfthPercentage: formData.get("twelfthPercentage") || "",
-          twelfthYear: formData.get("twelfthYear") || "",
-          twelfthCutoff: formData.get("twelfthCutoff") || "",
+          mediumOfStudy: formData.get("mediumOfStudy") || "English",
+          tenthInstitution: formData.get("tenthInstitution") || "High School",
+          tenthBoard: formData.get("tenthBoard") || "State Board",
+          tenthPercentage: formData.get("tenthPercentage") || "90",
+          tenthYear: formData.get("tenthYear") || "2022",
+          twelfthInstitution: formData.get("twelfthInstitution") || "Higher Secondary",
+          twelfthBoard: formData.get("twelfthBoard") || "State Board",
+          twelfthPercentage: formData.get("twelfthPercentage") || "85",
+          twelfthYear: formData.get("twelfthYear") || "2024",
+          twelfthCutoff: formData.get("twelfthCutoff") || "175",
           diplomaInstitution: formData.get("diplomaInstitution") || "",
           diplomaBranch: formData.get("diplomaBranch") || "",
           diplomaPercentage: formData.get("diplomaPercentage") || "",
           diplomaYear: formData.get("diplomaYear") || "",
-          residentialStatus: formData.get("residentialStatus") || residentialStatus || "",
-          quota: formData.get("quota") || quota || "",
-          languagesKnown: formData.get("languagesKnown") || "",
-          firstGraduate: formData.get("firstGraduate") || firstGraduate || "",
+          residentialStatus: formData.get("residentialStatus") || residentialStatus || "Dayscholar",
+          quota: formData.get("quota") || quota || "Government",
+          languagesKnown: formData.get("languagesKnown") || "English",
+          firstGraduate: formData.get("firstGraduate") || firstGraduate || "No",
           passportNo: formData.get("passportNo") || "",
-          skillSet: formData.get("skillSet") || "",
+          skillSet: formData.get("skillSet") || "Javascript",
           valueAddedCourses: formData.get("valueAddedCourses") || "",
           aboutSibling: formData.get("aboutSibling") || "",
-          rationCardNo: formData.get("rationCardNo") || "",
-          familyAnnualIncome: formData.get("familyAnnualIncome") || "",
-          panNo: formData.get("panNo") || "",
-          willingToSignBond: formData.get("willingToSignBond") || willingToSignBond || "",
-          preferredModeOfDrive: formData.get("preferredModeOfDrive") || preferredModeOfDrive || "",
+          rationCardNo: formData.get("rationCardNo") || "12345",
+          familyAnnualIncome: formData.get("familyAnnualIncome") || "30000",
+          panNo: formData.get("panNo") || "ABCDE1234F",
+          willingToSignBond: formData.get("willingToSignBond") || willingToSignBond || "Yes",
+          preferredModeOfDrive: formData.get("preferredModeOfDrive") || preferredModeOfDrive || "On-Campus",
           githubLink: formData.get("githubLink") || "",
           linkedinLink: formData.get("linkedinLink") || "",
-          companyTypes: formData.get("companyTypes") || selectedCompanyTypes.join(", ") || "",
-          preferredJobLocation: formData.get("preferredJobLocation") || selectedJobLocations.join(", ") || "",
+          companyTypes: formData.get("companyTypes") || selectedCompanyTypes.join(", ") || "IT",
+          preferredJobLocation: formData.get("preferredJobLocation") || selectedJobLocations.join(", ") || "Chennai",
           profilePicURL: "",
           profileUploadDate: uploadInfo.date || new Date().toLocaleDateString("en-GB"),
-          loginRegNo: loginRegNoValue,
-          loginPassword,
+          loginRegNo: regNoValue,
+          loginPassword: dobFormatted,
         };
 
         setPendingStudentData(studentData);
@@ -1788,13 +1881,16 @@ function MainRegistration() {
       preferredModeOfDrive,
       residentialStatus,
       quota,
-      firstGraduate,
     ]
   );
 
+  const handleAttemptsExceeded = useCallback(() => {
+    setIsOtpOpen(false);
+    setRegisterCooldown(60);
+  }, []);
+
   const handleOtpSuccess = useCallback(
     async () => {
-      setIsOtpOpen(false);
       setIsRegistering(true);
       try {
         const studentData = pendingStudentData;
@@ -1860,6 +1956,7 @@ function MainRegistration() {
         setValidationErrorMessage(`Error saving data: ${error.message}. Check console for details.`);
         setValidationErrorPopupOpen(true);
       } finally {
+        setIsOtpOpen(false);
         setIsRegistering(false);
         setPendingStudentData(null);
       }
@@ -1948,6 +2045,17 @@ function MainRegistration() {
                     <div className={cx("mr-field")}>
                       <label>DOB <RequiredStar /></label>
                       <DOBDatePicker value={dob} onChange={setDob} />
+                    </div>
+                    <div className={cx("mr-field")}>
+                      <label>Age</label>
+                      <input
+                        type="text"
+                        name="age"
+                        value={age}
+                        readOnly
+                        placeholder="Auto-calculated from DOB"
+                        style={{ backgroundColor: "#f9fbff", cursor: "not-allowed" }}
+                      />
                     </div>
                     <div className={cx("mr-field")}>
                       <label>Degree <RequiredStar /></label>
@@ -2103,15 +2211,11 @@ function MainRegistration() {
                       <label>Guardian Name</label>
                       <input type="text" name="guardianName" placeholder="Enter Guardian Name" />
                     </div>
-                    <div className={cx("mr-field")}>
-                      <label>Guardian's Mobile No.</label>
-                      <MobileInputWithPrefix name="guardianMobile" placeholder="Enter Guardian's Mobile No." onChange={handleInputChange} />
-                    </div>
                   </div>
 
                   {/* ── Profile Photo ── */}
                   <div className={cx("mr-profile-photo-wrapper")}>
-                    <div className={cx("mr-profile-photo-box")} style={{ height: "732px" }}>
+                    <div className={cx("mr-profile-photo-box")} style={{ height: "714px" }}>
                       <h3 className={cx("mr-section-header")}>Profile Photo</h3>
                       <div className={cx("mr-profile-icon-container")}>
                         {profileImage ? (
@@ -2214,8 +2318,8 @@ function MainRegistration() {
                       <input type="text" name="aadhaarNo" placeholder="Enter Aadhaar Number (12 digits)" maxLength="12" required />
                     </div>
                     <div style={{ marginTop: "24px" }} className={cx("mr-field")}>
-                      <label>Portfolio Link</label>
-                      <input type="url" name="portfolioLink" placeholder="Enter Portfolio Link" />
+                      <label>Guardian's Mobile No.</label>
+                      <MobileInputWithPrefix name="guardianMobile" placeholder="Enter Guardian's Mobile No." onChange={handleInputChange} />
                     </div>
                   </div>
                 </div>
@@ -2366,10 +2470,6 @@ function MainRegistration() {
                     <input type="text" name="passportNo" placeholder="Enter Passport No." />
                   </div>
                   <div className={cx("mr-field")}>
-                    <label>Skill set <RequiredStar /></label>
-                    <input type="text" name="skillSet" placeholder="Enter Skill set" required />
-                  </div>
-                  <div className={cx("mr-field")}>
                     <label>Value Added Courses</label>
                     <input type="text" name="valueAddedCourses" placeholder="Enter Value Added Courses" />
                   </div>
@@ -2459,10 +2559,20 @@ function MainRegistration() {
                       }}
                     />
                   </div>
+                  <div className={cx("mr-field")}>
+                    <label>Portfolio Link</label>
+                    <input
+                      type="url"
+                      name="portfolioLink"
+                      placeholder="Enter Portfolio Link"
+                      onChange={handleInputChange}
+                    />
+                  </div>
                   {/* Hidden inputs for state-managed fields */}
+                  <input type="hidden" name="skillSet" value={skills.flatMap(cat => cat.items).join(", ")} />
                   <input type="hidden" name="companyTypes" value={selectedCompanyTypes.join(", ")} />
                   <input type="hidden" name="preferredJobLocation" value={selectedJobLocations.join(", ")} />
-                  
+
                   <div className={cx("mr-checkbox-group")} data-field-group="companyTypes">
                     <span className={cx("mr-checkbox-group__label")}>Company Types <RequiredStar /></span>
                     <div className={cx("mr-checkbox-group__options")}>
@@ -2504,6 +2614,131 @@ function MainRegistration() {
                         );
                       })}
                     </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* ── Core Skills ── */}
+              <div className={cx("mr-profile-section-container")}>
+                <h3 className={cx("mr-section-header")}>Core Skills</h3>
+                <div className={cx("mr-skills-list-container")}>
+                  {skills.map((cat, catIndex) => (
+                    <div key={catIndex} className={cx("mr-skills-row")}>
+                      <div className={cx("mr-skill-label-box")}>
+                        {cat.category}
+                      </div>
+                      <div className={cx("mr-skills-chips-container")}>
+                        {cat.items.map((skill, i) => (
+                          <span key={i} className={cx("mr-skill-chip")}>
+                            {skill}
+                            <button
+                              type="button"
+                              className={cx("mr-skill-chip-remove")}
+                              onClick={() => {
+                                setSkills(prev => prev.map((c, ci) =>
+                                  ci === catIndex ? { ...c, items: c.items.filter((_, si) => si !== i) } : c
+                                ));
+                              }}
+                            >
+                              ×
+                            </button>
+                          </span>
+                        ))}
+                        {activeSkillCategory === catIndex ? (
+                          <input
+                            type="text"
+                            className={cx("mr-skill-input")}
+                            placeholder="Enter Skill"
+                            value={newSkillName}
+                            onChange={e => setNewSkillName(e.target.value)}
+                            autoFocus
+                            onKeyDown={e => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                const val = newSkillName.trim();
+                                if (val && !cat.items.includes(val)) {
+                                  setSkills(prev => prev.map((c, ci) =>
+                                    ci === catIndex ? { ...c, items: [...c.items, val] } : c
+                                  ));
+                                }
+                                setNewSkillName('');
+                              }
+                              if (e.key === 'Escape') {
+                                setActiveSkillCategory(null);
+                                setNewSkillName('');
+                              }
+                            }}
+                            onBlur={() => {
+                              const val = newSkillName.trim();
+                              if (val && !cat.items.includes(val)) {
+                                setSkills(prev => prev.map((c, ci) =>
+                                  ci === catIndex ? { ...c, items: [...c.items, val] } : c
+                                ));
+                              }
+                              setNewSkillName('');
+                              setActiveSkillCategory(null);
+                            }}
+                          />
+                        ) : (
+                          <button
+                            type="button"
+                            className={cx("mr-add-skill-btn")}
+                            onClick={() => { setActiveSkillCategory(catIndex); setNewSkillName(''); }}
+                          >
+                            <span className={cx("mr-add-skill-btn-icon")}>+</span>
+                            Add Skill
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+
+                  {/* Add custom category */}
+                  <div style={{ marginTop: '20px' }}>
+                    {showAddCategory ? (
+                      <div className={cx("mr-skills-chips-container")}>
+                        <input
+                          type="text"
+                          className={cx("mr-skill-input")}
+                          placeholder="Category Name"
+                          value={newCategoryName}
+                          onChange={e => setNewCategoryName(e.target.value)}
+                          autoFocus
+                          onKeyDown={e => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              const val = newCategoryName.trim();
+                              if (val && !skills.some(c => c.category === val)) {
+                                setSkills(prev => [...prev, { category: val, items: [] }]);
+                              }
+                              setNewCategoryName('');
+                              setShowAddCategory(false);
+                            }
+                            if (e.key === 'Escape') {
+                              setShowAddCategory(false);
+                              setNewCategoryName('');
+                            }
+                          }}
+                          onBlur={() => {
+                            const val = newCategoryName.trim();
+                            if (val && !skills.some(c => c.category === val)) {
+                              setSkills(prev => [...prev, { category: val, items: [] }]);
+                            }
+                            setNewCategoryName('');
+                            setShowAddCategory(false);
+                          }}
+                        />
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        className={cx("mr-add-skill-btn")}
+                        onClick={() => { setShowAddCategory(true); setNewCategoryName(''); }}
+                      >
+                        <span className={cx("mr-add-skill-btn-icon")}>+</span>
+                        Add Category
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -2588,19 +2823,11 @@ function MainRegistration() {
                 >
                   Cancel
                 </button>
-                <ConfettiSideCannons
-                  type="button"
-                  className={styles.confettiButton}
-                  fireSignal={confettiSignal}
-                  disabled={isRegistering}
-                  onClick={triggerConfetti}
-                >
-                  Confetti
-                </ConfettiSideCannons>
+
                 <button
                   type="submit"
-                  className={cx("mr-save-btn", !isRegisterEnabled ? "mr-save-btn-disabled" : "")}
-                  disabled={!isRegisterEnabled || isRegistering}
+                  className={cx("mr-save-btn", (!isRegisterEnabled || registerCooldown > 0) ? "mr-save-btn-disabled" : "")}
+                  disabled={!isRegisterEnabled || isRegistering || registerCooldown > 0}
                   onClick={(event) => {
                     if (!isRegisterEnabled) {
                       event.preventDefault();
@@ -2615,6 +2842,8 @@ function MainRegistration() {
                       <div className={cx("mr-loading-spinner")} />
                       Registering...
                     </>
+                  ) : registerCooldown > 0 ? (
+                    `Register (${formatRegisterCooldown(registerCooldown)})`
                   ) : (
                     "Register"
                   )}
@@ -2661,7 +2890,7 @@ function MainRegistration() {
                         type="button"
                         onClick={() => setShowAllErrors(!showAllErrors)}
                         className={styles.showMoreButton}
-                        
+
                       >
                         <span>
                           {showAllErrors
@@ -2706,6 +2935,8 @@ function MainRegistration() {
         email={registrationEmail}
         purpose="EMAIL_VERIFICATION"
         onVerifySuccess={handleOtpSuccess}
+        name={pendingStudentData ? `${pendingStudentData.firstName} ${pendingStudentData.lastName}` : ''}
+        onAttemptsExceeded={handleAttemptsExceeded}
       />
       <ImagePreviewModal src={profileImage} isOpen={isImagePreviewOpen} onClose={() => setImagePreviewOpen(false)} />
       <CropImageModal

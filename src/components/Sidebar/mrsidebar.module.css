@@ -163,4 +163,8 @@
   .mr-sidebar.active {
     transform: translateX(0);
   }
+
+  .mr-sidebar-nav {
+    flex: initial;
+  }
 }

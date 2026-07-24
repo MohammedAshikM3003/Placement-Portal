@@ -18,12 +18,25 @@ function maskEmail(email) {
     return `${localPart.charAt(0)}${'*'.repeat(localPart.length - 2)}${localPart.charAt(localPart.length - 1)}@${domain}`;
 }
 
+let latestOtpForTesting = null;
+
+/**
+ * GET /api/auth/otp/latest-for-testing
+ * Returns the latest generated OTP code. Restricted to development/testing environment.
+ */
+router.get('/latest-for-testing', (req, res) => {
+    if (process.env.NODE_ENV === 'production') {
+        return res.status(403).json({ success: false, error: 'Forbidden in production' });
+    }
+    return res.json({ success: true, otp: latestOtpForTesting });
+});
+
 /**
  * POST /api/auth/otp/send
  * Body: { email, purpose, role }
  */
 router.post('/send', async (req, res) => {
-    const { email, purpose, role } = req.body || {};
+    const { email, purpose, role, name } = req.body || {};
 
     if (!email || !purpose || !role) {
         return res.status(400).json({ success: false, error: 'Missing required fields: email, purpose, role' });
@@ -57,6 +70,7 @@ router.post('/send', async (req, res) => {
 
         // 2. Generate secure 6-digit numeric OTP
         const otpVal = crypto.randomInt(100000, 1000000).toString();
+        latestOtpForTesting = otpVal;
         const hashedOtp = await bcrypt.hash(otpVal, 10);
         const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes validity
 
@@ -65,6 +79,7 @@ router.post('/send', async (req, res) => {
             existingOtp.hashedOtp = hashedOtp;
             existingOtp.expiresAt = expiresAt;
             existingOtp.attempts = 0;
+            existingOtp.maxAttempts = 5;
             existingOtp.resendCount += 1;
             await existingOtp.save();
         } else {
@@ -74,7 +89,8 @@ router.post('/send', async (req, res) => {
                 purpose,
                 role,
                 expiresAt,
-                resendCount: 0
+                resendCount: 0,
+                maxAttempts: 5
             });
             await newOtp.save();
         }
@@ -83,13 +99,38 @@ router.post('/send', async (req, res) => {
         // Note: do not log plaintext OTP value in production logs
         console.log(`[OTP] Generating verification code for recipient role ${role}`);
         
+        let resolvedName = name || '';
+        if (!resolvedName) {
+            try {
+                if (role === 'admin') {
+                    const Admin = require('../models/Admin');
+                    const adminUser = await Admin.findOne({ emailId: normalizedEmail });
+                    if (adminUser) resolvedName = `${adminUser.firstName || ''} ${adminUser.lastName || ''}`.trim();
+                } else if (role === 'coordinator') {
+                    const User = require('../models/User');
+                    const user = await User.findOne({ email: normalizedEmail, role: 'coordinator' });
+                    if (user && user.profile) resolvedName = `${user.profile.firstName || ''} ${user.profile.lastName || ''}`.trim();
+                } else {
+                    const Student = require('../models/Student');
+                    const studentUser = await Student.findOne({ email: normalizedEmail });
+                    if (studentUser) resolvedName = `${studentUser.firstName || ''} ${studentUser.lastName || ''}`.trim();
+                }
+            } catch (dbErr) {
+                console.error('[OTP Name Resolution DB Error]:', dbErr);
+            }
+        }
+
+        if (!resolvedName) {
+            resolvedName = normalizedEmail.split('@')[0];
+        }
+
         await sendMail({
             eventType: EMAIL_EVENTS.OTP_VERIFICATION,
             to: normalizedEmail,
             role,
             data: {
                 otp: otpVal,
-                recipientName: normalizedEmail.split('@')[0]
+                recipientName: resolvedName
             }
         });
 
@@ -147,12 +188,12 @@ router.post('/verify', async (req, res) => {
 
             if (remainingAttempts <= 0) {
                 await Otp.deleteOne({ _id: otpRecord._id });
-                return res.status(400).json({ success: false, error: 'Too many verification attempts. Please request a new code.' });
+                return res.status(400).json({ success: false, error: 'Attempts exceeded. Request a new OTP.' });
             }
 
             return res.status(400).json({
                 success: false,
-                error: `Incorrect verification code. You have ${remainingAttempts} attempts remaining.`,
+                error: `Incorrect code. ${remainingAttempts} ${remainingAttempts === 1 ? 'attempt' : 'attempts'} left.`,
                 remainingAttempts
             });
         }
