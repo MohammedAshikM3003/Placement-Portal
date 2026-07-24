@@ -15,16 +15,14 @@ function createTransporter() {
 
     if (provider.toLowerCase() === 'gmail') {
         return nodemailer.createTransport({
-            host: 'smtp.gmail.com',
-            port: 465,
-            secure: true,
+            service: 'gmail',
             auth: {
                 user: user,
                 pass: pass
             },
-            tls: {
-                rejectUnauthorized: false
-            }
+            connectionTimeout: 15000,
+            greetingTimeout: 15000,
+            socketTimeout: 20000
         });
     } else {
         // Generic SMTP provider (e.g. institutional email, Google Workspace, Office 365)
