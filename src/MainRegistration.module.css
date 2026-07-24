@@ -1299,7 +1299,7 @@
     .mr-dashboard-area { 
         --mobile-side-gap: 10px;
         margin-left: 0; 
-        padding: 25px var(--mobile-side-gap) 25px var(--mobile-side-gap); 
+        padding: 25px 0 25px 0; 
         height: calc(100vh - 50px);
         overflow-y: auto;
         overflow-x: hidden;
@@ -1418,8 +1418,22 @@
         width: 100%;
     }
 
-    .mr-action-buttons { flex-direction: column; padding-bottom: 2rem; }
+    .mr-action-buttons {
+        flex-direction: column;
+        padding-bottom: 2rem;
+        width: 100%;
+        max-width: calc(100% - var(--mobile-side-gap, 10px) - var(--mobile-side-gap, 10px));
+        margin: 0 auto;
+        box-sizing: border-box;
+    }
     .mr-action-buttons button { width: 100%; padding: 1.2rem; }
+
+    .validationErrorBox {
+        width: 100%;
+        max-width: calc(100% - var(--mobile-side-gap, 10px) - var(--mobile-side-gap, 10px));
+        margin: 20px auto;
+        box-sizing: border-box;
+    }
 }
 
 @media (max-width: 768px) {

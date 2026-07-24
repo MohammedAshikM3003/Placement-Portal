@@ -53,6 +53,7 @@
 /* Main Container */
 .Admin-Drive-AD-container {
     display: flex;
+    flex-direction: column;
     gap: 20px;
     width: 100%;
     max-width: 1400px;
@@ -63,7 +64,7 @@
 
 /* Left Section - Add Company Drive */
 .Admin-Drive-AD-left-section {
-    flex: 1;
+    width: 100%;
     background: #ffffff;
     border-radius: 16px;
     padding: 2.5rem;
@@ -71,6 +72,7 @@
     display: flex;
     flex-direction: column;
     margin-bottom: 1.5rem;
+    box-sizing: border-box;
 }
 
 .Admin-Drive-AD-header-section {
@@ -148,15 +150,21 @@
 
 .Admin-Drive-AD-input {
     width: 100%; 
-    padding: 10px 14px;
-    border: 2px solid #c8e6c9;
-    border-radius: 10px;
-    font-size: 0.9rem;
+    padding: 0.9rem;
+    border: 1px solid #def4dd;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
     color: #333333;
-    background-color: #ffffff;
+    background-color: #f9fff9;
     transition: all 0.3s ease;
     font-family: inherit;
     box-sizing: border-box;
+}
+
+.Admin-Drive-AD-input:hover {
+    border-color: #4EA24E;
+    box-shadow: 0 0 0 3px rgba(78, 162, 78, 0.2);
 }
 
 .Admin-Drive-AD-input[type="date"] {
@@ -197,19 +205,19 @@
 .Admin-Drive-AD-input:focus {
     outline: none;
     border-color: #4EA24E;
-    box-shadow: 0 0 0 3px rgba(78, 162, 78, 0.1);
-    background-color: #ffffff;
+    box-shadow: 0 0 0 3px rgba(78, 162, 78, 0.2);
+    background-color: #f9fff9;
     color: #333333;
 }
 
 /* Required field styling - removed red border for invalid state */
 .Admin-Drive-AD-input:required {
-    border-color: #c8e6c9;
+    border-color: #def4dd;
 }
 
 /* Removed red border on invalid - will use tooltip instead */
 .Admin-Drive-AD-input:required:invalid {
-    border-color: #c8e6c9;
+    border-color: #def4dd;
 }
 
 /* Custom validation tooltip */
@@ -271,19 +279,24 @@
 .Admin-Drive-AD-input-with-chip {
     display: flex;
     width: 100%;
-    border: 2px solid #c8e6c9;
-    border-radius: 10px;
+    border: 1px solid #def4dd;
+    border-radius: 8px;
     overflow: hidden;
-    background-color: #ffffff;
+    background-color: #f9fff9;
     box-sizing: border-box;
-    height: 44px;
+    height: 48px;
     align-items: stretch;
     transition: all 0.3s ease;
 }
 
+.Admin-Drive-AD-input-with-chip:hover {
+    border-color: #4EA24E;
+    box-shadow: 0 0 0 3px rgba(78, 162, 78, 0.2);
+}
+
 .Admin-Drive-AD-input-with-chip:focus-within {
     border-color: #4EA24E;
-    box-shadow: 0 0 0 3px rgba(78, 162, 78, 0.1);
+    box-shadow: 0 0 0 3px rgba(78, 162, 78, 0.2);
 }
 
 .Admin-Drive-AD-input-with-chip .Admin-Drive-AD-input {
@@ -291,8 +304,8 @@
     border: none !important;
     border-radius: 0 !important;
     background-color: transparent !important;
-    padding: 10px 14px;
-    font-size: 0.9rem;
+    padding: 0.9rem;
+    font-size: 0.95rem;
     color: #333333;
     font-family: inherit;
     min-width: 0;
@@ -674,12 +687,13 @@
 }
 .Admin-Drive-AD-round-input {
     flex: 1;
-    padding: 9px 12px;
-    border: 2px solid rgba(255, 255, 255, 0.3);
+    padding: 0.9rem;
+    border: 1px solid #def4dd;
     border-radius: 8px;
-    font-size: 0.85rem;
+    font-size: 0.95rem;
+    font-weight: 600;
     color: #333333;
-    background-color: #ffffff;
+    background-color: #f9fff9;
     transition: all 0.3s ease;
     box-sizing: border-box;
     min-width: 0;
@@ -687,17 +701,18 @@
 }
 .Admin-Drive-AD-round-input:hover{
     border-color: #4EA24E;
+    box-shadow: 0 0 0 3px rgba(78, 162, 78, 0.2);
 }
 .Admin-Drive-AD-round-input::placeholder {
     color: #aaaaaa;
-    font-size: 0.8rem;
+    font-size: 0.85rem;
 }
 
 .Admin-Drive-AD-round-input:focus {
     outline: none;
     border-color: #4EA24E;
-    box-shadow: 0 0 0 3px rgba(78, 162, 78, 0.1);
-    background-color: #ffffff;
+    box-shadow: 0 0 0 3px rgba(78, 162, 78, 0.2);
+    background-color: #f9fff9;
     color: #333333;
 }
 /* Action Buttons */
@@ -769,7 +784,7 @@
 }
 /* Right Section - Company Details */
 .Admin-Drive-AD-right-section {
-    flex: 0.75;
+    width: 100%;
     background: #ffffff;
     border-radius: 16px;
     padding: 2.5rem;
@@ -778,6 +793,7 @@
     display: flex;
     flex-direction: column;
     margin-bottom: 1.5rem;
+    box-sizing: border-box;
 }
 
 .Admin-Drive-AD-right-section::-webkit-scrollbar {
@@ -849,9 +865,9 @@
     font-weight: 500;
     color: #666666;
     padding: 7px 12px;
-    background: #ffffff;
+    background: #f9fff9;
     border-radius: 8px;
-    border: 2px solid #c8e6c9;
+    border: 1px solid #def4dd;
     min-height: 36px;
     display: flex;
     align-items: center;
@@ -860,7 +876,7 @@
 
 .Admin-Drive-AD-detail-value:hover {
     border-color: #4EA24E;
-    box-shadow: 0 0 0 3px rgba(78, 162, 78, 0.1);
+    box-shadow: 0 0 0 3px rgba(78, 162, 78, 0.2);
 }
 
 /* Detail Value with Chip - Following detail styling */
@@ -868,19 +884,19 @@
     flex: 1;
     display: flex;
     width: 100%;
-    border: 2px solid #c8e6c9;
-    border-radius: 10px;
+    border: 1px solid #def4dd;
+    border-radius: 8px;
     overflow: hidden;
-    background-color: #ffffff;
+    background-color: #f9fff9;
     box-sizing: border-box;
-    height: 44px;
+    height: 36px;
     align-items: stretch;
     transition: all 0.3s ease;
 }
 
 .Admin-Drive-AD-detail-value-with-chip:hover {
     border-color: #4EA24E;
-    box-shadow: 0 0 0 3px rgba(78, 162, 78, 0.1);
+    box-shadow: 0 0 0 3px rgba(78, 162, 78, 0.2);
 }
 
 /* Detail Chip Badge */
@@ -1035,7 +1051,7 @@
     .Admin-Drive-AD-input {
         width: 100%;
         box-sizing: border-box;
-        padding: 10px 14px;
+        padding: 0.9rem;
     }
 
     .Admin-Drive-AD-round-section {
@@ -1558,18 +1574,18 @@
 }
 
 .Admin-Drive-AD-label {
-    font-size: 0.88rem;
-    font-weight: 700;
-    color: #4b4b4b;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #1f2d3d;
     margin-bottom: 6px;
     display: block;
     text-align: left;
 }
 
 .Admin-Drive-AD-required-star {
-    color: #cc2a2a;
+    color: #dc3545;
     margin-left: 2px;
-    font-weight: 700;
+    font-weight: 600;
 }
 
 /* Validation yellow warning box */
@@ -1671,4 +1687,17 @@
     animation: Admin-profile-field-blink 1.5s ease-in-out 2;
     border-color: #ffc107 !important;
     box-shadow: 0 0 10px rgba(255, 193, 7, 0.5) !important;
+}
+
+/* Custom Dropdown Overrides */
+.Admin-Drive-AD-dropdown-wrapper {
+    --form-dropdown-bg: #f9fff9;
+    --form-dropdown-border: #def4dd;
+    width: 100%;
+    position: relative;
+}
+
+.Admin-Drive-AD-dropdown-header {
+    font-weight: 600 !important;
+    color: #333333 !important;
 }

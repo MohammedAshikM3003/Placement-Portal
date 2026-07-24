@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom';
 import useAdminAuth from '../utils/useAdminAuth';
 import Ad_Calendar from '../components/Calendar/Ad_Calendar';
+import FormDropdown from '../components/common/FormDropdown/FormDropdown';
 
 import Navbar from "../components/Navbar/Adnavbar.js";
 import Sidebar from "../components/Sidebar/Adsidebar.js";
@@ -578,40 +579,37 @@ function Adcompanydrivead({ onLogout }) {
                                                      <div className={styles['Admin-Drive-AD-form-grid']} style={isLoading ? { pointerEvents: 'none', opacity: '0.6' } : {}}>
                                 <div className={styles['Admin-Drive-AD-form-group']}>
                                     <label className={styles['Admin-Drive-AD-label']}>Company Name <RequiredStar /></label>
-                                    <select
-                                        ref={registerFieldRef('companyName')}
-                                        name="companyName"
-                                        value={formData.companyName}
-                                        onChange={handleInputChange}
-                                        className={`${styles['Admin-Drive-AD-input']} ${highlightedField === 'companyName' ? styles['Admin-Drive-AD-field-highlight'] : ''}`}
-                                        required
+                                    <FormDropdown
+                                        id="companyName-dropdown"
+                                        options={companies.map((company) => ({
+                                            label: company.companyName,
+                                            value: company.companyName
+                                        }))}
+                                        selectedOption={formData.companyName}
+                                        onSelect={(val) => handleInputChange({ target: { name: 'companyName', value: val } })}
+                                        placeholder="Select Company"
                                         disabled={viewMode || isLoading}
-                                    >
-                                        <option value="">Select Company</option>
-                                        {companies.map((company) => (
-                                            <option key={company._id || company.id} value={company.companyName}>
-                                                {company.companyName}
-                                            </option>
-                                        ))}
-                                    </select>
+                                        role="admin"
+                                        className={`${styles['Admin-Drive-AD-dropdown-wrapper']} ${highlightedField === 'companyName' ? styles['Admin-Drive-AD-field-highlight'] : ''}`}
+                                        headerClassName={styles['Admin-Drive-AD-dropdown-header']}
+                                        ref={registerFieldRef('companyName')}
+                                    />
                                 </div>
 
                                 <div className={styles['Admin-Drive-AD-form-group']}>
                                     <label className={styles['Admin-Drive-AD-label']}>Mode <RequiredStar /></label>
-                                    <select
-                                        ref={registerFieldRef('mode')}
-                                        name="mode"
-                                        value={formData.mode}
-                                        onChange={handleInputChange}
-                                        className={`${styles['Admin-Drive-AD-input']} ${highlightedField === 'mode' ? styles['Admin-Drive-AD-field-highlight'] : ''}`}
-                                        required
+                                    <FormDropdown
+                                        id="mode-dropdown"
+                                        options={['Online', 'Offline', 'Hybrid']}
+                                        selectedOption={formData.mode}
+                                        onSelect={(val) => handleInputChange({ target: { name: 'mode', value: val } })}
+                                        placeholder="Select Mode"
                                         disabled={viewMode}
-                                    >
-                                        <option value="">Select Mode</option>
-                                        <option value="Online">Online</option>
-                                        <option value="Offline">Offline</option>
-                                        <option value="Hybrid">Hybrid</option>
-                                    </select>
+                                        role="admin"
+                                        className={`${styles['Admin-Drive-AD-dropdown-wrapper']} ${highlightedField === 'mode' ? styles['Admin-Drive-AD-field-highlight'] : ''}`}
+                                        headerClassName={styles['Admin-Drive-AD-dropdown-header']}
+                                        ref={registerFieldRef('mode')}
+                                    />
                                 </div>
 
                                 <div className={styles['Admin-Drive-AD-form-group']}>
@@ -702,22 +700,18 @@ function Adcompanydrivead({ onLogout }) {
 
                                 <div className={styles['Admin-Drive-AD-form-group']}>
                                     <label className={styles['Admin-Drive-AD-label']}>Company Type <RequiredStar /></label>
-                                    <select
-                                        ref={registerFieldRef('companyType')}
-                                        name="companyType"
-                                        value={formData.companyType}
-                                        onChange={handleInputChange}
-                                        className={`${styles['Admin-Drive-AD-input']} ${highlightedField === 'companyType' ? styles['Admin-Drive-AD-field-highlight'] : ''}`}
-                                        required
+                                    <FormDropdown
+                                        id="companyType-dropdown"
+                                        options={['CORE', 'IT', 'ITES(BPO/KPO)', 'Marketing & Sales', 'HR / Business analyst']}
+                                        selectedOption={formData.companyType}
+                                        onSelect={(val) => handleInputChange({ target: { name: 'companyType', value: val } })}
+                                        placeholder="Select Company Type"
                                         disabled={viewMode}
-                                    >
-                                        <option value="">Select Company Type</option>
-                                        <option value="CORE">CORE</option>
-                                        <option value="IT">IT</option>
-                                        <option value="ITES(BPO/KPO)">ITES(BPO/KPO)</option>
-                                        <option value="Marketing & Sales">Marketing & Sales</option>
-                                        <option value="HR / Business analyst">HR / Business analyst</option>
-                                    </select>
+                                        role="admin"
+                                        className={`${styles['Admin-Drive-AD-dropdown-wrapper']} ${highlightedField === 'companyType' ? styles['Admin-Drive-AD-field-highlight'] : ''}`}
+                                        headerClassName={styles['Admin-Drive-AD-dropdown-header']}
+                                        ref={registerFieldRef('companyType')}
+                                    />
                                 </div>
 
                                 <div className={styles['Admin-Drive-AD-form-group']}>
@@ -753,6 +747,7 @@ function Adcompanydrivead({ onLogout }) {
                                             value={formData.startingDate}
                                             onChange={(dateValue) => handleCalendarDateChange('startingDate', dateValue)}
                                             triggerClassName={highlightedField === 'startingDate' ? styles['Admin-Drive-AD-field-highlight'] : ''}
+                                            style={{ backgroundColor: '#f9fff9' }}
                                         />
                                     </div>
                                 </div>
@@ -768,6 +763,7 @@ function Adcompanydrivead({ onLogout }) {
                                             value={formData.endingDate}
                                             onChange={(dateValue) => handleCalendarDateChange('endingDate', dateValue)}
                                             triggerClassName={highlightedField === 'endingDate' ? styles['Admin-Drive-AD-field-highlight'] : ''}
+                                            style={{ backgroundColor: '#f9fff9' }}
                                         />
                                     </div>
                                 </div>

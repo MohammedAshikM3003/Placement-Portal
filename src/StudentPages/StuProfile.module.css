@@ -2615,5 +2615,26 @@
                 margin-left: 0 !important;
                 width: 100% !important;
                 max-width: 100% !important;
+                padding: 10px 0 calc(env(safe-area-inset-bottom, 0px) + 25px) 0 !important;
+        }
+
+        .profileSectionContainer {
+                width: 100% !important;
+                max-width: calc(100% - 20px) !important;
+                margin: 0 auto 1.25rem !important;
+                box-sizing: border-box !important;
+        }
+
+        .actionButtons {
+                flex-direction: column !important;
+                width: 100% !important;
+                max-width: calc(100% - 20px) !important;
+                margin: 0 auto 2rem !important;
+                box-sizing: border-box !important;
+        }
+
+        .actionButtons button {
+                width: 100% !important;
+                padding: 1.2rem !important;
         }
 }

@@ -478,11 +478,23 @@
 }
 
 @media (max-width: 1024px) {
+    .Admin-cp-page-layout {
+        position: fixed !important;
+        width: 100% !important;
+        height: 100% !important;
+        height: 100dvh !important;
+        overflow: hidden !important;
+    }
+
     .Admin-cp-page-main {
         margin-left: 0;
         width: 100%;
         padding: 10px 10px calc(env(safe-area-inset-bottom, 0px) + 25px) 20px !important;
-        height: calc(100vh - 65px);
+        height: calc(100vh - 65px) !important;
+        height: calc(100dvh - 65px) !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        box-sizing: border-box !important;
     }
 
     .Admin-cp-page-grid {
@@ -492,9 +504,13 @@
 
 @media (max-width: 768px) {
     .Admin-cp-page-main {
-        margin: 70px 0 0 0;
+        margin: 70px 0 0 0 !important;
         padding: 10px 10px calc(env(safe-area-inset-bottom, 0px) + 25px) 20px !important;
-        height: calc(100vh - 70px);
+        height: calc(100vh - 70px) !important;
+        height: calc(100dvh - 70px) !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        box-sizing: border-box !important;
     }
 
     .Admin-cp-page-card {
