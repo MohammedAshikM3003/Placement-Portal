@@ -2,57 +2,43 @@ const nodemailer = require('nodemailer');
 
 /**
  * Creates and configures Nodemailer SMTP transporter.
- * Switching providers relies solely on environment variables.
+ * Supports Gmail and institutional SMTP providers with IPv4 enforcement.
  */
 function createTransporter() {
-    const provider = process.env.MAIL_PROVIDER || 'gmail';
-    const user = process.env.MAIL_USER;
-    const pass = process.env.MAIL_PASSWORD;
+    const provider = (process.env.MAIL_PROVIDER || 'gmail').toLowerCase();
+    const user = process.env.MAIL_USER ? process.env.MAIL_USER.trim() : undefined;
+    const pass = process.env.MAIL_PASSWORD ? process.env.MAIL_PASSWORD.trim() : undefined;
 
     if (!user || !pass) {
-        console.warn('Mail configuration warning: MAIL_USER or MAIL_PASSWORD not set.');
+        console.warn('[MailConfig Warning] MAIL_USER or MAIL_PASSWORD environment variables are not set.');
     }
 
-    if (provider.toLowerCase() === 'gmail') {
-        return nodemailer.createTransport({
-            host: 'smtp.gmail.com',
-            port: 465,
-            secure: true,
-            family: 4, // Force IPv4 to prevent Render IPv6 ENETUNREACH errors
-            auth: {
-                user: user,
-                pass: pass
-            },
-            tls: {
-                rejectUnauthorized: false
-            },
-            connectionTimeout: 15000,
-            greetingTimeout: 15000,
-            socketTimeout: 20000
-        });
-    } else {
-        // Generic SMTP provider (e.g. institutional email, Google Workspace, Office 365)
-        const host = process.env.MAIL_SMTP_HOST || 'smtp.gmail.com';
-        const port = parseInt(process.env.MAIL_SMTP_PORT || '587', 10);
-        const secure = process.env.MAIL_SMTP_SECURE === 'true'; // true for port 465, false for 587/25
+    // Determine host, port, and security settings
+    let host = process.env.MAIL_SMTP_HOST || 'smtp.gmail.com';
+    let port = parseInt(process.env.MAIL_SMTP_PORT || '587', 10);
+    let secure = process.env.MAIL_SMTP_SECURE === 'true';
 
-        return nodemailer.createTransport({
-            host: host,
-            port: port,
-            secure: secure,
-            family: 4, // Force IPv4 to prevent Render IPv6 ENETUNREACH errors
-            auth: {
-                user: user,
-                pass: pass
-            },
-            tls: {
-                rejectUnauthorized: false
-            },
-            connectionTimeout: 15000,
-            greetingTimeout: 15000,
-            socketTimeout: 20000
-        });
+    // Default configuration for Gmail provider if not explicitly overridden by MAIL_SMTP_* vars
+    if (provider === 'gmail' && !process.env.MAIL_SMTP_PORT) {
+        // Port 587 STARTTLS (standard) or Port 465 SSL depending on MAIL_SMTP_SECURE
+        port = secure ? 465 : 587;
     }
+
+    const transportOptions = {
+        host: host,
+        port: port,
+        secure: secure, // false for 587 STARTTLS, true for 465 Direct SSL
+        family: 4,      // Force IPv4 to bypass Render IPv6 ENETUNREACH network routing issue
+        auth: {
+            user: user,
+            pass: pass
+        },
+        connectionTimeout: 15000,
+        greetingTimeout: 15000,
+        socketTimeout: 20000
+    };
+
+    return nodemailer.createTransport(transportOptions);
 }
 
 const fromName = process.env.MAIL_FROM_NAME || 'K S R College of Engineering - Placement Portal';
