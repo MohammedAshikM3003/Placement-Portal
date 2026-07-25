@@ -1,6 +1,8 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
+const { generateTemplate } = require('../backend/services/mail/mailTemplates');
+const EMAIL_EVENTS = require('../backend/services/mail/emailEvents');
 
 let cachedDb = null;
 async function connectToDatabase() {
@@ -101,40 +103,13 @@ module.exports = async function handler(req, res) {
 
         const fromName = process.env.MAIL_FROM_NAME || 'K S R College of Engineering - Placement Cell';
         const fromAddress = process.env.MAIL_FROM_ADDRESS || 'placementportalksrce@gmail.com';
-
-        // 4. Role Theme Styling & HTML Template
-        const themeColor = role === 'admin' ? '#4EA24E' : role === 'coordinator' ? '#D23B42' : '#2085F6';
         const resolvedName = name || normalizedEmail.split('@')[0];
 
-        const htmlContent = `
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OTP Verification</title>
-</head>
-<body style="margin:0; padding:0; background-color:#f4f6f8; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
-    <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f6f8; padding: 40px 10px;">
-        <tr>
-            <td align="center">
-                <table width="100%" maxWidth="560" cellpadding="0" cellspacing="0" style="max-width:560px; background-color:#ffffff; border-radius:12px; overflow:hidden; box-shadow:0 4px 15px rgba(0,0,0,0.08); border-top: 6px solid ${themeColor};">
-                    <tr>
-                        <td style="padding: 32px 30px; text-align:center;">
-                            <h2 style="color:#1e293b; font-size:24px; margin:0 0 10px 0; font-weight:700;">Verification Code</h2>
-                            <p style="color:#64748b; font-size:15px; margin:0 0 24px 0;">Hello <strong>${resolvedName}</strong>, please use the 6-digit verification code below to verify your email address.</p>
-                            <div style="background-color:#f8fafc; border:2px dashed ${themeColor}; border-radius:10px; padding:20px; text-align:center; margin:0 0 24px 0;">
-                                <span style="font-size:36px; font-weight:800; letter-spacing:8px; color:${themeColor}; display:inline-block;">${otpVal}</span>
-                            </div>
-                            <p style="color:#94a3b8; font-size:13px; margin:0;">This code is valid for <strong>5 minutes</strong>. Do not share this code with anyone.</p>
-                        </td>
-                    </tr>
-                </table>
-            </td>
-        </tr>
-    </table>
-</body>
-</html>`;
+        // 4. Generate Single Unified Branded Email Template from mailTemplates.js
+        const emailDetails = generateTemplate(EMAIL_EVENTS.OTP_VERIFICATION, role, {
+            otp: otpVal,
+            recipientName: resolvedName
+        });
 
         // 5. Dispatch Email via Resend or Brevo HTTPS REST API (Port 443)
         let response = null;
@@ -146,10 +121,10 @@ module.exports = async function handler(req, res) {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    from: fromAddress,
+                    from: `${fromName} <${fromAddress}>`,
                     to: [normalizedEmail],
-                    subject: `${otpVal} is your Placement Portal Verification Code`,
-                    html: htmlContent
+                    subject: emailDetails.subject,
+                    html: emailDetails.htmlBody
                 })
             });
         } else {
@@ -163,8 +138,8 @@ module.exports = async function handler(req, res) {
                 body: JSON.stringify({
                     sender: { name: fromName, email: fromAddress },
                     to: [{ email: normalizedEmail }],
-                    subject: `${otpVal} is your Placement Portal Verification Code`,
-                    htmlContent: htmlContent
+                    subject: emailDetails.subject,
+                    htmlContent: emailDetails.htmlBody
                 })
             });
         }

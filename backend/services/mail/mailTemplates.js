@@ -218,30 +218,15 @@ function generateTemplate(eventType, role, data) {
 
     switch (eventType) {
         case EMAIL_EVENTS.OTP_VERIFICATION:
-            subject = 'Your Placement Portal Verification Code';
+            subject = `${data.otp} is your Placement Portal Verification Code`;
             title = 'OTP Verification';
             
-            // Map the role to the correct local PNG path
-            let otpIconPath = 'd:/Placement-Portal/src/assets/stuotp.png';
-            if (role === 'admin') {
-                otpIconPath = 'd:/Placement-Portal/src/assets/adotp.png';
-            } else if (role === 'coordinator') {
-                otpIconPath = 'd:/Placement-Portal/src/assets/coootp.png';
-            }
-            
-            // Reference the image using cid (Content ID)
-            statusIcon = `<img src="cid:otp-role-icon" width="64" height="64" style="display: block; margin: 0 auto; object-fit: contain;" alt="OTP verification icon" />`;
-            
-            // Add to attachments array
-            attachments = [{
-                filename: `${role}-otp.png`,
-                path: otpIconPath,
-                cid: 'otp-role-icon'
-            }];
+            statusIcon = getIconSvg('lock', primaryColor);
+            attachments = undefined;
 
             contentHtml = 'We received a request to verify your identity for the Placement Portal.';
             detailsCardHtml = `
-                ${buildRow('Verification Code', `<span style="font-size: 24px; font-weight: 800; color: #111111; letter-spacing: 2px;">${data.otp}</span>`)}
+                ${buildRow('Verification Code', `<span style="font-size: 28px; font-weight: 800; color: ${primaryColor}; letter-spacing: 4px;">${data.otp}</span>`)}
                 ${buildRow('Expiry Time', '5 Minutes')}
                 ${buildRow('Security Note', 'Do not share this code with anyone.')}
             `;
