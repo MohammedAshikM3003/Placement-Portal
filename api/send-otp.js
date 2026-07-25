@@ -139,13 +139,34 @@ module.exports = async function handler(req, res) {
 </body>
 </html>`;
 
-        // 4. Send Email via Gmail SMTP from Vercel
-        await transporter.sendMail({
-            from: `"${fromName}" <${fromAddress}>`,
-            to: normalizedEmail,
-            subject: `${otpVal} is your Placement Portal Verification Code`,
-            html: htmlContent
-        });
+        const brevoKey = process.env.BREVO_API_KEY;
+        if (brevoKey) {
+            const brevoRes = await fetch('https://api.brevo.com/v3/smtp/email', {
+                method: 'POST',
+                headers: {
+                    'accept': 'application/json',
+                    'api-key': brevoKey.trim(),
+                    'content-type': 'application/json'
+                },
+                body: JSON.stringify({
+                    sender: { name: fromName, email: fromAddress },
+                    to: [{ email: normalizedEmail }],
+                    subject: `${otpVal} is your Placement Portal Verification Code`,
+                    htmlContent: htmlContent
+                })
+            });
+            const brevoData = await brevoRes.json();
+            if (!brevoRes.ok) {
+                throw new Error(brevoData.message || 'Brevo HTTPS API Error');
+            }
+        } else {
+            await transporter.sendMail({
+                from: `"${fromName}" <${fromAddress}>`,
+                to: normalizedEmail,
+                subject: `${otpVal} is your Placement Portal Verification Code`,
+                html: htmlContent
+            });
+        }
 
         // 5. Save or Update OTP in DB ONLY after successful email delivery
         if (existingOtp) {

@@ -65,29 +65,58 @@ async function sendMail({ eventType, to, role, data = {}, idempotencyKey = null 
     }
     let logDoc = new EmailLog(logPayload);
 
-    // 4. Send email using Nodemailer
+    // 4. Send email using Brevo HTTPS API (Port 443) or Nodemailer SMTP
     try {
-        const transporter = createTransporter();
-        const mailOptions = {
-            from: fromEmail,
-            to: to.trim(),
-            subject: emailDetails.subject,
-            html: emailDetails.htmlBody
-        };
-        if (emailDetails.attachments) {
-            mailOptions.attachments = emailDetails.attachments;
-        }
+        const brevoKey = process.env.BREVO_API_KEY;
+        let messageId = null;
 
-        console.log(`[MailService] Dispatching email. Event: ${eventType}, To: ${to}, Role: ${role}`);
-        const info = await transporter.sendMail(mailOptions);
-        console.log(`[MailService] Dispatch success. MessageId: ${info.messageId}`);
+        if (brevoKey) {
+            console.log(`[MailService] Dispatching email via Brevo HTTPS API. Event: ${eventType}, To: ${to}`);
+            const brevoRes = await fetch('https://api.brevo.com/v3/smtp/email', {
+                method: 'POST',
+                headers: {
+                    'accept': 'application/json',
+                    'api-key': brevoKey.trim(),
+                    'content-type': 'application/json'
+                },
+                body: JSON.stringify({
+                    sender: { name: process.env.MAIL_FROM_NAME || 'K S R College of Engineering - Placement Cell', email: process.env.MAIL_FROM_ADDRESS || process.env.MAIL_USER || 'no-reply@ksrce.ac.in' },
+                    to: [{ email: to.trim() }],
+                    subject: emailDetails.subject,
+                    htmlContent: emailDetails.htmlBody
+                })
+            });
+
+            const brevoData = await brevoRes.json();
+            if (!brevoRes.ok) {
+                throw new Error(brevoData.message || brevoData.error || 'Brevo HTTPS API Error');
+            }
+            messageId = brevoData.messageId || `brevo_${Date.now()}`;
+            console.log(`[MailService] Brevo HTTPS dispatch success. MessageId: ${messageId}`);
+        } else {
+            const transporter = createTransporter();
+            const mailOptions = {
+                from: fromEmail,
+                to: to.trim(),
+                subject: emailDetails.subject,
+                html: emailDetails.htmlBody
+            };
+            if (emailDetails.attachments) {
+                mailOptions.attachments = emailDetails.attachments;
+            }
+
+            console.log(`[MailService] Dispatching email via SMTP. Event: ${eventType}, To: ${to}, Role: ${role}`);
+            const info = await transporter.sendMail(mailOptions);
+            messageId = info.messageId;
+            console.log(`[MailService] SMTP dispatch success. MessageId: ${messageId}`);
+        }
 
         // Update log as successful
         logDoc.status = 'sent';
-        logDoc.providerMessageId = info.messageId;
+        logDoc.providerMessageId = messageId;
         await logDoc.save().catch(logErr => console.error('[MailService] Failed updating send log:', logErr));
 
-        return { success: true, messageId: info.messageId };
+        return { success: true, messageId };
     } catch (sendErr) {
         console.error(`[MailService] Dispatch failed for event ${eventType} to ${to}:`, sendErr.message);
 
