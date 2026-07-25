@@ -168,8 +168,9 @@ function buildCta(label, url, role) {
         admin: '#4EA24E'
     };
     const primaryColor = roleColors[role] || '#2085F6';
+    const targetUrl = url || process.env.PORTAL_URL || 'https://placement--portal.vercel.app/';
     return `
-        <a href="${url || 'http://localhost:3000'}" target="_blank" style="display: inline-block; background-color: ${primaryColor}; color: #ffffff !important; text-decoration: none; padding: 12px 28px; border-radius: 6px; font-size: 14px; font-weight: 700; letter-spacing: 0.5px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); font-family: 'Poppins', 'Segoe UI', sans-serif;">
+        <a href="${targetUrl}" target="_blank" style="display: inline-block; background-color: ${primaryColor}; color: #ffffff !important; text-decoration: none; padding: 12px 28px; border-radius: 6px; font-size: 14px; font-weight: 700; letter-spacing: 0.5px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); font-family: 'Poppins', 'Segoe UI', sans-serif;">
             ${label}
         </a>
     `;
@@ -206,7 +207,7 @@ function generateTemplate(eventType, role, data) {
     let subject = '';
     let attachments = undefined;
     
-    const portalUrl = process.env.PORTAL_URL || 'http://localhost:3000';
+    const portalUrl = process.env.PORTAL_URL || 'https://placement--portal.vercel.app/';
     const recipientName = data.recipientName || 'Member';
 
     const roleColors = {

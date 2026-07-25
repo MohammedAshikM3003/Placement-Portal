@@ -6,27 +6,7 @@ const { canonicalStorePath, resolveProfileUrl } = profileUtils;
 
 class AuthService {
   constructor() {
-    // Use environment variable or fallback based on environment
-    let defaultBackendUrl;
-    
-    if (process.env.NODE_ENV === 'production') {
-      // Production: Use Render backend URL
-      defaultBackendUrl = 'https://placement-portal-zxo2.onrender.com/api';
-    } else if (typeof window !== 'undefined' && window.location.hostname.includes('devtunnels.ms')) {
-      // Development: VS Code tunnel
-      const backendHost = window.location.hostname.replace('-3000', '-5000');
-      defaultBackendUrl = `https://${backendHost}/api`;
-    } else {
-      // Development: Local
-      defaultBackendUrl = 'http://localhost:5000/api';
-    }
-    
-    // Prioritize devtunnels dynamic url over REACT_APP_API_URL (which might be hardcoded to localhost)
-    if (typeof window !== 'undefined' && window.location.hostname.includes('devtunnels.ms')) {
-      this.baseURL = defaultBackendUrl;
-    } else {
-      this.baseURL = process.env.REACT_APP_API_URL || defaultBackendUrl;
-    }
+    this.baseURL = API_BASE_URL;
     console.log('🔧 Backend URL:', this.baseURL);
     
     // Auth result cache for rapid repeated checks

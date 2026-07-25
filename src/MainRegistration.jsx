@@ -2959,6 +2959,7 @@ function MainRegistration() {
       {/* ── Overlays & Popups ── */}
       {isSidebarOpen && <div className={cx("mr-overlay")} onClick={() => setIsSidebarOpen(false)} />}
 
+      <ConfettiSideCannons fireSignal={isPopupOpen ? 1 : 0} style={{ display: 'none' }} />
       <SuccessPopup isOpen={isPopupOpen} onClose={closePopup} />
       <ConfirmDiscardPopup isOpen={isDiscardPopupOpen} onConfirm={handleConfirmDiscard} onCancel={handleCancelDiscard} />
       <ExistingRegNoPopup isOpen={isExistingRegNoPopupOpen} onClose={closeExistingRegNoPopup} regNo={existingRegNo} />
