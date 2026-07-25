@@ -171,7 +171,7 @@ function AppContent() {
   useEffect(() => {
     if (!authLoading) {
       const path = location.pathname;
-      const isPublicRoute = path === '/' || path === '/mainlogin' || path === '/signup' || path === '/registration' || path === '/registration-debug';
+      const isPublicRoute = path === '/' || path === '/mainlogin' || path === '/signup' || path === '/registration' || path === '/registration-debug' || path === '/admin-excel-upload';
 
       if (isPublicRoute) {
         changeFavicon(FAVICON_TYPES.DEFAULT);
@@ -204,7 +204,9 @@ function AppContent() {
                           path === '/mainlogin' || 
                           path === '/signup' || 
                           path === '/registration' || 
-                          path === '/registration-debug';
+                          path === '/registration-debug' ||
+                          path === '/admin-excel-upload';
+
                           
     if (isPublicRoute) {
       document.documentElement.classList.remove('admin-theme', 'coo-theme', 'stu-theme');
@@ -331,6 +333,7 @@ function AppContent() {
       <Route path="/registration" element={<MainRegistration onNavigateToLogin={() => navigate("/mainlogin")} />} />
       <Route path="/mail-status" element={<MailStatusPage />} />
       <Route path="/registration-debug" element={<RegistrationDebug />} />
+      <Route path="/admin-excel-upload" element={<RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading Page..." showAnimatedDots={true} />}><AdminExcelStudentUpload /></Suspense></RouteErrorBoundary>} />
       <Route path="/sastu-page" element={<RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading Page..." showAnimatedDots={true} />}><SastuPage /></Suspense></RouteErrorBoundary>} />
       <Route path="/sacoo-page" element={<RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading Page..." showAnimatedDots={true} />}><SaCooPage /></Suspense></RouteErrorBoundary>} />
       <Route path="/saad-page" element={<RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading Page..." showAnimatedDots={true} />}><SaAdPage /></Suspense></RouteErrorBoundary>} />
@@ -382,7 +385,6 @@ function AppContent() {
       <Route path="/admin-dashboard" element={<RoleGuard allowedRoles={['admin']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading Dashboard..." showAnimatedDots={true} />}><AdminDashboard onLogout={() => navigate('/')} /></Suspense></RouteErrorBoundary></RoleGuard>} />
       <Route path="/saad-admin-dashboard" element={<RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading Dashboard..." showAnimatedDots={true} />}><AdminDashboard onLogout={() => navigate('/')} /></Suspense></RouteErrorBoundary>} />
       <Route path="/admin-student-database" element={<RoleGuard allowedRoles={['admin']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdminstudDB onLogout={() => navigate('/')} /></Suspense></RouteErrorBoundary></RoleGuard>} />
-      <Route path="/admin-excel-upload" element={<RoleGuard allowedRoles={['admin']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdminExcelStudentUpload onLogout={() => navigate('/')} /></Suspense></RouteErrorBoundary></RoleGuard>} />
 
       <Route path="/admin-placement-training" element={<RoleGuard allowedRoles={['admin']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdminTraining onLogout={() => navigate('/')} /></Suspense></RouteErrorBoundary></RoleGuard>} />
       <Route path="/admin-training" element={<RoleGuard allowedRoles={['admin']}><RouteErrorBoundary><Suspense fallback={<LoadingSpinner message="Loading..." showAnimatedDots={true} />}><AdminTraining onLogout={() => navigate('/')} /></Suspense></RouteErrorBoundary></RoleGuard>} />

@@ -101,6 +101,9 @@
 
 .profilePhotoWrapper {
     grid-column: 3 / 4;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
 }
 
 /* Inputs and Selects */
@@ -108,7 +111,8 @@
 .formGrid select,
 .datepickerInput {
     width: 100%;
-    padding: 0.9rem;
+    height: 53.6px;
+    padding: 0 0.9rem;
     border: 1px solid #dde6f4;
     border-radius: 8px;
     background-color: #f9fbff;

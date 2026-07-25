@@ -11,6 +11,8 @@ import { normalizeSkillCategories, flattenSkillsToSkillSet } from '../utils/skil
 import Navbar from '../components/Navbar/Navbar';
 import Sidebar from '../components/Sidebar/Sidebar';
 import styles from './StuProfile.module.css'; // Module Import
+import FormDropdown from '../components/common/FormDropdown/FormDropdown';
+import { validateGmailUsername } from '../utils/emailUtils';
 import achievementStyles from './Achievements.module.css'; // Achievement popup styles
 import Adminicons from '../assets/BlueAdminicon.png';
 import BestAchievement from '../assets/BestAchievementicon.svg';
@@ -136,7 +138,7 @@ const IoMdClose = () => (
 const RequiredStar = () => <span className={styles.requiredStar}>*</span>;
 
 const GraduationCapIcon = () => (
-    <img src={Adminicons} alt="Graduation Cap" style={{ width: '100px', height: '90px', marginTop:'-20px'}}/>
+    <img src={Adminicons} alt="Graduation Cap" style={{ width: '100px', height: '90px', marginTop: '-20px' }} />
 );
 
 const FileIcon = () => (
@@ -166,8 +168,8 @@ const SuccessPopup = ({ isOpen, onClose }) => {
                 <div className={achievementStyles['Achievement-popup-header']}>Saved!</div>
                 <div className={achievementStyles['Achievement-popup-body']}>
                     <svg className={achievementStyles['Achievement-success-icon']} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
-                        <circle className={achievementStyles['Achievement-success-icon--circle']} cx="26" cy="26" r="25" fill="none"/>
-                        <path className={achievementStyles['Achievement-success-icon--check']} fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+                        <circle className={achievementStyles['Achievement-success-icon--circle']} cx="26" cy="26" r="25" fill="none" />
+                        <path className={achievementStyles['Achievement-success-icon--check']} fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8" />
                     </svg>
                     <h2 style={{ margin: "1rem 0 0.5rem 0", fontSize: "24px", color: "#000", fontWeight: "700" }}>
                         Changes Saved ✓
@@ -308,44 +310,44 @@ const ImagePreviewModal = ({ src, isOpen, onClose }) => {
 
     return (
         <>
-        {shouldShowPreviewPopup && (
-            <div className={styles.imagePreviewOverlay} onClick={downloadPopupState === 'progress' ? undefined : onClose}>
-                <div className={styles.imagePreviewContainer} onClick={(e) => e.stopPropagation()}>
-                    <div className={styles.imagePreviewHeader}>Preview Image</div>
-                    <div className={styles.imagePreviewBody}>
-                        <img src={src} alt="Profile Preview" />
-                    </div>
-                    <div className={styles.imagePreviewFooter}>
-                        <button
-                            onClick={onClose}
-                            disabled={downloadPopupState === 'progress'}
-                            className={`${styles.imagePreviewFooterBtn} ${styles.imagePreviewCloseBtn}`}
-                        >
-                            Close
-                        </button>
-                        <button
-                            onClick={handleDownload}
-                            disabled={downloadPopupState === 'progress'}
-                            className={`${styles.imagePreviewFooterBtn} ${styles.imagePreviewDownloadBtn}`}
-                        >
-                            {downloadPopupState === 'progress' ? 'Downloading...' : 'Download'}
-                        </button>
+            {shouldShowPreviewPopup && (
+                <div className={styles.imagePreviewOverlay} onClick={downloadPopupState === 'progress' ? undefined : onClose}>
+                    <div className={styles.imagePreviewContainer} onClick={(e) => e.stopPropagation()}>
+                        <div className={styles.imagePreviewHeader}>Preview Image</div>
+                        <div className={styles.imagePreviewBody}>
+                            <img src={src} alt="Profile Preview" />
+                        </div>
+                        <div className={styles.imagePreviewFooter}>
+                            <button
+                                onClick={onClose}
+                                disabled={downloadPopupState === 'progress'}
+                                className={`${styles.imagePreviewFooterBtn} ${styles.imagePreviewCloseBtn}`}
+                            >
+                                Close
+                            </button>
+                            <button
+                                onClick={handleDownload}
+                                disabled={downloadPopupState === 'progress'}
+                                className={`${styles.imagePreviewFooterBtn} ${styles.imagePreviewDownloadBtn}`}
+                            >
+                                {downloadPopupState === 'progress' ? 'Downloading...' : 'Download'}
+                            </button>
+                        </div>
                     </div>
                 </div>
-            </div>
-        )}
-        <DownloadSuccessAlert
-            isOpen={downloadPopupState === 'success'}
-            onClose={handleSuccessClose}
-            fileLabel="image"
-            title="Downloaded !"
-            description="The image has been successfully downloaded to your device."
-        />
-        <DownloadFailedAlert
-            isOpen={downloadPopupState === 'error'}
-            onClose={() => setDownloadPopupState('none')}
-            color="#2563EB"
-        />
+            )}
+            <DownloadSuccessAlert
+                isOpen={downloadPopupState === 'success'}
+                onClose={handleSuccessClose}
+                fileLabel="image"
+                title="Downloaded !"
+                description="The image has been successfully downloaded to your device."
+            />
+            <DownloadFailedAlert
+                isOpen={downloadPopupState === 'error'}
+                onClose={() => setDownloadPopupState('none')}
+                color="#2563EB"
+            />
         </>
     );
 };
@@ -688,8 +690,8 @@ function UnsavedChangesModal({ changedFields, onDiscard, onSave }) {
                 <div className={achievementStyles['Achievement-popup-body']}>
                     <div className={styles.unsavedIconWrap}>
                         <svg viewBox="0 0 24 24" width="42" height="42" fill="none" stroke="#333" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                            <line x1="12" y1="7" x2="12" y2="14"/>
-                            <circle cx="12" cy="18" r="0.5" fill="#333" stroke="#333"/>
+                            <line x1="12" y1="7" x2="12" y2="14" />
+                            <circle cx="12" cy="18" r="0.5" fill="#333" stroke="#333" />
                         </svg>
                     </div>
                     <h2 className={styles.unsavedTitle}>Save Changes!</h2>
@@ -1840,11 +1842,24 @@ function StuProfile({ onLogout, onViewChange }) {
     }, [hasCompanyData, showAnalysis]);
 
     const successRate = useMemo(() => {
-        const attended   = companyStats.totalDrivesAttended;
+        const attended = companyStats.totalDrivesAttended;
         const shortlisted = companyStats.shortlistedCount;
         if (attended === 0) return 0;
         return Math.min(100, Math.round((shortlisted / attended) * 100));
     }, [companyStats.totalDrivesAttended, companyStats.shortlistedCount]);
+
+    const age = useMemo(() => {
+        if (!dob) return studentData?.age || "";
+        const birthDate = new Date(dob);
+        if (isNaN(birthDate.getTime())) return studentData?.age || "";
+        const today = new Date();
+        let computedAge = today.getFullYear() - birthDate.getFullYear();
+        const monthDiff = today.getMonth() - birthDate.getMonth();
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+            computedAge--;
+        }
+        return computedAge >= 0 ? String(computedAge) : studentData?.age || "";
+    }, [dob, studentData?.age]);
 
     const getAvailableSemesters = (year) => {
         const semesterMap = { 'I': ['1', '2'], 'II': ['3', '4'], 'III': ['5', '6'], 'IV': ['7', '8'] };
@@ -1907,7 +1922,7 @@ function StuProfile({ onLogout, onViewChange }) {
         setSkills(processedSkills);
         setOriginalSkills([...processedSkills]); // Track original skills for banner
         savedDataRef.current = { ...merged, skills: processedSkills };
-        
+
         if (merged.dob) {
             const dobStr = merged.dob.toString();
             if (dobStr.length === 8) {
@@ -1917,7 +1932,7 @@ function StuProfile({ onLogout, onViewChange }) {
                 setDob(new Date(year, month - 1, day));
             }
         }
-        
+
         if (merged.profilePicURL) {
             // Resolve GridFS URLs to full backend URL for display
             const resolvedUrl = gridfsService.getFileUrl(merged.profilePicURL);
@@ -1946,15 +1961,15 @@ function StuProfile({ onLogout, onViewChange }) {
         try {
             const storedStudentData = JSON.parse(localStorage.getItem('studentData') || 'null');
             if (!storedStudentData || !storedStudentData._id) return;
-            
+
             const studentId = storedStudentData._id || storedStudentData.id;
             const completeData = await fastDataService.getCompleteStudentData(studentId);
-            
+
             if (completeData && completeData.student) {
                 populateFormFields(completeData.student, false);
                 if (completeData.resume) localStorage.setItem('resumeData', JSON.stringify(completeData.resume));
                 if (completeData.certificates) localStorage.setItem('certificatesData', JSON.stringify(completeData.certificates));
-                
+
                 const regNo = completeData.student.regNo || completeData.student.registerNumber || '';
                 if (regNo) {
                     fetchAvailableSemesters(regNo);
@@ -1999,18 +2014,18 @@ function StuProfile({ onLogout, onViewChange }) {
             } else if (storedStudentData.regNo) {
                 fetchAvailableSemesters(storedStudentData.regNo);
             }
-            
+
             if (storedStudentData.profilePicURL) {
-                window.dispatchEvent(new CustomEvent('profileUpdated', { 
-                    detail: { profilePicURL: storedStudentData.profilePicURL, studentData: storedStudentData } 
+                window.dispatchEvent(new CustomEvent('profileUpdated', {
+                    detail: { profilePicURL: storedStudentData.profilePicURL, studentData: storedStudentData }
                 }));
             }
-            
+
             // Set initial sync time
             setLastSyncTime(storedStudentData.updatedAt || new Date().toISOString());
         }
         loadStudentData();
-        
+
         return () => {
             // Cleanup handled globally in AuthContext
         };
@@ -2041,9 +2056,9 @@ function StuProfile({ onLogout, onViewChange }) {
             try {
                 const storedStudentData = JSON.parse(localStorage.getItem('studentData') || 'null');
                 if (!storedStudentData || !storedStudentData._id) return;
-                
+
                 const studentId = storedStudentData._id || storedStudentData.id;
-                
+
                 // Use the lightweight status endpoint instead of full student fetch
                 const authToken = localStorage.getItem('authToken');
                 const response = await fetch(`${API_BASE_URL}/students/${studentId}/status`, {
@@ -2053,10 +2068,10 @@ function StuProfile({ onLogout, onViewChange }) {
                     }
                 });
                 if (!response.ok) return;
-                
+
                 const statusData = await response.json();
                 if (!statusData.success) return;
-                
+
                 // If blocked status changed, handle it
                 if (statusData.student?.blocked) {
                     console.warn('Account blocked by admin');
@@ -2065,10 +2080,10 @@ function StuProfile({ onLogout, onViewChange }) {
                 // Silently ignore sync errors to avoid console spam
             }
         };
-        
+
         // Check for updates every 30 seconds (reduced from 10s)
         const syncInterval = setInterval(checkForUpdates, 30000);
-        
+
         // Cleanup interval on unmount
         return () => clearInterval(syncInterval);
     }, []); // Fixed: Removed lastSyncTime dependency to prevent interval recreation
@@ -2209,7 +2224,7 @@ function StuProfile({ onLogout, onViewChange }) {
 
         // Skip submit when nothing changed (e.g., Enter key submit on unchanged form)
         if (isSaving || getChangedFields().length === 0) return;
-        
+
         // Validate GitHub and LinkedIn URLs before saving
         const githubVal = studentData?.githubLink?.trim() || '';
         const linkedinVal = studentData?.linkedinLink?.trim() || '';
@@ -2227,7 +2242,7 @@ function StuProfile({ onLogout, onViewChange }) {
         }
 
         setIsSaving(true);
-        
+
         try {
             const storedStudentData = JSON.parse(localStorage.getItem('studentData') || 'null');
             if (!storedStudentData || (!storedStudentData._id && !storedStudentData.id)) {
@@ -2242,7 +2257,7 @@ function StuProfile({ onLogout, onViewChange }) {
             let profilePhotoUrl = studentData?.profilePicURL || '';
             // Initialize finalResolvedUrl with existing profile URL (in case no new photo uploaded)
             let finalResolvedUrl = studentData?.profilePicURL ? gridfsService.getFileUrl(studentData.profilePicURL) : '';
-            
+
             if (profilePhotoFile) {
                 try {
                     console.log('🔄 Uploading profile photo to GridFS...');
@@ -2250,11 +2265,11 @@ function StuProfile({ onLogout, onViewChange }) {
                     if (result && result.url) {
                         profilePhotoUrl = result.url; // relative GridFS path e.g. /api/file/xxx
                         finalResolvedUrl = gridfsService.getFileUrl(result.url); // full URL
-                        
+
                         // Don't update UI yet - keep old image visible until save completes
                         // This prevents sidebar flicker (old → placeholder → new)
                         setProfilePhotoFile(null);
-                        
+
                         console.log('✅ Profile photo uploaded to GridFS:', profilePhotoUrl);
                     }
                 } catch (uploadErr) {
@@ -2266,7 +2281,7 @@ function StuProfile({ onLogout, onViewChange }) {
             }
 
             const formData = new FormData(e.target);
-            
+
             const updateData = {
                 // Include all readonly fields to preserve complete profile data
                 firstName: formData.get('firstName') || studentData?.firstName || '',
@@ -2284,7 +2299,7 @@ function StuProfile({ onLogout, onViewChange }) {
                 aadhaarNo: formData.get('aadhaarNo') || studentData?.aadhaarNo || '',
                 community: formData.get('community') || studentData?.community || '',
                 mediumOfStudy: formData.get('mediumOfStudy') || studentData?.mediumOfStudy || '',
-                
+
                 // Academic background (readonly)
                 tenthBoard: formData.get('tenthBoard') || studentData?.tenthBoard || '',
                 tenthInstitution: formData.get('tenthInstitution') || studentData?.tenthInstitution || '',
@@ -2299,53 +2314,53 @@ function StuProfile({ onLogout, onViewChange }) {
                 diplomaInstitution: formData.get('diplomaInstitution') || studentData?.diplomaInstitution || '',
                 diplomaPercentage: formData.get('diplomaPercentage') || studentData?.diplomaPercentage || '',
                 diplomaYear: formData.get('diplomaYear') || studentData?.diplomaYear || '',
-                
+
                 // Editable fields - preserve existing data if field not on current form view
-                address: formData.get('address') || studentData?.address || '', 
+                address: formData.get('address') || studentData?.address || '',
                 city: formData.get('city') || studentData?.city || '',
-                primaryEmail: formData.get('primaryEmail') || studentData?.primaryEmail || '', 
+                primaryEmail: formData.get('primaryEmail') || studentData?.primaryEmail || '',
                 mobileNo: formData.get('mobileNo') || studentData?.mobileNo || '',
-                fatherOccupation: formData.get('fatherOccupation') || studentData?.fatherOccupation || '', 
+                fatherOccupation: formData.get('fatherOccupation') || studentData?.fatherOccupation || '',
                 fatherMobile: formData.get('fatherMobile') || studentData?.fatherMobile || '',
-                motherOccupation: formData.get('motherOccupation') || studentData?.motherOccupation || '', 
+                motherOccupation: formData.get('motherOccupation') || studentData?.motherOccupation || '',
                 motherMobile: formData.get('motherMobile') || studentData?.motherMobile || '',
                 section: formData.get('section') || studentData?.section || '',
-                guardianName: formData.get('guardianName') || studentData?.guardianName || '', 
+                guardianName: formData.get('guardianName') || studentData?.guardianName || '',
                 guardianMobile: formData.get('guardianMobile') || studentData?.guardianMobile || '',
-                bloodGroup: formData.get('bloodGroup') || studentData?.bloodGroup || '', 
+                bloodGroup: formData.get('bloodGroup') || studentData?.bloodGroup || '',
                 studyCategory: studyCategory || studentData?.studyCategory || '',
-                currentYear: formData.get('currentYear') || studentData?.currentYear || '', 
+                currentYear: formData.get('currentYear') || studentData?.currentYear || '',
                 currentSemester: formData.get('currentSemester') || studentData?.currentSemester || '',
-                semester1GPA: formData.get('semester1GPA') || studentData?.semester1GPA || '', 
+                semester1GPA: formData.get('semester1GPA') || studentData?.semester1GPA || '',
                 semester2GPA: formData.get('semester2GPA') || studentData?.semester2GPA || '',
-                semester3GPA: formData.get('semester3GPA') || studentData?.semester3GPA || '', 
+                semester3GPA: formData.get('semester3GPA') || studentData?.semester3GPA || '',
                 semester4GPA: formData.get('semester4GPA') || studentData?.semester4GPA || '',
-                semester5GPA: formData.get('semester5GPA') || studentData?.semester5GPA || '', 
+                semester5GPA: formData.get('semester5GPA') || studentData?.semester5GPA || '',
                 semester6GPA: formData.get('semester6GPA') || studentData?.semester6GPA || '',
-                semester7GPA: formData.get('semester7GPA') || studentData?.semester7GPA || '', 
+                semester7GPA: formData.get('semester7GPA') || studentData?.semester7GPA || '',
                 semester8GPA: formData.get('semester8GPA') || studentData?.semester8GPA || '',
-                overallCGPA: formData.get('overallCGPA') || studentData?.overallCGPA || '', 
+                overallCGPA: formData.get('overallCGPA') || studentData?.overallCGPA || '',
                 clearedBacklogs: formData.get('clearedBacklogs') || studentData?.clearedBacklogs || '',
-                currentBacklogs: formData.get('currentBacklogs') || studentData?.currentBacklogs || '', 
-                yearOfGap: formData.get('yearOfGap') || studentData?.yearOfGap || '', 
+                currentBacklogs: formData.get('currentBacklogs') || studentData?.currentBacklogs || '',
+                yearOfGap: formData.get('yearOfGap') || studentData?.yearOfGap || '',
                 gapReason: formData.get('gapReason') || studentData?.gapReason || '',
-                residentialStatus: formData.get('residentialStatus') || studentData?.residentialStatus || '', 
-                quota: formData.get('quota') || studentData?.quota || '', 
+                residentialStatus: formData.get('residentialStatus') || studentData?.residentialStatus || '',
+                quota: formData.get('quota') || studentData?.quota || '',
                 languagesKnown: formData.get('languagesKnown') || studentData?.languagesKnown || '',
-                firstGraduate: formData.get('firstGraduate') || studentData?.firstGraduate || '', 
-                passportNo: formData.get('passportNo') || studentData?.passportNo || '', 
+                firstGraduate: formData.get('firstGraduate') || studentData?.firstGraduate || '',
+                passportNo: formData.get('passportNo') || studentData?.passportNo || '',
                 skillSet: flattenSkillsToSkillSet(skills),
                 skills: skills,
-                valueAddedCourses: formData.get('valueAddedCourses') || studentData?.valueAddedCourses || '', 
-                aboutSibling: formData.get('aboutSibling') || studentData?.aboutSibling || '', 
+                valueAddedCourses: formData.get('valueAddedCourses') || studentData?.valueAddedCourses || '',
+                aboutSibling: formData.get('aboutSibling') || studentData?.aboutSibling || '',
                 rationCardNo: formData.get('rationCardNo') || studentData?.rationCardNo || '',
-                familyAnnualIncome: formData.get('familyAnnualIncome') || studentData?.familyAnnualIncome || '', 
+                familyAnnualIncome: formData.get('familyAnnualIncome') || studentData?.familyAnnualIncome || '',
                 willingToSignBond: formData.get('willingToSignBond') || studentData?.willingToSignBond || '',
-                preferredModeOfDrive: formData.get('preferredModeOfDrive') || studentData?.preferredModeOfDrive || '', 
+                preferredModeOfDrive: formData.get('preferredModeOfDrive') || studentData?.preferredModeOfDrive || '',
                 githubLink: formData.get('githubLink') || studentData?.githubLink || '',
-                linkedinLink: formData.get('linkedinLink') || studentData?.linkedinLink || '', 
-                portfolioLink: formData.get('portfolioLink') || studentData?.portfolioLink || '', 
-                companyTypes: formData.get('companyTypes') || studentData?.companyTypes || '', 
+                linkedinLink: formData.get('linkedinLink') || studentData?.linkedinLink || '',
+                portfolioLink: formData.get('portfolioLink') || studentData?.portfolioLink || '',
+                companyTypes: formData.get('companyTypes') || studentData?.companyTypes || '',
                 preferredJobLocation: formData.get('preferredJobLocation') || studentData?.preferredJobLocation || '',
                 preferredTraining: studentData?.preferredTraining || '',
                 profilePicURL: (() => {
@@ -2371,14 +2386,14 @@ function StuProfile({ onLogout, onViewChange }) {
             const result = await fastDataService.updateProfile(studentId, updateData);
             console.log('StuProfile handleSave result.student:', result?.student);
 
-            const updatedStudentData = { 
-                ...(studentData || {}), 
-                ...(result?.student || {}), 
+            const updatedStudentData = {
+                ...(studentData || {}),
+                ...(result?.student || {}),
                 ...updateData,
                 // Ensure we use the resolved GridFS URL for display
                 profilePicURL: finalResolvedUrl || updateData.profilePicURL || studentData?.profilePicURL
             };
-            
+
             // If we have a new profile image, preload it before updating UI (prevents placeholder flash)
             if (finalResolvedUrl && finalResolvedUrl !== studentData?.profilePicURL) {
                 try {
@@ -2388,7 +2403,7 @@ function StuProfile({ onLogout, onViewChange }) {
                             console.log('⚠️ Image preload timeout, continuing anyway');
                             resolve();
                         }, 3000); // 3 second max wait
-                        
+
                         img.onload = () => {
                             clearTimeout(timeout);
                             console.log('✅ New profile image preloaded successfully');
@@ -2405,18 +2420,18 @@ function StuProfile({ onLogout, onViewChange }) {
                     console.warn('Image preload error:', preloadErr);
                 }
             }
-            
+
             // Clean up blob URLs to prevent memory leaks (after preload completes)
             if (profileImage && profileImage.startsWith('blob:')) {
                 URL.revokeObjectURL(profileImage);
             }
-            
+
             // Update local state with new data including new profile pic
             setStudentData(updatedStudentData);
             setCurrentYear(String(updatedStudentData.currentYear || ''));
             setCurrentSemester(String(updatedStudentData.currentSemester || ''));
             setSelectedSection(String(updatedStudentData.section || ''));
-            
+
             // Update profile image preview to new image (seamless transition - image already preloaded)
             if (finalResolvedUrl) {
                 setProfileImage(finalResolvedUrl);
@@ -2504,7 +2519,7 @@ function StuProfile({ onLogout, onViewChange }) {
             onViewChange(navTarget);
         }
     };
-    
+
     const getChangedFields = () => {
         if (!savedDataRef.current || !studentData) return [];
         const saved = savedDataRef.current;
@@ -2575,7 +2590,7 @@ function StuProfile({ onLogout, onViewChange }) {
                     fontSize: '14px'
                 }}>
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M20 6L9 17l-5-5"/>
+                        <path d="M20 6L9 17l-5-5" />
                     </svg>
                     <span>Your profile has been updated by admin</span>
                 </div>
@@ -2673,7 +2688,7 @@ function StuProfile({ onLogout, onViewChange }) {
                                         <div className={styles.datepickerWrapper}>
                                             <DatePicker
                                                 selected={dob}
-                                                onChange={() => {}}
+                                                onChange={() => { }}
                                                 dateFormat="dd-MM-yyyy"
                                                 placeholderText="Enter DOB"
                                                 className={`${styles.datepickerInput} ${styles.readOnlyInput}`}
@@ -2685,95 +2700,111 @@ function StuProfile({ onLogout, onViewChange }) {
                                         </div>
                                     </div>
                                     <div className={styles.field}>
+                                        <label>Age</label>
+                                        <div className={styles.inputWithSuffix}>
+                                            <input
+                                                type="text"
+                                                name="age"
+                                                value={age || ''}
+                                                readOnly
+                                                placeholder="Auto-calculated from DOB"
+                                                className={styles.readOnlyInput}
+                                            />
+                                            <div className={styles.suffixChip}>Years</div>
+                                        </div>
+                                    </div>
+                                    <div className={styles.field}>
                                         <label>Degree <RequiredStar /></label>
-                                        <select name="degree" value={studentData?.degree || ''} disabled className={styles.readOnlyInput}>
-                                            <option value="" disabled>Degree</option>
-                                            <option value={studentData?.degree || ''}>{studentData?.degree || 'N/A'}</option>
-                                        </select>
+                                        <FormDropdown
+                                            options={studentData?.degree ? [studentData.degree] : []}
+                                            selectedOption={studentData?.degree || ''}
+                                            onSelect={() => { }}
+                                            placeholder="Select Degree"
+                                            disabled={true}
+                                            role="student"
+                                            className={styles.dropdownWrapper}
+                                            headerClassName={styles.dropdownHeader}
+                                        />
+                                        <input type="hidden" name="degree" value={studentData?.degree || ''} />
                                     </div>
                                     <div className={styles.field}>
                                         <label>Branch <RequiredStar /></label>
-                                        <select
-                                            name="branch"
-                                            value={studentData?.branch || ''}
-                                            disabled
-                                            className={styles.readOnlyInput}
-                                        >
-                                            <option value="" disabled>Branch</option>
-                                            <option value={studentData?.branch || ''}>{studentData?.branch || 'N/A'}</option>
-                                        </select>
+                                        <FormDropdown
+                                            options={studentData?.branch ? [studentData.branch] : []}
+                                            selectedOption={studentData?.branch || ''}
+                                            onSelect={() => { }}
+                                            placeholder="Select Branch"
+                                            disabled={true}
+                                            role="student"
+                                            className={styles.dropdownWrapper}
+                                            headerClassName={styles.dropdownHeader}
+                                        />
+                                        <input type="hidden" name="branch" value={studentData?.branch || ''} />
                                     </div>
                                     <div className={styles.field}>
                                         <label>Current Year <RequiredStar /></label>
-                                        <select
-                                            name="currentYear"
-                                            value={currentYear || ''}
-                                            required
-                                            onChange={(e) => {
-                                                const newYear = e.target.value;
+                                        <FormDropdown
+                                            options={['I', 'II', 'III', 'IV']}
+                                            selectedOption={currentYear || ''}
+                                            onSelect={(newYear) => {
                                                 setCurrentYear(newYear);
                                                 const semesters = getAvailableSemesters(newYear);
                                                 const firstSemester = semesters[0] || '';
                                                 setCurrentSemester(firstSemester);
                                                 setStudentData((prev) => ({ ...(prev || {}), currentYear: newYear, currentSemester: firstSemester }));
                                             }}
+                                            placeholder="Select Current Year"
                                             disabled={isSaving}
-                                        >
-                                            <option value="" disabled>Current Year</option>
-                                            <option value="I">I</option>
-                                            <option value="II">II</option>
-                                            <option value="III">III</option>
-                                            <option value="IV">IV</option>
-                                        </select>
+                                            role="student"
+                                            className={styles.dropdownWrapper}
+                                            headerClassName={styles.dropdownHeader}
+                                        />
+                                        <input type="hidden" name="currentYear" value={currentYear || ''} />
                                     </div>
                                     <div className={styles.field}>
                                         <label>Current Semester <RequiredStar /></label>
-                                        <select
-                                            name="currentSemester"
-                                            value={currentSemester || ''}
-                                            onChange={(e) => {
-                                                const value = e.target.value;
+                                        <FormDropdown
+                                            options={getAvailableSemesters(currentYear)}
+                                            selectedOption={currentSemester || ''}
+                                            onSelect={(value) => {
                                                 setCurrentSemester(value);
                                                 setStudentData((prev) => ({ ...(prev || {}), currentSemester: value }));
                                             }}
-                                            required
+                                            placeholder={currentYear ? 'Select Current Semester' : 'Select Year First'}
                                             disabled={!currentYear || isSaving}
-                                        >
-                                            <option value="" disabled>{currentYear ? 'Current Semester' : 'Select Year First'}</option>
-                                            {getAvailableSemesters(currentYear).map((sem) => (
-                                                <option key={sem} value={sem}>
-                                                    {sem}
-                                                </option>
-                                            ))}
-                                        </select>
+                                            role="student"
+                                            className={styles.dropdownWrapper}
+                                            headerClassName={styles.dropdownHeader}
+                                        />
+                                        <input type="hidden" name="currentSemester" value={currentSemester || ''} />
                                     </div>
                                     <div className={styles.field}>
                                         <label>Section <RequiredStar /></label>
-                                        <>
-                                            <select
-                                                name="section"
-                                                value={selectedSection}
-                                                disabled
-                                                className={styles.readOnlyInput}
-                                            >
-                                                <option value="" disabled>
-                                                    Section *
-                                                </option>
-                                                <option value="A">A</option>
-                                                <option value="B">B</option>
-                                                <option value="C">C</option>
-                                                <option value="D">D</option>
-                                            </select>
-                                            <input type="hidden" name="section" value={selectedSection || ''} />
-                                        </>
+                                        <FormDropdown
+                                            options={['A', 'B', 'C', 'D']}
+                                            selectedOption={selectedSection || ''}
+                                            onSelect={() => { }}
+                                            placeholder="Select Section"
+                                            disabled={true}
+                                            role="student"
+                                            className={styles.dropdownWrapper}
+                                            headerClassName={styles.dropdownHeader}
+                                        />
+                                        <input type="hidden" name="section" value={selectedSection || ''} />
                                     </div>
                                     <div className={styles.field}>
                                         <label>Gender <RequiredStar /></label>
-                                        <select name="gender" value={studentData?.gender || ''} disabled className={styles.readOnlyInput}>
-                                            <option value="" disabled>Gender</option>
-                                            <option value="male">Male</option>
-                                            <option value="female">Female</option>
-                                        </select>
+                                        <FormDropdown
+                                            options={[{ label: 'Male', value: 'male' }, { label: 'Female', value: 'female' }]}
+                                            selectedOption={studentData?.gender || ''}
+                                            onSelect={() => { }}
+                                            placeholder="Select Gender"
+                                            disabled={true}
+                                            role="student"
+                                            className={styles.dropdownWrapper}
+                                            headerClassName={styles.dropdownHeader}
+                                        />
+                                        <input type="hidden" name="gender" value={studentData?.gender || ''} />
                                     </div>
                                     <div className={styles.field}>
                                         <label>Address</label>
@@ -2785,11 +2816,35 @@ function StuProfile({ onLogout, onViewChange }) {
                                     </div>
                                     <div className={styles.field}>
                                         <label>Primary Email <RequiredStar /></label>
-                                        <input type="email" name="primaryEmail" placeholder="Enter Primary Email" value={studentData?.primaryEmail || ''} onChange={(e) => setStudentData(prev => ({ ...prev, primaryEmail: e.target.value }))} disabled={isSaving} />
+                                        <div className={styles.inputWithSuffix}>
+                                            <input
+                                                type="text"
+                                                name="primaryEmail"
+                                                placeholder="Enter Primary Email"
+                                                value={(studentData?.primaryEmail || '').replace(/@gmail\.com$/i, '')}
+                                                onChange={(e) => {
+                                                    let raw = e.target.value.replace(/@gmail\.com$/i, '').trim();
+                                                    raw = raw.replace(/[\s$#%&*!?/\\,:]/g, '');
+                                                    setStudentData(prev => ({ ...prev, primaryEmail: raw ? `${raw}@gmail.com` : '' }));
+                                                }}
+                                                disabled={isSaving}
+                                            />
+                                            <div className={styles.suffixChip}>@gmail.com</div>
+                                        </div>
                                     </div>
                                     <div className={styles.field}>
                                         <label>Domain Email <RequiredStar /></label>
-                                        <input type="email" name="domainEmail" placeholder="Enter Domain Email" value={studentData?.domainEmail || ''} readOnly className={styles.readOnlyInput} />
+                                        <div className={styles.inputWithSuffix}>
+                                            <input
+                                                type="text"
+                                                name="domainEmail"
+                                                placeholder="Enter Domain Email"
+                                                value={(studentData?.domainEmail || '').replace(/@ksrce\.ac\.in$/i, '')}
+                                                readOnly
+                                                className={styles.readOnlyInput}
+                                            />
+                                            <div className={styles.suffixChip}>@ksrce.ac.in</div>
+                                        </div>
                                     </div>
                                     <div className={styles.field}>
                                         <label>Mobile No. <RequiredStar /></label>
@@ -2832,16 +2887,9 @@ function StuProfile({ onLogout, onViewChange }) {
                                         <label>Guardian Name</label>
                                         <input type="text" name="guardianName" placeholder="Enter Guardian Name" value={studentData?.guardianName || ''} onChange={(e) => setStudentData(prev => ({ ...prev, guardianName: e.target.value }))} disabled={isSaving} />
                                     </div>
-                                    <div className={styles.field}>
-                                        <label>Guardian Number</label>
-                                        <div className={styles.mobileInputWrapper}>
-                                            <div className={styles.countryCode}>+91</div>
-                                            <input type="tel" name="guardianMobile" placeholder="Enter Guardian Number" value={studentData?.guardianMobile || ''} onChange={(e) => handleMobileChange(e, 'guardianMobile')} disabled={isSaving} className={styles.mobileNumberInput} />
-                                        </div>
-                                    </div>
                                 </div>
                                 <div className={styles.profilePhotoWrapper}>
-                                    <div className={styles.profilePhotoBox} style={{ height: '732px' }}>
+                                    <div className={styles.profilePhotoBox} style={{ height: '729px' }}>
                                         <h3 className={styles.sectionHeader}>Profile Photo</h3>
                                         <div className={styles.profileIconContainer}>
                                             {profileImage ? (
@@ -2893,43 +2941,48 @@ function StuProfile({ onLogout, onViewChange }) {
                                             <p className={styles.uploadHint}>*JPG, JPEG, and WebP formats allowed (WebP recommended).</p>
                                         </div>
                                     </div>
-                                    <div className={styles.field} style={{ marginTop: '24px' }}>
+                                    <div className={styles.field}>
                                         <label>Community <RequiredStar /></label>
-                                        <select name="community" value={studentData?.community || ''} disabled className={styles.readOnlyInput}>
-                                            <option value="" disabled>
-                                                Community
-                                            </option>
-                                            <option value="OC">OC</option>
-                                            <option value="BC">BC</option>
-                                            <option value="BCM">BCM</option>
-                                            <option value="MBC">MBC</option>
-                                            <option value="SC">SC</option>
-                                            <option value="SCA">SCA</option>
-                                            <option value="ST">ST</option>
-                                        </select>
+                                        <FormDropdown
+                                            options={['OC', 'BC', 'MBC', 'SC', 'ST', 'Other']}
+                                            selectedOption={studentData?.community || ''}
+                                            onSelect={() => { }}
+                                            placeholder="Select Community"
+                                            disabled={true}
+                                            role="student"
+                                            className={styles.dropdownWrapper}
+                                            headerClassName={styles.dropdownHeader}
+                                        />
+                                        <input type="hidden" name="community" value={studentData?.community || ''} />
                                     </div>
-                                    <div className={styles.field} style={{ marginTop: '24px' }}>
+                                    <div className={styles.field}>
                                         <label>Medium of Study <RequiredStar /></label>
-                                        <select name="mediumOfStudy" value={studentData?.mediumOfStudy || ''} disabled className={styles.readOnlyInput}>
-                                            <option value="" disabled>
-                                                Medium
-                                            </option>
-                                            <option value="English">English</option>
-                                            <option value="Tamil">Tamil</option>
-                                            <option value="Other">Others</option>
-                                        </select>
+                                        <FormDropdown
+                                            options={['English', 'Tamil', 'Hindi', 'Other']}
+                                            selectedOption={studentData?.mediumOfStudy || ''}
+                                            onSelect={() => { }}
+                                            placeholder="Select Medium"
+                                            disabled={true}
+                                            role="student"
+                                            className={styles.dropdownWrapper}
+                                            headerClassName={styles.dropdownHeader}
+                                        />
+                                        <input type="hidden" name="mediumOfStudy" value={studentData?.mediumOfStudy || ''} />
                                     </div>
-                                    <div className={styles.field} style={{ marginTop: '24px' }}>
+                                    <div className={styles.field}>
                                         <label>Blood Group</label>
                                         <input type="text" name="bloodGroup" placeholder="Enter Blood Group" value={studentData?.bloodGroup || ''} readOnly className={styles.readOnlyInput} />
                                     </div>
-                                    <div className={styles.field} style={{ marginTop: '24px' }}>
+                                    <div className={styles.field}>
                                         <label>Aadhaar Number <RequiredStar /></label>
                                         <input type="text" name="aadhaarNo" placeholder="Enter Aadhaar Number (12 digits)" value={studentData?.aadhaarNo || ''} maxLength="12" readOnly className={styles.readOnlyInput} />
                                     </div>
-                                    <div className={styles.field} style={{ marginTop: '24px' }}>
-                                        <label>Portfolio Link</label>
-                                        <input type="url" name="portfolioLink" placeholder="Enter Portfolio Link" value={studentData?.portfolioLink || ''} onChange={(e) => setStudentData(prev => ({ ...prev, portfolioLink: e.target.value }))} disabled={isSaving} />
+                                    <div className={styles.field}>
+                                        <label>Guardian Number</label>
+                                        <div className={styles.mobileInputWrapper}>
+                                            <div className={styles.countryCode}>+91</div>
+                                            <input type="tel" name="guardianMobile" placeholder="Enter Guardian Number" value={studentData?.guardianMobile || ''} onChange={(e) => handleMobileChange(e, 'guardianMobile')} disabled={isSaving} className={styles.mobileNumberInput} />
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -2937,7 +2990,7 @@ function StuProfile({ onLogout, onViewChange }) {
 
                         {/* --- ACADEMIC BACKGROUND --- */}
                         <div className={styles.profileSectionContainer}>
-                          <h3 className={styles.sectionHeader}>Academic Background</h3>
+                            <h3 className={styles.sectionHeader}>Academic Background</h3>
                             <div className={styles.formGrid}>
                                 <div className={styles.studyCategory} style={{ gridColumn: '1 / -1' }}>
                                     <input type="radio" id="12th" name="study_category" value="12th" checked={studyCategory === '12th'} disabled />
@@ -2947,94 +3000,98 @@ function StuProfile({ onLogout, onViewChange }) {
                                     <input type="radio" id="both" name="study_category" value="both" checked={studyCategory === 'both'} disabled />
                                     <label htmlFor="both">Both</label>
                                 </div>
-                                    <div className={styles.field}>
-                                        <label>10th Institution Name <RequiredStar /></label>
-                                        <input type="text" name="tenthInstitution" placeholder="Enter 10th Institution Name" value={studentData?.tenthInstitution || ''} readOnly className={styles.readOnlyInput} />
+                                <div className={styles.field}>
+                                    <label>10th Institution Name <RequiredStar /></label>
+                                    <input type="text" name="tenthInstitution" placeholder="Enter 10th Institution Name" value={studentData?.tenthInstitution || ''} readOnly className={styles.readOnlyInput} />
+                                </div>
+                                <div className={styles.field}>
+                                    <label>10th Board / University <RequiredStar /></label>
+                                    <select name="tenthBoard" value={studentData?.tenthBoard || ''} disabled className={styles.readOnlyInput}>
+                                        <option value="" disabled>10th Board/University</option>
+                                        <option value="State Board (Tamil Nadu)">State Board (Tamil Nadu)</option>
+                                        <option value="CBSE">CBSE</option>
+                                        <option value="ICSE">ICSE</option>
+                                        <option value="Other State Board">Other State Board</option>
+                                    </select>
+                                </div>
+                                <div className={styles.field}>
+                                    <label>10th Percentage <RequiredStar /></label>
+                                    <div className={styles.percentageInputWrapper}>
+                                        <input type="text" name="tenthPercentage" placeholder="Enter 10th Percentage" value={studentData?.tenthPercentage || ''} readOnly className={styles.percentageInput} />
+                                        <div className={styles.percentSuffix}>%</div>
                                     </div>
-                                    <div className={styles.field}>
-                                        <label>10th Board / University <RequiredStar /></label>
-                                        <select name="tenthBoard" value={studentData?.tenthBoard || ''} disabled className={styles.readOnlyInput}>
-                                            <option value="" disabled>10th Board/University</option>
-                                            <option value="State Board (Tamil Nadu)">State Board (Tamil Nadu)</option>
-                                            <option value="CBSE">CBSE</option>
-                                            <option value="ICSE">ICSE</option>
-                                            <option value="Other State Board">Other State Board</option>
-                                        </select>
-                                    </div>
-                                    <div className={styles.field}>
-                                        <label>10th Percentage <RequiredStar /></label>
-                                        <div className={styles.percentageInputWrapper}>
-                                            <input type="text" name="tenthPercentage" placeholder="Enter 10th Percentage" value={studentData?.tenthPercentage || ''} readOnly className={styles.percentageInput} />
-                                            <div className={styles.percentSuffix}>%</div>
+                                </div>
+                                <div className={styles.field}>
+                                    <label>10th Year of Passing <RequiredStar /></label>
+                                    <input type="text" name="tenthYear" placeholder="Enter 10th Year of Passing" value={studentData?.tenthYear || ''} readOnly className={styles.readOnlyInput} />
+                                </div>
+                                {(studyCategory === '12th' || studyCategory === 'both') && (
+                                    <>
+                                        <div className={styles.field}>
+                                            <label>12th Institution Name <RequiredStar /></label>
+                                            <input type="text" name="twelfthInstitution" placeholder="Enter 12th Institution Name" value={studentData?.twelfthInstitution || ''} readOnly className={styles.readOnlyInput} />
                                         </div>
-                                    </div>
-                                    <div className={styles.field}>
-                                        <label>10th Year of Passing <RequiredStar /></label>
-                                        <input type="text" name="tenthYear" placeholder="Enter 10th Year of Passing" value={studentData?.tenthYear || ''} readOnly className={styles.readOnlyInput} />
-                                    </div>
-                                    {(studyCategory === '12th' || studyCategory === 'both') && (
-                                        <>
-                                            <div className={styles.field}>
-                                                <label>12th Institution Name <RequiredStar /></label>
-                                                <input type="text" name="twelfthInstitution" placeholder="Enter 12th Institution Name" value={studentData?.twelfthInstitution || ''} readOnly className={styles.readOnlyInput} />
+                                        <div className={styles.field}>
+                                            <label>12th Board / University <RequiredStar /></label>
+                                            <FormDropdown
+                                                options={['State Board (Tamil Nadu)', 'CBSE', 'ICSE', 'Other State Board']}
+                                                selectedOption={studentData?.twelfthBoard || ''}
+                                                onSelect={() => { }}
+                                                placeholder="Select 12th Board"
+                                                disabled={true}
+                                                role="student"
+                                                className={styles.dropdownWrapper}
+                                                headerClassName={styles.dropdownHeader}
+                                            />
+                                            <input type="hidden" name="twelfthBoard" value={studentData?.twelfthBoard || ''} />
+                                        </div>
+                                        <div className={styles.field}>
+                                            <label>12th Percentage <RequiredStar /></label>
+                                            <div className={styles.percentageInputWrapper}>
+                                                <input type="text" name="twelfthPercentage" placeholder="Enter 12th Percentage" value={studentData?.twelfthPercentage || ''} readOnly className={styles.percentageInput} />
+                                                <div className={styles.percentSuffix}>%</div>
                                             </div>
-                                            <div className={styles.field}>
-                                                <label>12th Board / University <RequiredStar /></label>
-                                                <select name="twelfthBoard" value={studentData?.twelfthBoard || ''} disabled className={styles.readOnlyInput}>
-                                                    <option value="" disabled>12th Board/University</option>
-                                                    <option value="State Board (Tamil Nadu)">State Board (Tamil Nadu)</option>
-                                                    <option value="CBSE">CBSE</option>
-                                                    <option value="ICSE">ICSE</option>
-                                                    <option value="Other State Board">Other State Board</option>
-                                                </select>
+                                        </div>
+                                        <div className={styles.field}>
+                                            <label>12th Year of Passing <RequiredStar /></label>
+                                            <input type="text" name="twelfthYear" placeholder="Enter 12th Year of Passing" value={studentData?.twelfthYear || ''} readOnly className={styles.readOnlyInput} />
+                                        </div>
+                                        <div className={styles.field}>
+                                            <label>12th Cut-off Marks <RequiredStar /></label>
+                                            <div className={styles.percentageInputWrapper}>
+                                                <input type="text" name="twelfthCutoff" placeholder="Enter 12th Cut-off Marks" value={studentData?.twelfthCutoff || ''} readOnly className={styles.percentageInput} />
+                                                <div className={styles.percentSuffix}>%</div>
                                             </div>
-                                            <div className={styles.field}>
-                                                <label>12th Percentage <RequiredStar /></label>
-                                                <div className={styles.percentageInputWrapper}>
-                                                    <input type="text" name="twelfthPercentage" placeholder="Enter 12th Percentage" value={studentData?.twelfthPercentage || ''} readOnly className={styles.percentageInput} />
-                                                    <div className={styles.percentSuffix}>%</div>
-                                                </div>
+                                        </div>
+                                    </>
+                                )}
+                                {(studyCategory === 'diploma' || studyCategory === 'both') && (
+                                    <>
+                                        <div className={styles.field}>
+                                            <label>Diploma Institution <RequiredStar /></label>
+                                            <input type="text" name="diplomaInstitution" placeholder="Enter Diploma Institution" value={studentData?.diplomaInstitution || ''} readOnly className={styles.readOnlyInput} />
+                                        </div>
+                                        <div className={styles.field}>
+                                            <label>Diploma Branch <RequiredStar /></label>
+                                            <input type="text" name="diplomaBranch" placeholder="Enter Diploma Branch" value={studentData?.diplomaBranch || ''} readOnly className={styles.readOnlyInput} />
+                                        </div>
+                                        <div className={styles.field}>
+                                            <label>Diploma Percentage <RequiredStar /></label>
+                                            <div className={styles.percentageInputWrapper}>
+                                                <input type="text" name="diplomaPercentage" placeholder="Enter Diploma Percentage" value={studentData?.diplomaPercentage || ''} readOnly className={styles.percentageInput} />
+                                                <div className={styles.percentSuffix}>%</div>
                                             </div>
-                                            <div className={styles.field}>
-                                                <label>12th Year of Passing <RequiredStar /></label>
-                                                <input type="text" name="twelfthYear" placeholder="Enter 12th Year of Passing" value={studentData?.twelfthYear || ''} readOnly className={styles.readOnlyInput} />
-                                            </div>
-                                            <div className={styles.field}>
-                                                <label>12th Cut-off Marks <RequiredStar /></label>
-                                                <div className={styles.percentageInputWrapper}>
-                                                    <input type="text" name="twelfthCutoff" placeholder="Enter 12th Cut-off Marks" value={studentData?.twelfthCutoff || ''} readOnly className={styles.percentageInput} />
-                                                    <div className={styles.percentSuffix}>%</div>
-                                                </div>
-                                            </div>
-                                        </>
-                                    )}
-                                    {(studyCategory === 'diploma' || studyCategory === 'both') && (
-                                        <>
-                                            <div className={styles.field}>
-                                                <label>Diploma Institution <RequiredStar /></label>
-                                                <input type="text" name="diplomaInstitution" placeholder="Enter Diploma Institution" value={studentData?.diplomaInstitution || ''} readOnly className={styles.readOnlyInput} />
-                                            </div>
-                                            <div className={styles.field}>
-                                                <label>Diploma Branch <RequiredStar /></label>
-                                                <input type="text" name="diplomaBranch" placeholder="Enter Diploma Branch" value={studentData?.diplomaBranch || ''} readOnly className={styles.readOnlyInput} />
-                                            </div>
-                                            <div className={styles.field}>
-                                                <label>Diploma Percentage <RequiredStar /></label>
-                                                <div className={styles.percentageInputWrapper}>
-                                                    <input type="text" name="diplomaPercentage" placeholder="Enter Diploma Percentage" value={studentData?.diplomaPercentage || ''} readOnly className={styles.percentageInput} />
-                                                    <div className={styles.percentSuffix}>%</div>
-                                                </div>
-                                            </div>
-                                            <div className={styles.field}>
-                                                <label>Diploma Year of Passing <RequiredStar /></label>
-                                                <input type="text" name="diplomaYear" placeholder="Enter Diploma Year of Passing" value={studentData?.diplomaYear || ''} readOnly className={styles.readOnlyInput} />
-                                            </div>
-                                        </>
-                                    )}
+                                        </div>
+                                        <div className={styles.field}>
+                                            <label>Diploma Year of Passing <RequiredStar /></label>
+                                            <input type="text" name="diplomaYear" placeholder="Enter Diploma Year of Passing" value={studentData?.diplomaYear || ''} readOnly className={styles.readOnlyInput} />
+                                        </div>
+                                    </>
+                                )}
                             </div>
                         </div>
-                        
-                            {/* --- SEMESTER --- */}
+
+                        {/* --- SEMESTER --- */}
                         <div className={styles.profileSectionContainer}>
                             <h3 className={styles.sectionHeader}>Semester Marksheets</h3>
                             <div className={styles.marksheetGrid}>
@@ -3046,14 +3103,14 @@ function StuProfile({ onLogout, onViewChange }) {
                                     availableSemesters.map((semesterNumber) => (
                                         <div key={semesterNumber} className={styles.semesterBox}>
                                             <span className={styles.semesterLabel}>Semester {semesterNumber}</span>
-                                            <button 
-                                                type="button" 
+                                            <button
+                                                type="button"
                                                 className={styles.viewMarksheetBtn}
-                                                onClick={() => navigate('/student-semester-view', { 
-                                                    state: { 
+                                                onClick={() => navigate('/student-semester-view', {
+                                                    state: {
                                                         semester: semesterNumber,
                                                         returnPath: location.pathname
-                                                    } 
+                                                    }
                                                 })}
                                             >
                                                 <img src={StuEyeIcon} alt="View" className={styles.eyeIcon} />
@@ -3062,10 +3119,10 @@ function StuProfile({ onLogout, onViewChange }) {
                                     ))
                                 )}
                             </div>
-                            
+
                             {/* Separator line */}
                             <div className={styles.semesterSeparator}></div>
-                            
+
                             <div className={`${styles.formGrid} ${styles.academicGrid}`} style={{ marginTop: '2rem' }}>
                                 <div className={styles.field}>
                                     <label>CGPA</label>
@@ -3124,388 +3181,388 @@ function StuProfile({ onLogout, onViewChange }) {
                                 </div>
                             </div>
                         </div>
-                        
+
                         {hasTrainingData && (
-                        <div className={styles.profileSectionContainer}>
-                            <h3 className={styles.sectionHeader}>Training</h3>
-                            {trainingCardEntries.map((trainingCard, index) => (
-                                <div
-                                    key={`${trainingCard.label}-${index}`}
-                                    className={styles.companyStatsGrid}
-                                    style={{ marginBottom: index === trainingCardEntries.length - 1 ? '0' : '1rem' }}
-                                >
-                                    <div className={styles.companyStatCardEmpty}>
-                                        <span className={styles.companyStatLabel}>{trainingCard.label}</span>
-                                        <span className={styles.companyStatValueEmpty}>{trainingCard.courseName}</span>
+                            <div className={styles.profileSectionContainer}>
+                                <h3 className={styles.sectionHeader}>Training</h3>
+                                {trainingCardEntries.map((trainingCard, index) => (
+                                    <div
+                                        key={`${trainingCard.label}-${index}`}
+                                        className={styles.companyStatsGrid}
+                                        style={{ marginBottom: index === trainingCardEntries.length - 1 ? '0' : '1rem' }}
+                                    >
+                                        <div className={styles.companyStatCardEmpty}>
+                                            <span className={styles.companyStatLabel}>{trainingCard.label}</span>
+                                            <span className={styles.companyStatValueEmpty}>{trainingCard.courseName}</span>
+                                        </div>
+                                        <div className={styles.companyStatCard}>
+                                            <span className={styles.companyStatLabel}>Attendance Percentage</span>
+                                            <span className={styles.companyStatValue}>{trainingCard.attendancePercentage}%</span>
+                                        </div>
+                                        <div className={styles.companyStatCard}>
+                                            <span className={styles.companyStatLabel}>Total Training Days</span>
+                                            <span className={styles.companyStatValue}>{trainingCard.totalTrainingDays}</span>
+                                        </div>
                                     </div>
-                                    <div className={styles.companyStatCard}>
-                                        <span className={styles.companyStatLabel}>Attendance Percentage</span>
-                                        <span className={styles.companyStatValue}>{trainingCard.attendancePercentage}%</span>
-                                    </div>
-                                    <div className={styles.companyStatCard}>
-                                        <span className={styles.companyStatLabel}>Total Training Days</span>
-                                        <span className={styles.companyStatValue}>{trainingCard.totalTrainingDays}</span>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
+                                ))}
+                            </div>
                         )}
 
                         {/* --- COMPANY DETAILS / ANALYSIS TOGGLE --- */}
                         {hasCompanyData && (
-                        <div className={styles.profileSectionContainer}>
-                            {!showAnalysis ? (
-                                <>
-                                    <h3 className={styles.sectionHeader}>Company Details</h3>
-                                    <div className={styles.companyStatsGrid}>
-                                        <div className={styles.companyStatCard}>
-                                            <span className={styles.companyStatLabel}>Total Companies Attended</span>
-                                            <span className={styles.companyStatValue}>{companyStats.totalCompaniesAttended}</span>
+                            <div className={styles.profileSectionContainer}>
+                                {!showAnalysis ? (
+                                    <>
+                                        <h3 className={styles.sectionHeader}>Company Details</h3>
+                                        <div className={styles.companyStatsGrid}>
+                                            <div className={styles.companyStatCard}>
+                                                <span className={styles.companyStatLabel}>Total Companies Attended</span>
+                                                <span className={styles.companyStatValue}>{companyStats.totalCompaniesAttended}</span>
+                                            </div>
+                                            <div className={styles.companyStatCard}>
+                                                <span className={styles.companyStatLabel}>Total Drives Attended</span>
+                                                <span className={styles.companyStatValue}>{companyStats.totalDrivesAttended}</span>
+                                            </div>
+                                            <div className={styles.companyStatCard}>
+                                                <span className={styles.companyStatLabel}>Shortlisted Count</span>
+                                                <span className={styles.companyStatValue}>{companyStats.shortlistedCount}</span>
+                                            </div>
+                                            <div className={styles.companyStatCard}>
+                                                <span className={styles.companyStatLabel}>Preferred Mode</span>
+                                                <span className={styles.companyStatValue}>{companyStats.preferredModeOfDrive}</span>
+                                            </div>
+                                            <div className={styles.companyStatCardEmpty}>
+                                                <span className={styles.companyStatLabel}>Last Drive Attended</span>
+                                                <span className={styles.companyStatValueEmpty}>{companyStats.lastDriveAttended}</span>
+                                            </div>
+                                            <div className={styles.companyStatCardEmpty}>
+                                                <span className={styles.companyStatLabel}>Last Drive Result</span>
+                                                <span className={styles.companyStatValueEmpty}>{companyStats.lastDriveResult}</span>
+                                            </div>
                                         </div>
-                                        <div className={styles.companyStatCard}>
-                                            <span className={styles.companyStatLabel}>Total Drives Attended</span>
-                                            <span className={styles.companyStatValue}>{companyStats.totalDrivesAttended}</span>
-                                        </div>
-                                        <div className={styles.companyStatCard}>
-                                            <span className={styles.companyStatLabel}>Shortlisted Count</span>
-                                            <span className={styles.companyStatValue}>{companyStats.shortlistedCount}</span>
-                                        </div>
-                                        <div className={styles.companyStatCard}>
-                                            <span className={styles.companyStatLabel}>Preferred Mode</span>
-                                            <span className={styles.companyStatValue}>{companyStats.preferredModeOfDrive}</span>
-                                        </div>
-                                        <div className={styles.companyStatCardEmpty}>
-                                            <span className={styles.companyStatLabel}>Last Drive Attended</span>
-                                            <span className={styles.companyStatValueEmpty}>{companyStats.lastDriveAttended}</span>
-                                        </div>
-                                        <div className={styles.companyStatCardEmpty}>
-                                            <span className={styles.companyStatLabel}>Last Drive Result</span>
-                                            <span className={styles.companyStatValueEmpty}>{companyStats.lastDriveResult}</span>
-                                        </div>
-                                    </div>
-                                    <div className={styles.companyBottomRow}>
-                                        <div className={styles.successRateWrapper}>
-                                            <div className={styles.successRateCircleContainer}>
-                                                <svg className={styles.successRateSvg} viewBox="0 0 120 120">
-                                                    <circle cx="60" cy="60" r="50" fill="none" stroke="#e8e8e8" strokeWidth="10" />
-                                                    <circle
-                                                        cx="60" cy="60" r="50" fill="none"
-                                                        stroke="#0062C5"
-                                                        strokeWidth="10"
-                                                        strokeLinecap="round"
-                                                        strokeDasharray="314.16"
-                                                        strokeDashoffset={314.16 * (1 - successRate / 100)}
-                                                        transform="rotate(-90 60 60)"
-                                                        style={{ transition: 'stroke-dashoffset 0.6s ease' }}
-                                                    />
+                                        <div className={styles.companyBottomRow}>
+                                            <div className={styles.successRateWrapper}>
+                                                <div className={styles.successRateCircleContainer}>
+                                                    <svg className={styles.successRateSvg} viewBox="0 0 120 120">
+                                                        <circle cx="60" cy="60" r="50" fill="none" stroke="#e8e8e8" strokeWidth="10" />
+                                                        <circle
+                                                            cx="60" cy="60" r="50" fill="none"
+                                                            stroke="#0062C5"
+                                                            strokeWidth="10"
+                                                            strokeLinecap="round"
+                                                            strokeDasharray="314.16"
+                                                            strokeDashoffset={314.16 * (1 - successRate / 100)}
+                                                            transform="rotate(-90 60 60)"
+                                                            style={{ transition: 'stroke-dashoffset 0.6s ease' }}
+                                                        />
+                                                    </svg>
+                                                    <div className={styles.successRateInner}>
+                                                        <span className={styles.successRateLabel}>Success Rate %</span>
+                                                        <span className={styles.successRateNum}>{successRate}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className={styles.performanceInsightsCard}>
+                                                <h4 className={styles.insightsTitle}>Top performance Insights</h4>
+                                                <div className={styles.insightRow}>
+                                                    <span className={styles.insightLabel}>Highest Package Drive :</span>
+                                                    <span className={styles.insightValue}>{companyStats.highestPackageDrive > 0 ? `${companyStats.highestPackageDrive} LPA` : 'N/A'}</span>
+                                                </div>
+                                                <div className={styles.insightRow}>
+                                                    <span className={styles.insightLabel}>Total Rounds Cleared :</span>
+                                                    <span className={styles.insightValue}>{companyStats.totalRoundsCleared}</span>
+                                                </div>
+                                            </div>
+                                            <button type="button" className={styles.viewAnalysisBtn} onClick={() => setShowAnalysis(true)}>
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={styles.viewAnalysisIcon}>
+                                                    <path d="M3 13h2v7H3v-7zm4-5h2v12H7V8zm4-3h2v15h-2V5zm4 6h2v9h-2v-9z" />
                                                 </svg>
-                                                <div className={styles.successRateInner}>
-                                                    <span className={styles.successRateLabel}>Success Rate %</span>
-                                                    <span className={styles.successRateNum}>{successRate}</span>
-                                                </div>
-                                            </div>
+                                                <span>View Analysis</span>
+                                            </button>
                                         </div>
-                                        <div className={styles.performanceInsightsCard}>
-                                            <h4 className={styles.insightsTitle}>Top performance Insights</h4>
-                                            <div className={styles.insightRow}>
-                                                <span className={styles.insightLabel}>Highest Package Drive :</span>
-                                                <span className={styles.insightValue}>{companyStats.highestPackageDrive > 0 ? `${companyStats.highestPackageDrive} LPA` : 'N/A'}</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        {/* ── Analysis Panel (inline) ── */}
+                                        <div className={styles.anlsHeader}>
+                                            <h3 className={styles.sectionHeader} style={{ marginBottom: 0, paddingBottom: '6px' }}>Analysis</h3>
+                                            <div className={styles.anlsTitleRow}>
+                                                <span className={`${styles.anlsPlacedBadge} ${isStudentPlaced ? styles.anlsPlacedBadgePlaced : styles.anlsPlacedBadgeNotPlaced}`}>
+                                                    <span className={`${styles.anlsPlacedDot} ${isStudentPlaced ? styles.anlsPlacedDotPlaced : styles.anlsPlacedDotNotPlaced}`} />
+                                                    {isStudentPlaced ? 'Placed' : 'Not placed'}
+                                                </span>
+                                                <button type="button" className={styles.anlsBackBtn} onClick={() => setShowAnalysis(false)}>Back ↩</button>
                                             </div>
-                                            <div className={styles.insightRow}>
-                                                <span className={styles.insightLabel}>Total Rounds Cleared :</span>
-                                                <span className={styles.insightValue}>{companyStats.totalRoundsCleared}</span>
-                                            </div>
-                                        </div>
-                                        <button type="button" className={styles.viewAnalysisBtn} onClick={() => setShowAnalysis(true)}>
-                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={styles.viewAnalysisIcon}>
-                                                <path d="M3 13h2v7H3v-7zm4-5h2v12H7V8zm4-3h2v15h-2V5zm4 6h2v9h-2v-9z"/>
-                                            </svg>
-                                            <span>View Analysis</span>
-                                        </button>
-                                    </div>
-                                </>
-                            ) : (
-                                <>
-                                    {/* ── Analysis Panel (inline) ── */}
-                                    <div className={styles.anlsHeader}>
-                                        <h3 className={styles.sectionHeader} style={{ marginBottom: 0, paddingBottom: '6px' }}>Analysis</h3>
-                                        <div className={styles.anlsTitleRow}>
-                                            <span className={`${styles.anlsPlacedBadge} ${isStudentPlaced ? styles.anlsPlacedBadgePlaced : styles.anlsPlacedBadgeNotPlaced}`}>
-                                                <span className={`${styles.anlsPlacedDot} ${isStudentPlaced ? styles.anlsPlacedDotPlaced : styles.anlsPlacedDotNotPlaced}`} />
-                                                {isStudentPlaced ? 'Placed' : 'Not placed'}
-                                            </span>
-                                            <button type="button" className={styles.anlsBackBtn} onClick={() => setShowAnalysis(false)}>Back ↩</button>
-                                        </div>
-                                    </div>
-
-                                    <div className={styles.anlsGrid}>
-                                        {/* Left: Pie Chart */}
-                                        <div
-                                            className={styles.anlsPieCol}
-                                            onMouseLeave={() => {
-                                                if (!isMobile && !selectedRound) setHoveredRound(null);
-                                            }}
-                                            style={{ userSelect: 'none', WebkitUserSelect: 'none' }}
-                                        >
-                                            <ResponsiveContainer width="100%" height={isMobile ? 300 : 330}>
-                                                <PieChart tabIndex={-1} style={{ outline: 'none' }}>
-                                                    <Pie
-                                                        data={PIE_DATA}
-                                                        cx="50%" cy="50%" outerRadius={isMobile ? 130 : 148} dataKey="value"
-                                                        animationBegin={0} animationDuration={800}
-                                                        isAnimationActive={false}
-                                                        labelLine={false}
-                                                        activeIndex={-1}
-                                                        activeShape={null}
-                                                        onMouseEnter={(data, index) => {
-                                                            if (!isMobile && !selectedRound) setHoveredRound(PIE_DATA[index].name);
-                                                        }}
-                                                        onClick={(data, index) => {
-                                                            const name = PIE_DATA[index].name;
-                                                            setSelectedRound(name);
-                                                            setHoveredRound(name);
-                                                        }}
-                                                        label={({ cx, cy, midAngle, innerRadius, outerRadius, name }) => {
-                                                            const RADIAN = Math.PI / 180;
-                                                            const radius = innerRadius + (outerRadius - innerRadius) * 0.52;
-                                                            const x = cx + radius * Math.cos(-midAngle * RADIAN);
-                                                            const y = cy + radius * Math.sin(-midAngle * RADIAN);
-                                                            let rot = -midAngle;
-                                                            rot = ((rot % 360) + 360) % 360;
-                                                            if (rot > 180) rot -= 360;
-                                                            if (rot > 90) rot -= 180;
-                                                            if (rot < -90) rot += 180;
-                                                            const label = name.length > 12 ? `${name.slice(0, 12)}..` : name;
-                                                            const fs = isMobile ? 11 : 11;
-                                                            return (
-                                                                <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" fontSize={fs} fontWeight="700" transform={`rotate(${rot}, ${x}, ${y})`} style={{ textShadow: '0 1px 2px rgba(0,0,0,0.4)', userSelect: 'none', pointerEvents: 'none' }}>
-                                                                    {label}
-                                                                </text>
-                                                            );
-                                                        }}
-                                                    >
-                                                        {PIE_DATA.map((entry, i) => {
-                                                            const activeRound = selectedRound || hoveredRound;
-                                                            const isActive = !activeRound || entry.name === activeRound;
-                                                            return (
-                                                                <Cell
-                                                                    key={i}
-                                                                    fill={isActive ? entry.color : '#BDBDBD'}
-                                                                    style={{ cursor: 'pointer', outline: 'none' }}
-                                                                />
-                                                            );
-                                                        })}
-                                                    </Pie>
-                                                </PieChart>
-                                            </ResponsiveContainer>
-                                            {selectedRound && (
-                                                <div style={{ display: 'flex', justifyContent: 'center', marginTop: '-4px' }}>
-                                                    <button
-                                                        type="button"
-                                                        className={styles.anlsClearBtn}
-                                                        onClick={() => { setSelectedRound(null); setHoveredRound(null); }}
-                                                    >
-                                                        ✕ Clear Selection
-                                                    </button>
-                                                </div>
-                                            )}
                                         </div>
 
-                                        {/* Right: stats + legend */}
-                                        <div className={styles.anlsRightCol}>
-                                            <div className={styles.anlsRightTop}>
-                                                {/* Left column: Stats grid OR Companies card on click */}
-                                                {selectedRound && ROUND_DETAILS[selectedRound] ? (
-                                                    <div className={styles.anlsCompaniesCard} style={{ borderColor: PIE_DATA.find(d => d.name === selectedRound)?.color }}>
-                                                        <h4 className={styles.anlsCompaniesTitle}>{selectedRound} Companies</h4>
-                                                        <div className={styles.anlsCompaniesList}>
-                                                            {ROUND_DETAILS[selectedRound].companies.map(c => {
-                                                                const sColor = c.status === 'PASSED' ? '#10B981' : c.status === 'FAILED' ? '#EF4444' : '#94A3B8';
+                                        <div className={styles.anlsGrid}>
+                                            {/* Left: Pie Chart */}
+                                            <div
+                                                className={styles.anlsPieCol}
+                                                onMouseLeave={() => {
+                                                    if (!isMobile && !selectedRound) setHoveredRound(null);
+                                                }}
+                                                style={{ userSelect: 'none', WebkitUserSelect: 'none' }}
+                                            >
+                                                <ResponsiveContainer width="100%" height={isMobile ? 300 : 330}>
+                                                    <PieChart tabIndex={-1} style={{ outline: 'none' }}>
+                                                        <Pie
+                                                            data={PIE_DATA}
+                                                            cx="50%" cy="50%" outerRadius={isMobile ? 130 : 148} dataKey="value"
+                                                            animationBegin={0} animationDuration={800}
+                                                            isAnimationActive={false}
+                                                            labelLine={false}
+                                                            activeIndex={-1}
+                                                            activeShape={null}
+                                                            onMouseEnter={(data, index) => {
+                                                                if (!isMobile && !selectedRound) setHoveredRound(PIE_DATA[index].name);
+                                                            }}
+                                                            onClick={(data, index) => {
+                                                                const name = PIE_DATA[index].name;
+                                                                setSelectedRound(name);
+                                                                setHoveredRound(name);
+                                                            }}
+                                                            label={({ cx, cy, midAngle, innerRadius, outerRadius, name }) => {
+                                                                const RADIAN = Math.PI / 180;
+                                                                const radius = innerRadius + (outerRadius - innerRadius) * 0.52;
+                                                                const x = cx + radius * Math.cos(-midAngle * RADIAN);
+                                                                const y = cy + radius * Math.sin(-midAngle * RADIAN);
+                                                                let rot = -midAngle;
+                                                                rot = ((rot % 360) + 360) % 360;
+                                                                if (rot > 180) rot -= 360;
+                                                                if (rot > 90) rot -= 180;
+                                                                if (rot < -90) rot += 180;
+                                                                const label = name.length > 12 ? `${name.slice(0, 12)}..` : name;
+                                                                const fs = isMobile ? 11 : 11;
                                                                 return (
-                                                                    <div key={c.name} className={styles.anlsCompanyRow}>
-                                                                        <span className={styles.anlsCompanyDot} style={{ background: sColor }} />
-                                                                        <span className={styles.anlsCompanyName}>{c.name}</span>
-                                                                        <span className={styles.anlsCompanyStatus} style={{ color: sColor }}>{c.status}</span>
-                                                                    </div>
+                                                                    <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" fontSize={fs} fontWeight="700" transform={`rotate(${rot}, ${x}, ${y})`} style={{ textShadow: '0 1px 2px rgba(0,0,0,0.4)', userSelect: 'none', pointerEvents: 'none' }}>
+                                                                        {label}
+                                                                    </text>
+                                                                );
+                                                            }}
+                                                        >
+                                                            {PIE_DATA.map((entry, i) => {
+                                                                const activeRound = selectedRound || hoveredRound;
+                                                                const isActive = !activeRound || entry.name === activeRound;
+                                                                return (
+                                                                    <Cell
+                                                                        key={i}
+                                                                        fill={isActive ? entry.color : '#BDBDBD'}
+                                                                        style={{ cursor: 'pointer', outline: 'none' }}
+                                                                    />
                                                                 );
                                                             })}
-                                                        </div>
-                                                    </div>
-                                                ) : (
-                                                    <div className={styles.anlsStatsGrid}>
-                                                        <div className={`${styles.anlsStatCard} ${styles.anlsCardLavender}`}>
-                                                            <div className={styles.anlsStatTop}>
-                                                                <svg className={styles.anlsStatIcon} viewBox="0 0 24 24" fill="none">
-                                                                    <circle cx="9" cy="7" r="4" stroke="#6C63FF" strokeWidth="1.8"/>
-                                                                    <path d="M2 20c0-4 3.134-7 7-7" stroke="#6C63FF" strokeWidth="1.8" strokeLinecap="round"/>
-                                                                    <path d="M16 13l2 2 4-4" stroke="#6C63FF" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                                                                </svg>
-                                                                <span className={styles.anlsStatLabel}>Attended</span>
-                                                            </div>
-                                                            <div className={styles.anlsStatValue}>{companyStats.totalDrivesAttended}</div>
-                                                        </div>
-                                                        <div className={`${styles.anlsStatCard} ${styles.anlsCardBlue}`}>
-                                                            <div className={styles.anlsStatTop}>
-                                                                <svg className={styles.anlsStatIcon} viewBox="0 0 24 24" fill="none">
-                                                                    <circle cx="12" cy="12" r="9" stroke="#2085f6" strokeWidth="1.8"/>
-                                                                    <path d="M8 12l3 3 5-5" stroke="#2085f6" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                                                                </svg>
-                                                                <span className={styles.anlsStatLabel}>Shortlisted</span>
-                                                            </div>
-                                                            <div className={styles.anlsStatValue}>{companyStats.shortlistedCount}</div>
-                                                        </div>
-                                                        <div className={`${styles.anlsStatCard} ${styles.anlsCardPink}`}>
-                                                            <div className={styles.anlsStatTop}>
-                                                                <svg className={styles.anlsStatIcon} viewBox="0 0 24 24" fill="none">
-                                                                    <circle cx="12" cy="12" r="9" stroke="#E05C6C" strokeWidth="1.8"/>
-                                                                    <path d="M12 8v4" stroke="#E05C6C" strokeWidth="1.8" strokeLinecap="round"/>
-                                                                    <circle cx="12" cy="16" r="0.8" fill="#E05C6C"/>
-                                                                </svg>
-                                                                <span className={styles.anlsStatLabel}>Work On</span>
-                                                            </div>
-                                                            <ul className={styles.anlsStatList}>
-                                                                {driveAnalytics.workOn.map(i => <li key={i}><span className={styles.anlsArrow}>→</span>{i}</li>)}
-                                                            </ul>
-                                                        </div>
-                                                        <div className={`${styles.anlsStatCard} ${styles.anlsCardMint}`}>
-                                                            <div className={styles.anlsStatTop}>
-                                                                <svg className={styles.anlsStatIcon} viewBox="0 0 24 24" fill="none">
-                                                                    <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6L12 2z" stroke="#27AE8C" strokeWidth="1.6" strokeLinejoin="round"/>
-                                                                </svg>
-                                                                <span className={styles.anlsStatLabel}>Best</span>
-                                                            </div>
-                                                            <ul className={styles.anlsStatList}>
-                                                                {driveAnalytics.bestAt.map(i => <li key={i}><span className={styles.anlsArrow}>→</span>{i}</li>)}
-                                                            </ul>
-                                                        </div>
-                                                    </div>
-                                                )}
-
-                                                {/* Right column: Achievement+LastActivity OR Good/Bad on click */}
-                                                {selectedRound && ROUND_DETAILS[selectedRound] ? (
-                                                    <div className={styles.anlsAchievCol}>
-                                                        <div className={styles.anlsGoodCard}>
-                                                            <div className={styles.anlsGoodBadHeader}>
-                                                                <span className={styles.anlsGoodIcon}>👍</span>
-                                                                <span className={styles.anlsGoodLabel}>GOOD</span>
-                                                            </div>
-                                                            {ROUND_DETAILS[selectedRound].good.map((g, i) => (
-                                                                <div key={i} className={styles.anlsGoodItem}>
-                                                                    <span className={styles.anlsCheckIcon}>✅</span>
-                                                                    <span>{g}</span>
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                        <div className={styles.anlsBadCard}>
-                                                            <div className={styles.anlsGoodBadHeader}>
-                                                                <span className={styles.anlsGoodIcon}>👎</span>
-                                                                <span className={styles.anlsBadLabel}>BAD</span>
-                                                            </div>
-                                                            {ROUND_DETAILS[selectedRound].bad.map((b, i) => (
-                                                                <div key={i} className={styles.anlsBadItem}>
-                                                                    <span className={styles.anlsCheckIcon}>❌</span>
-                                                                    <span>{b}</span>
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    </div>
-                                                ) : (
-                                                    <div className={styles.anlsAchievCol}>
-                                                        <div className={`${styles.anlsAchievBanner} ${isStudentPlaced ? '' : styles.anlsAchievBannerNotPlaced}`}>
-                                                            <div>
-                                                                <p className={styles.anlsAchievMeta}>BEST ACHIEVEMENT</p>
-                                                                {isStudentPlaced ? (
-                                                                    <>
-                                                                        <div className={styles.anlsAchievMain}>
-                                                                            <span className={styles.anlsAchievLPA}>{companyStats.highestPackageDrive > 0 ? `${companyStats.highestPackageDrive} LPA` : 'N/A'}</span>
-                                                                            <span className={styles.anlsAchievSub}>Highest Package</span>
-                                                                        </div>
-                                                                        <div className={styles.anlsAchievCompany}>
-                                                                            <svg viewBox="0 0 24 24" fill="currentColor" width="12" height="12"><path d="M3 21h18v-2H3v2zm0-4h18v-2H3v2zm2-4h14v-2H5v2zm0-4h14V7H5v2zm2-7v2h10V2H7z"/></svg>
-                                                                            <span>{driveAnalytics.highestPackageCompany || 'N/A'}</span>
-                                                                        </div>
-                                                                    </>
-                                                                ) : (
-                                                                    <>
-                                                                        <div className={styles.anlsAchievMain}>
-                                                                            <span className={styles.anlsAchievLPA}>{studentData?.overallCGPA || 'N/A'} CGPA</span>
-                                                                            <span className={styles.anlsAchievSub}>Top Score</span>
-                                                                        </div>
-                                                                        <div className={styles.anlsAchievCompany}>
-                                                                            <svg viewBox="0 0 24 24" fill="currentColor" width="12" height="12"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm1 10.4V7h-2v6h5v-2h-3z"/></svg>
-                                                                            <span>Upcoming: {driveAnalytics.upcomingCompany || 'N/A'}</span>
-                                                                        </div>
-                                                                    </>
-                                                                )}
-                                                            </div>
-                                                            <div className={styles.anlsAchievBadge}>
-                                                                <img src={BestAchievement} alt="Best Achievement" width="40" height="40" style={{ objectFit: 'contain' }} />
-                                                            </div>
-                                                        </div>
-                                                        <div className={styles.anlsLastActivity}>
-                                                            <p className={styles.anlsLastTitle}>LAST ACTIVITY</p>
-                                                            <p className={styles.anlsLastCompany}>{companyStats.lastDriveAttended}</p>
-                                                            <p className={styles.anlsLastRole}>{driveAnalytics.lastDriveRole || 'N/A'}</p>
-                                                            <span className={styles.anlsLastBadge}>{companyStats.lastDriveResult}</span>
-                                                        </div>
+                                                        </Pie>
+                                                    </PieChart>
+                                                </ResponsiveContainer>
+                                                {selectedRound && (
+                                                    <div style={{ display: 'flex', justifyContent: 'center', marginTop: '-4px' }}>
+                                                        <button
+                                                            type="button"
+                                                            className={styles.anlsClearBtn}
+                                                            onClick={() => { setSelectedRound(null); setHoveredRound(null); }}
+                                                        >
+                                                            ✕ Clear Selection
+                                                        </button>
                                                     </div>
                                                 )}
                                             </div>
 
-                                            {/* Legend always visible */}
-                                            <div className={styles.anlsLegendBox}>
-                                                <div className={styles.anlsLegend}>
-                                                    {PIE_DATA.map(d => (
-                                                        <div
-                                                            key={d.name}
-                                                            role="button"
-                                                            tabIndex={0}
-                                                            className={`${styles.anlsLegendItem} ${selectedRound === d.name ? styles.anlsLegendItemActive : ''}`}
-                                                            onClick={() => {
-                                                                setSelectedRound(d.name);
-                                                                setHoveredRound(d.name);
-                                                            }}
-                                                            onKeyDown={(e) => {
-                                                                if (e.key === 'Enter' || e.key === ' ') {
-                                                                    e.preventDefault();
+                                            {/* Right: stats + legend */}
+                                            <div className={styles.anlsRightCol}>
+                                                <div className={styles.anlsRightTop}>
+                                                    {/* Left column: Stats grid OR Companies card on click */}
+                                                    {selectedRound && ROUND_DETAILS[selectedRound] ? (
+                                                        <div className={styles.anlsCompaniesCard} style={{ borderColor: PIE_DATA.find(d => d.name === selectedRound)?.color }}>
+                                                            <h4 className={styles.anlsCompaniesTitle}>{selectedRound} Companies</h4>
+                                                            <div className={styles.anlsCompaniesList}>
+                                                                {ROUND_DETAILS[selectedRound].companies.map(c => {
+                                                                    const sColor = c.status === 'PASSED' ? '#10B981' : c.status === 'FAILED' ? '#EF4444' : '#94A3B8';
+                                                                    return (
+                                                                        <div key={c.name} className={styles.anlsCompanyRow}>
+                                                                            <span className={styles.anlsCompanyDot} style={{ background: sColor }} />
+                                                                            <span className={styles.anlsCompanyName}>{c.name}</span>
+                                                                            <span className={styles.anlsCompanyStatus} style={{ color: sColor }}>{c.status}</span>
+                                                                        </div>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                        </div>
+                                                    ) : (
+                                                        <div className={styles.anlsStatsGrid}>
+                                                            <div className={`${styles.anlsStatCard} ${styles.anlsCardLavender}`}>
+                                                                <div className={styles.anlsStatTop}>
+                                                                    <svg className={styles.anlsStatIcon} viewBox="0 0 24 24" fill="none">
+                                                                        <circle cx="9" cy="7" r="4" stroke="#6C63FF" strokeWidth="1.8" />
+                                                                        <path d="M2 20c0-4 3.134-7 7-7" stroke="#6C63FF" strokeWidth="1.8" strokeLinecap="round" />
+                                                                        <path d="M16 13l2 2 4-4" stroke="#6C63FF" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                                                                    </svg>
+                                                                    <span className={styles.anlsStatLabel}>Attended</span>
+                                                                </div>
+                                                                <div className={styles.anlsStatValue}>{companyStats.totalDrivesAttended}</div>
+                                                            </div>
+                                                            <div className={`${styles.anlsStatCard} ${styles.anlsCardBlue}`}>
+                                                                <div className={styles.anlsStatTop}>
+                                                                    <svg className={styles.anlsStatIcon} viewBox="0 0 24 24" fill="none">
+                                                                        <circle cx="12" cy="12" r="9" stroke="#2085f6" strokeWidth="1.8" />
+                                                                        <path d="M8 12l3 3 5-5" stroke="#2085f6" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                                                                    </svg>
+                                                                    <span className={styles.anlsStatLabel}>Shortlisted</span>
+                                                                </div>
+                                                                <div className={styles.anlsStatValue}>{companyStats.shortlistedCount}</div>
+                                                            </div>
+                                                            <div className={`${styles.anlsStatCard} ${styles.anlsCardPink}`}>
+                                                                <div className={styles.anlsStatTop}>
+                                                                    <svg className={styles.anlsStatIcon} viewBox="0 0 24 24" fill="none">
+                                                                        <circle cx="12" cy="12" r="9" stroke="#E05C6C" strokeWidth="1.8" />
+                                                                        <path d="M12 8v4" stroke="#E05C6C" strokeWidth="1.8" strokeLinecap="round" />
+                                                                        <circle cx="12" cy="16" r="0.8" fill="#E05C6C" />
+                                                                    </svg>
+                                                                    <span className={styles.anlsStatLabel}>Work On</span>
+                                                                </div>
+                                                                <ul className={styles.anlsStatList}>
+                                                                    {driveAnalytics.workOn.map(i => <li key={i}><span className={styles.anlsArrow}>→</span>{i}</li>)}
+                                                                </ul>
+                                                            </div>
+                                                            <div className={`${styles.anlsStatCard} ${styles.anlsCardMint}`}>
+                                                                <div className={styles.anlsStatTop}>
+                                                                    <svg className={styles.anlsStatIcon} viewBox="0 0 24 24" fill="none">
+                                                                        <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6L12 2z" stroke="#27AE8C" strokeWidth="1.6" strokeLinejoin="round" />
+                                                                    </svg>
+                                                                    <span className={styles.anlsStatLabel}>Best</span>
+                                                                </div>
+                                                                <ul className={styles.anlsStatList}>
+                                                                    {driveAnalytics.bestAt.map(i => <li key={i}><span className={styles.anlsArrow}>→</span>{i}</li>)}
+                                                                </ul>
+                                                            </div>
+                                                        </div>
+                                                    )}
+
+                                                    {/* Right column: Achievement+LastActivity OR Good/Bad on click */}
+                                                    {selectedRound && ROUND_DETAILS[selectedRound] ? (
+                                                        <div className={styles.anlsAchievCol}>
+                                                            <div className={styles.anlsGoodCard}>
+                                                                <div className={styles.anlsGoodBadHeader}>
+                                                                    <span className={styles.anlsGoodIcon}>👍</span>
+                                                                    <span className={styles.anlsGoodLabel}>GOOD</span>
+                                                                </div>
+                                                                {ROUND_DETAILS[selectedRound].good.map((g, i) => (
+                                                                    <div key={i} className={styles.anlsGoodItem}>
+                                                                        <span className={styles.anlsCheckIcon}>✅</span>
+                                                                        <span>{g}</span>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                            <div className={styles.anlsBadCard}>
+                                                                <div className={styles.anlsGoodBadHeader}>
+                                                                    <span className={styles.anlsGoodIcon}>👎</span>
+                                                                    <span className={styles.anlsBadLabel}>BAD</span>
+                                                                </div>
+                                                                {ROUND_DETAILS[selectedRound].bad.map((b, i) => (
+                                                                    <div key={i} className={styles.anlsBadItem}>
+                                                                        <span className={styles.anlsCheckIcon}>❌</span>
+                                                                        <span>{b}</span>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    ) : (
+                                                        <div className={styles.anlsAchievCol}>
+                                                            <div className={`${styles.anlsAchievBanner} ${isStudentPlaced ? '' : styles.anlsAchievBannerNotPlaced}`}>
+                                                                <div>
+                                                                    <p className={styles.anlsAchievMeta}>BEST ACHIEVEMENT</p>
+                                                                    {isStudentPlaced ? (
+                                                                        <>
+                                                                            <div className={styles.anlsAchievMain}>
+                                                                                <span className={styles.anlsAchievLPA}>{companyStats.highestPackageDrive > 0 ? `${companyStats.highestPackageDrive} LPA` : 'N/A'}</span>
+                                                                                <span className={styles.anlsAchievSub}>Highest Package</span>
+                                                                            </div>
+                                                                            <div className={styles.anlsAchievCompany}>
+                                                                                <svg viewBox="0 0 24 24" fill="currentColor" width="12" height="12"><path d="M3 21h18v-2H3v2zm0-4h18v-2H3v2zm2-4h14v-2H5v2zm0-4h14V7H5v2zm2-7v2h10V2H7z" /></svg>
+                                                                                <span>{driveAnalytics.highestPackageCompany || 'N/A'}</span>
+                                                                            </div>
+                                                                        </>
+                                                                    ) : (
+                                                                        <>
+                                                                            <div className={styles.anlsAchievMain}>
+                                                                                <span className={styles.anlsAchievLPA}>{studentData?.overallCGPA || 'N/A'} CGPA</span>
+                                                                                <span className={styles.anlsAchievSub}>Top Score</span>
+                                                                            </div>
+                                                                            <div className={styles.anlsAchievCompany}>
+                                                                                <svg viewBox="0 0 24 24" fill="currentColor" width="12" height="12"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm1 10.4V7h-2v6h5v-2h-3z" /></svg>
+                                                                                <span>Upcoming: {driveAnalytics.upcomingCompany || 'N/A'}</span>
+                                                                            </div>
+                                                                        </>
+                                                                    )}
+                                                                </div>
+                                                                <div className={styles.anlsAchievBadge}>
+                                                                    <img src={BestAchievement} alt="Best Achievement" width="40" height="40" style={{ objectFit: 'contain' }} />
+                                                                </div>
+                                                            </div>
+                                                            <div className={styles.anlsLastActivity}>
+                                                                <p className={styles.anlsLastTitle}>LAST ACTIVITY</p>
+                                                                <p className={styles.anlsLastCompany}>{companyStats.lastDriveAttended}</p>
+                                                                <p className={styles.anlsLastRole}>{driveAnalytics.lastDriveRole || 'N/A'}</p>
+                                                                <span className={styles.anlsLastBadge}>{companyStats.lastDriveResult}</span>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                {/* Legend always visible */}
+                                                <div className={styles.anlsLegendBox}>
+                                                    <div className={styles.anlsLegend}>
+                                                        {PIE_DATA.map(d => (
+                                                            <div
+                                                                key={d.name}
+                                                                role="button"
+                                                                tabIndex={0}
+                                                                className={`${styles.anlsLegendItem} ${selectedRound === d.name ? styles.anlsLegendItemActive : ''}`}
+                                                                onClick={() => {
                                                                     setSelectedRound(d.name);
                                                                     setHoveredRound(d.name);
-                                                                }
-                                                            }}
-                                                            aria-label={`Open ${d.name} round details`}
-                                                        >
-                                                            <span className={styles.anlsLegendCircle} style={{ background: d.color }}>{d.value}%</span>
-                                                            <span className={styles.anlsLegendName}>{d.name}</span>
-                                                        </div>
-                                                    ))}
+                                                                }}
+                                                                onKeyDown={(e) => {
+                                                                    if (e.key === 'Enter' || e.key === ' ') {
+                                                                        e.preventDefault();
+                                                                        setSelectedRound(d.name);
+                                                                        setHoveredRound(d.name);
+                                                                    }
+                                                                }}
+                                                                aria-label={`Open ${d.name} round details`}
+                                                            >
+                                                                <span className={styles.anlsLegendCircle} style={{ background: d.color }}>{d.value}%</span>
+                                                                <span className={styles.anlsLegendName}>{d.name}</span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
 
-                                    {/* Progress Stepper */}
-                                    <div className={styles.anlsStepper}>
-                                        {driveAnalytics.progressSteps.map((step, i, arr) => (
-                                            <React.Fragment key={step.label}>
-                                                <div className={styles.anlsStepItem}>
-                                                    <div className={`${styles.anlsStepCircle} ${step.s === 'done' ? styles.anlsStep_done : step.s === 'current' ? styles.anlsStep_current : styles.anlsStep_pending}`}>
-                                                        {step.s === 'done' ? (
-                                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" width="13" height="13"><polyline points="20 6 9 17 4 12"/></svg>
-                                                        ) : step.s === 'current' ? (
-                                                            <span className={styles.anlsStepDot}/>
-                                                        ) : null}
+                                        {/* Progress Stepper */}
+                                        <div className={styles.anlsStepper}>
+                                            {driveAnalytics.progressSteps.map((step, i, arr) => (
+                                                <React.Fragment key={step.label}>
+                                                    <div className={styles.anlsStepItem}>
+                                                        <div className={`${styles.anlsStepCircle} ${step.s === 'done' ? styles.anlsStep_done : step.s === 'current' ? styles.anlsStep_current : styles.anlsStep_pending}`}>
+                                                            {step.s === 'done' ? (
+                                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" width="13" height="13"><polyline points="20 6 9 17 4 12" /></svg>
+                                                            ) : step.s === 'current' ? (
+                                                                <span className={styles.anlsStepDot} />
+                                                            ) : null}
+                                                        </div>
+                                                        <span className={`${styles.anlsStepLabel} ${step.s === 'done' ? styles.anlsStepLbl_done : step.s === 'current' ? styles.anlsStepLbl_current : styles.anlsStepLbl_pending}`}>{step.label}</span>
                                                     </div>
-                                                    <span className={`${styles.anlsStepLabel} ${step.s === 'done' ? styles.anlsStepLbl_done : step.s === 'current' ? styles.anlsStepLbl_current : styles.anlsStepLbl_pending}`}>{step.label}</span>
-                                                </div>
-                                                {i < arr.length - 1 && (
-                                                    <div className={`${styles.anlsStepLine} ${arr[i+1].s === 'pending' ? styles.anlsStepLinePending : styles.anlsStepLineDone}`}/>
-                                                )}
-                                            </React.Fragment>
-                                        ))}
-                                    </div>
-                                </>
-                            )}
-                        </div>
+                                                    {i < arr.length - 1 && (
+                                                        <div className={`${styles.anlsStepLine} ${arr[i + 1].s === 'pending' ? styles.anlsStepLinePending : styles.anlsStepLineDone}`} />
+                                                    )}
+                                                </React.Fragment>
+                                            ))}
+                                        </div>
+                                    </>
+                                )}
+                            </div>
                         )}
 
                         {/* --- CORE SKILLS --- */}
@@ -3651,258 +3708,250 @@ function StuProfile({ onLogout, onViewChange }) {
                         <div className={styles.profileSectionContainer}>
                             <h3 className={styles.sectionHeader}>Other Details</h3>
                             <div className={styles.formGrid}>
-                                    <div className={styles.field}>
-                                        <label>Residential Status <RequiredStar /></label>
-                                        <select
-                                            name="residentialStatus"
-                                            value={studentData?.residentialStatus || ''}
-                                            onChange={(e) => setStudentData(prev => ({ ...prev, residentialStatus: e.target.value }))}
-                                            disabled={isSaving}
-                                        >
-                                            <option value="" disabled>Residential status</option>
-                                            <option value="Hosteller">Hosteller</option>
-                                            <option value="Dayscholar">Dayscholar</option>
-                                        </select>
+                                <div className={styles.field}>
+                                    <label>Residential Status <RequiredStar /></label>
+                                    <FormDropdown
+                                        options={['Hosteller', 'Dayscholar']}
+                                        selectedOption={studentData?.residentialStatus || ''}
+                                        onSelect={(val) => setStudentData(prev => ({ ...prev, residentialStatus: val }))}
+                                        placeholder="Select Residential Status"
+                                        disabled={isSaving}
+                                        role="student"
+                                        className={styles.dropdownWrapper}
+                                        headerClassName={styles.dropdownHeader}
+                                    />
+                                    <input type="hidden" name="residentialStatus" value={studentData?.residentialStatus || ''} />
+                                </div>
+                                <div className={styles.field}>
+                                    <label>Quota <RequiredStar /></label>
+                                    <FormDropdown
+                                        options={['Management', 'Counselling']}
+                                        selectedOption={studentData?.quota || ''}
+                                        onSelect={() => { }}
+                                        placeholder="Select Quota"
+                                        disabled={true}
+                                        role="student"
+                                        className={styles.dropdownWrapper}
+                                        headerClassName={styles.dropdownHeader}
+                                    />
+                                    <input type="hidden" name="quota" value={studentData?.quota || ''} />
+                                </div>
+                                <div className={styles.field}>
+                                    <label>Spoken Languages</label>
+                                    <input
+                                        type="text"
+                                        name="languagesKnown"
+                                        placeholder="Exclude Tamil & English"
+                                        value={studentData?.languagesKnown || ''}
+                                        onChange={(e) => setStudentData(prev => ({ ...prev, languagesKnown: e.target.value }))}
+                                        disabled={isSaving}
+                                    />
+                                </div>
+                                <div className={styles.field}>
+                                    <label>First Graduate <RequiredStar /></label>
+                                    <FormDropdown
+                                        options={['Yes', 'No']}
+                                        selectedOption={studentData?.firstGraduate || ''}
+                                        onSelect={() => { }}
+                                        placeholder="Select First Graduate"
+                                        disabled={true}
+                                        role="student"
+                                        className={styles.dropdownWrapper}
+                                        headerClassName={styles.dropdownHeader}
+                                    />
+                                    <input type="hidden" name="firstGraduate" value={studentData?.firstGraduate || ''} />
+                                </div>
+                                <div className={styles.field}>
+                                    <label>Passport No.</label>
+                                    <input
+                                        type="text"
+                                        name="passportNo"
+                                        placeholder="Enter Passport No."
+                                        value={studentData?.passportNo || ''}
+                                        onChange={(e) => setStudentData(prev => ({ ...prev, passportNo: e.target.value }))}
+                                        disabled={isSaving}
+                                    />
+                                </div>
+                                <div className={styles.field}>
+                                    <label>Value Added Courses</label>
+                                    <input
+                                        type="text"
+                                        name="valueAddedCourses"
+                                        placeholder="Enter Value Added Courses"
+                                        value={studentData?.valueAddedCourses || ''}
+                                        onChange={(e) => setStudentData(prev => ({ ...prev, valueAddedCourses: e.target.value }))}
+                                        disabled={isSaving}
+                                    />
+                                </div>
+                                <div className={styles.field}>
+                                    <label>About Sibling</label>
+                                    <input
+                                        type="text"
+                                        name="aboutSibling"
+                                        placeholder="Enter About Sibling"
+                                        value={studentData?.aboutSibling || ''}
+                                        onChange={(e) => setStudentData(prev => ({ ...prev, aboutSibling: e.target.value }))}
+                                        disabled={isSaving}
+                                    />
+                                </div>
+                                <div className={styles.field}>
+                                    <label>Ration Card No. <RequiredStar /></label>
+                                    <input
+                                        type="text"
+                                        name="rationCardNo"
+                                        placeholder="Enter Ration Card No."
+                                        value={studentData?.rationCardNo || ''}
+                                        readOnly
+                                        className={styles.readOnlyInput}
+                                        disabled={isSaving}
+                                    />
+                                </div>
+                                <div className={styles.field}>
+                                    <label>Family Annual Income <RequiredStar /></label>
+                                    <input
+                                        type="text"
+                                        name="familyAnnualIncome"
+                                        placeholder="Enter Family Annual Income"
+                                        value={studentData?.familyAnnualIncome || ''}
+                                        onChange={(e) => setStudentData(prev => ({ ...prev, familyAnnualIncome: e.target.value }))}
+                                        disabled={isSaving}
+                                    />
+                                </div>
+                                <div className={styles.field}>
+                                    <label>PAN No. <RequiredStar /></label>
+                                    <input
+                                        type="text"
+                                        name="panNo"
+                                        placeholder="Enter PAN No."
+                                        value={studentData?.panNo || ''}
+                                        readOnly
+                                        className={styles.readOnlyInput}
+                                    />
+                                </div>
+                                <div className={styles.field}>
+                                    <label>Willing to Sign Bond <RequiredStar /></label>
+                                    <FormDropdown
+                                        options={['Yes', 'No']}
+                                        selectedOption={studentData?.willingToSignBond || ''}
+                                        onSelect={() => { }}
+                                        placeholder="Select Willing to Sign Bond"
+                                        disabled={true}
+                                        role="student"
+                                        className={styles.dropdownWrapper}
+                                        headerClassName={styles.dropdownHeader}
+                                    />
+                                    <input type="hidden" name="willingToSignBond" value={studentData?.willingToSignBond || ''} />
+                                </div>
+                                <div className={styles.field}>
+                                    <label>Preferred Mode of Drive <RequiredStar /></label>
+                                    <FormDropdown
+                                        options={['Online', 'Offline', 'Hybrid']}
+                                        selectedOption={studentData?.preferredModeOfDrive || ''}
+                                        onSelect={() => { }}
+                                        placeholder="Select Preferred Mode of Drive"
+                                        disabled={true}
+                                        role="student"
+                                        className={styles.dropdownWrapper}
+                                        headerClassName={styles.dropdownHeader}
+                                    />
+                                    <input type="hidden" name="preferredModeOfDrive" value={studentData?.preferredModeOfDrive || ''} />
+                                </div>
+                                <div className={styles.field}>
+                                    <label>GitHub Link</label>
+                                    <input
+                                        type="url"
+                                        name="githubLink"
+                                        placeholder="Enter GitHub Link (e.g. https://github.com/username)"
+                                        value={studentData?.githubLink || ''}
+                                        onChange={(e) => setStudentData(prev => ({ ...prev, githubLink: e.target.value }))}
+                                        onBlur={(e) => {
+                                            const val = e.target.value.trim();
+                                            if (val && !GITHUB_URL_REGEX.test(val)) {
+                                                e.target.style.borderColor = '#dc3545';
+                                                e.target.title = 'Must be: https://github.com/your-username';
+                                                setUrlErrorType('GitHub');
+                                                setInvalidUrl(val);
+                                                setURLErrorPopupOpen(true);
+                                            } else {
+                                                e.target.style.borderColor = val ? '#28a745' : '';
+                                                e.target.title = '';
+                                            }
+                                        }}
+                                        disabled={isSaving}
+                                    />
+                                </div>
+                                <div className={styles.field}>
+                                    <label>LinkedIn Link</label>
+                                    <input
+                                        type="url"
+                                        name="linkedinLink"
+                                        placeholder="Enter LinkedIn Link (e.g. https://linkedin.com/in/username)"
+                                        value={studentData?.linkedinLink || ''}
+                                        onChange={(e) => setStudentData(prev => ({ ...prev, linkedinLink: e.target.value }))}
+                                        onBlur={(e) => {
+                                            const val = e.target.value.trim();
+                                            if (val && !LINKEDIN_URL_REGEX.test(val)) {
+                                                e.target.style.borderColor = '#dc3545';
+                                                e.target.title = 'Must be: https://linkedin.com/in/your-username';
+                                                setUrlErrorType('LinkedIn');
+                                                setInvalidUrl(val);
+                                                setURLErrorPopupOpen(true);
+                                            } else {
+                                                e.target.style.borderColor = val ? '#28a745' : '';
+                                                e.target.title = '';
+                                            }
+                                        }}
+                                        disabled={isSaving}
+                                    />
+                                </div>
+                                <div className={styles.field}>
+                                    <label>Portfolio Link</label>
+                                    <input
+                                        type="url"
+                                        name="portfolioLink"
+                                        placeholder="Enter Portfolio Link"
+                                        value={studentData?.portfolioLink || ''}
+                                        onChange={(e) => setStudentData(prev => ({ ...prev, portfolioLink: e.target.value }))}
+                                        disabled={isSaving}
+                                    />
+                                </div>
+                                <div className={styles.checkboxGroup}>
+                                    <span className={styles.checkboxGroupLabel}>Company Types <RequiredStar /></span>
+                                    <div className={styles.checkboxOptions}>
+                                        {COMPANY_TYPE_OPTIONS.map((option) => (
+                                            <label key={option} className={styles.checkboxOption}>
+                                                <input
+                                                    type="checkbox"
+                                                    name="companyTypesReadonly"
+                                                    checked={selectedCompanyTypes.includes(option)}
+                                                    disabled
+                                                />
+                                                <span>{option}</span>
+                                            </label>
+                                        ))}
                                     </div>
-                                    <div className={styles.field}>
-                                        <label>Quota <RequiredStar /></label>
-                                        <>
-                                            <select
-                                                name="quota"
-                                                value={studentData?.quota || ''}
-                                                disabled
-                                                className={styles.readOnlyInput}
-                                            >
-                                                <option value="" disabled>Quota</option>
-                                                <option value="Management">Management</option>
-                                                <option value="Counselling">Counselling</option>
-                                            </select>
-                                            <input type="hidden" name="quota" value={studentData?.quota || ''} />
-                                        </>
+                                </div>
+                                <div className={styles.checkboxGroup}>
+                                    <span className={styles.checkboxGroupLabel}>Preferred Job Locations <RequiredStar /></span>
+                                    <div className={styles.checkboxOptions}>
+                                        {JOB_LOCATION_OPTIONS.map((option) => (
+                                            <label key={option} className={styles.checkboxOption}>
+                                                <input
+                                                    type="checkbox"
+                                                    name="jobLocationsReadonly"
+                                                    checked={selectedJobLocations.includes(option)}
+                                                    disabled
+                                                />
+                                                <span>{option}</span>
+                                            </label>
+                                        ))}
                                     </div>
-                                    <div className={styles.field}>
-                                        <label>Spoken Languages</label>
-                                        <input
-                                            type="text"
-                                            name="languagesKnown"
-                                            placeholder="Exclude Tamil & English"
-                                            value={studentData?.languagesKnown || ''}
-                                            onChange={(e) => setStudentData(prev => ({ ...prev, languagesKnown: e.target.value }))}
-                                            disabled={isSaving}
-                                        />
-                                    </div>
-                                    <div className={styles.field}>
-                                        <label>First Graduate <RequiredStar /></label>
-                                        <>
-                                            <select
-                                                name="firstGraduate"
-                                                value={studentData?.firstGraduate || ''}
-                                                disabled
-                                                className={styles.readOnlyInput}
-                                            >
-                                                <option value="" disabled>First Graduate</option>
-                                                <option value="Yes">Yes</option>
-                                                <option value="No">No</option>
-                                            </select>
-                                            <input type="hidden" name="firstGraduate" value={studentData?.firstGraduate || ''} />
-                                        </>
-                                    </div>
-                                    <div className={styles.field}>
-                                        <label>Passport No.</label>
-                                        <input
-                                            type="text"
-                                            name="passportNo"
-                                            placeholder="Enter Passport No."
-                                            value={studentData?.passportNo || ''}
-                                            onChange={(e) => setStudentData(prev => ({ ...prev, passportNo: e.target.value }))}
-                                            disabled={isSaving}
-                                        />
-                                    </div>
-                                    <div className={styles.field}>
-                                        <label>Skill Set <RequiredStar /></label>
-                                        <input
-                                            type="text"
-                                            name="skillSet"
-                                            placeholder="Enter Skill Set"
-                                            value={studentData?.skillSet || ''}
-                                            onChange={(e) => setStudentData(prev => ({ ...prev, skillSet: e.target.value }))}
-                                            disabled={isSaving}
-                                        />
-                                    </div>
-                                    <div className={styles.field}>
-                                        <label>Value Added Courses</label>
-                                        <input
-                                            type="text"
-                                            name="valueAddedCourses"
-                                            placeholder="Enter Value Added Courses"
-                                            value={studentData?.valueAddedCourses || ''}
-                                            onChange={(e) => setStudentData(prev => ({ ...prev, valueAddedCourses: e.target.value }))}
-                                            disabled={isSaving}
-                                        />
-                                    </div>
-                                    <div className={styles.field}>
-                                        <label>About Sibling</label>
-                                        <input
-                                            type="text"
-                                            name="aboutSibling"
-                                            placeholder="Enter About Sibling"
-                                            value={studentData?.aboutSibling || ''}
-                                            onChange={(e) => setStudentData(prev => ({ ...prev, aboutSibling: e.target.value }))}
-                                            disabled={isSaving}
-                                        />
-                                    </div>
-                                    <div className={styles.field}>
-                                        <label>Ration Card No. <RequiredStar /></label>
-                                        <input
-                                            type="text"
-                                            name="rationCardNo"
-                                            placeholder="Enter Ration Card No."
-                                            value={studentData?.rationCardNo || ''}
-                                            readOnly
-                                            className={styles.readOnlyInput}
-                                            disabled={isSaving}
-                                        />
-                                    </div>
-                                    <div className={styles.field}>
-                                        <label>Family Annual Income <RequiredStar /></label>
-                                        <input
-                                            type="text"
-                                            name="familyAnnualIncome"
-                                            placeholder="Enter Family Annual Income"
-                                            value={studentData?.familyAnnualIncome || ''}
-                                            onChange={(e) => setStudentData(prev => ({ ...prev, familyAnnualIncome: e.target.value }))}
-                                            disabled={isSaving}
-                                        />
-                                    </div>
-                                    <div className={styles.field}>
-                                        <label>PAN No. <RequiredStar /></label>
-                                        <input
-                                            type="text"
-                                            name="panNo"
-                                            placeholder="Enter PAN No."
-                                            value={studentData?.panNo || ''}
-                                            readOnly
-                                            className={styles.readOnlyInput}
-                                        />
-                                    </div>
-                                    <div className={styles.field}>
-                                        <label>Willing to Sign Bond <RequiredStar /></label>
-                                        <>
-                                            <select
-                                                name="willingToSignBond"
-                                                value={studentData?.willingToSignBond || ''}
-                                                disabled
-                                                className={styles.readOnlyInput}
-                                            >
-                                                <option value="" disabled>Willing to Sign Bond</option>
-                                                <option value="Yes">Yes</option>
-                                                <option value="No">No</option>
-                                            </select>
-                                            <input type="hidden" name="willingToSignBond" value={studentData?.willingToSignBond || ''} />
-                                        </>
-                                    </div>
-                                    <div className={styles.field}>
-                                        <label>Preferred Mode of Drive <RequiredStar /></label>
-                                        <>
-                                            <select
-                                                name="preferredModeOfDrive"
-                                                value={studentData?.preferredModeOfDrive || ''}
-                                                disabled
-                                                className={styles.readOnlyInput}
-                                            >
-                                                <option value="" disabled>Preferred Mode of Drive</option>
-                                                <option value="On-Campus">On-Campus</option>
-                                                <option value="Off-Campus">Off-Campus</option>
-                                                <option value="Hybrid">Hybrid</option>
-                                            </select>
-                                            <input type="hidden" name="preferredModeOfDrive" value={studentData?.preferredModeOfDrive || ''} />
-                                        </>
-                                    </div>
-                                    <div className={styles.field}>
-                                        <label>GitHub Link</label>
-                                        <input
-                                            type="url"
-                                            name="githubLink"
-                                            placeholder="Enter GitHub Link (e.g. https://github.com/username)"
-                                            value={studentData?.githubLink || ''}
-                                            onChange={(e) => setStudentData(prev => ({ ...prev, githubLink: e.target.value }))}
-                                            onBlur={(e) => {
-                                                const val = e.target.value.trim();
-                                                if (val && !GITHUB_URL_REGEX.test(val)) {
-                                                    e.target.style.borderColor = '#dc3545';
-                                                    e.target.title = 'Must be: https://github.com/your-username';
-                                                    setUrlErrorType('GitHub');
-                                                    setInvalidUrl(val);
-                                                    setURLErrorPopupOpen(true);
-                                                } else {
-                                                    e.target.style.borderColor = val ? '#28a745' : '';
-                                                    e.target.title = '';
-                                                }
-                                            }}
-                                            disabled={isSaving}
-                                        />
-                                    </div>
-                                    <div className={styles.field}>
-                                        <label>LinkedIn Link</label>
-                                        <input
-                                            type="url"
-                                            name="linkedinLink"
-                                            placeholder="Enter LinkedIn Link (e.g. https://linkedin.com/in/username)"
-                                            value={studentData?.linkedinLink || ''}
-                                            onChange={(e) => setStudentData(prev => ({ ...prev, linkedinLink: e.target.value }))}
-                                            onBlur={(e) => {
-                                                const val = e.target.value.trim();
-                                                if (val && !LINKEDIN_URL_REGEX.test(val)) {
-                                                    e.target.style.borderColor = '#dc3545';
-                                                    e.target.title = 'Must be: https://linkedin.com/in/your-username';
-                                                    setUrlErrorType('LinkedIn');
-                                                    setInvalidUrl(val);
-                                                    setURLErrorPopupOpen(true);
-                                                } else {
-                                                    e.target.style.borderColor = val ? '#28a745' : '';
-                                                    e.target.title = '';
-                                                }
-                                            }}
-                                            disabled={isSaving}
-                                        />
-                                    </div>
-                                    <div className={styles.checkboxGroup}>
-                                        <span className={styles.checkboxGroupLabel}>Company Types <RequiredStar /></span>
-                                        <div className={styles.checkboxOptions}>
-                                            {COMPANY_TYPE_OPTIONS.map((option) => (
-                                                <label key={option} className={styles.checkboxOption}>
-                                                    <input
-                                                        type="checkbox"
-                                                        name="companyTypesReadonly"
-                                                        checked={selectedCompanyTypes.includes(option)}
-                                                        disabled
-                                                    />
-                                                    <span>{option}</span>
-                                                </label>
-                                            ))}
-                                        </div>
-                                    </div>
-                                    <div className={styles.checkboxGroup}>
-                                        <span className={styles.checkboxGroupLabel}>Preferred Job Locations <RequiredStar /></span>
-                                        <div className={styles.checkboxOptions}>
-                                            {JOB_LOCATION_OPTIONS.map((option) => (
-                                                <label key={option} className={styles.checkboxOption}>
-                                                    <input
-                                                        type="checkbox"
-                                                        name="jobLocationsReadonly"
-                                                        checked={selectedJobLocations.includes(option)}
-                                                        disabled
-                                                    />
-                                                    <span>{option}</span>
-                                                </label>
-                                            ))}
-                                        </div>
-                                    </div>
-                                    <input type="hidden" name="companyTypes" value={companyTypesHiddenValue} />
-                                    <input type="hidden" name="preferredJobLocation" value={jobLocationsHiddenValue} />
+                                </div>
+                                <input type="hidden" name="companyTypes" value={companyTypesHiddenValue} />
+                                <input type="hidden" name="preferredJobLocation" value={jobLocationsHiddenValue} />
                             </div>
                         </div>
-                        
+
                         <div className={styles.actionButtons}>
                             <button type="button" className={styles.discardBtn} onClick={handleDiscard} disabled={isSaving || !hasActionableChanges}>Discard</button>
                             <button type="submit" className={styles.saveBtn} disabled={isSaving || !hasActionableChanges}>
@@ -3920,10 +3969,10 @@ function StuProfile({ onLogout, onViewChange }) {
                 </div>
             </div>
             <SuccessPopup isOpen={isPopupOpen} onClose={closePopup} />
-            <FileSizeErrorPopup 
-                isOpen={isFileSizeErrorOpen} 
-                onClose={() => setIsFileSizeErrorOpen(false)} 
-                fileSizeKB={fileSizeErrorKB} 
+            <FileSizeErrorPopup
+                isOpen={isFileSizeErrorOpen}
+                onClose={() => setIsFileSizeErrorOpen(false)}
+                fileSizeKB={fileSizeErrorKB}
             />
             <URLValidationErrorPopup
                 isOpen={isURLErrorPopupOpen}

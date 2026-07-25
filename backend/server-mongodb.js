@@ -9217,6 +9217,283 @@ app.get('/api/students/check/:regNo', async (req, res) => {
     }
 });
 
+// ==========================================
+// EXCEL STUDENTS UPLOAD & MANAGEMENT API
+// ==========================================
+
+// ==========================================
+// EXCEL STUDENTS UPLOAD & MANAGEMENT API
+// ==========================================
+
+// 1. Upload Excel parsed students batch
+app.post('/api/students/excel-upload', async (req, res) => {
+    try {
+        const { students: rawStudents } = req.body;
+        if (!Array.isArray(rawStudents) || rawStudents.length === 0) {
+            return res.status(400).json({ error: 'No student records provided' });
+        }
+
+        const isMongoConnected = mongoose.connection.readyState === 1 || (typeof ensureConnection === 'function' && await ensureConnection());
+        let insertedCount = 0;
+        let updatedCount = 0;
+        let errors = [];
+
+        const batchSize = 100;
+        for (let i = 0; i < rawStudents.length; i += batchSize) {
+            const batch = rawStudents.slice(i, i + batchSize);
+            const bulkOps = [];
+            const userOps = [];
+
+            for (let idx = 0; idx < batch.length; idx++) {
+                const s = batch[idx];
+                let regNo = String(s.regNo || s.registerNo || s.reg_no || s.rollNo || s.registrationNo || s.studentId || '').trim();
+                if (!regNo) {
+                    // Fallback auto register number
+                    regNo = `EXCEL${Date.now()}_${i + idx + 1}`;
+                }
+
+                let firstName = String(s.firstName || s.first_name || s.fname || '').trim();
+                let lastName = String(s.lastName || s.last_name || s.lname || '').trim();
+                const rawName = String(s.name || s.studentName || s.fullName || s.candidateName || '').trim();
+
+                if (!firstName && rawName) {
+                    const parts = rawName.split(/\s+/);
+                    firstName = parts[0] || 'Student';
+                    lastName = parts.slice(1).join(' ') || lastName;
+                }
+                if (!firstName) firstName = 'Student';
+
+                const rawDob = String(s.dob || s.dateOfBirth || s.date_of_birth || '01012000').replace(/[^0-9]/g, '');
+                const dob = rawDob.length >= 8 ? rawDob.slice(0, 8) : rawDob.padEnd(8, '0');
+                const primaryEmail = String(s.primaryEmail || s.email || s.mail || `${regNo.toLowerCase()}@ksrict.ac.in`).trim().toLowerCase();
+                const domainEmail = String(s.domainEmail || s.collegeEmail || s.officialEmail || `${regNo.toLowerCase()}@ksrict.ac.in`).trim().toLowerCase();
+                const branch = String(s.branch || s.department || s.dept || 'CSE').trim();
+                const degree = String(s.degree || s.programme || 'Bachelor of Engineering').trim();
+                const batchYear = String(s.batch || s.batchYear || s.passoutYear || '2023-2027').trim();
+                const currentYear = String(s.currentYear || s.year || 'III').trim();
+                const currentSemester = String(s.currentSemester || s.semester || s.sem || '6').trim();
+                const section = String(s.section || s.sec || 'A').trim();
+                const gender = String(s.gender || s.sex || 'male').trim().toLowerCase();
+                const mobileNo = String(s.mobileNo || s.mobile || s.phone || s.contact || '').trim();
+                const fatherName = String(s.fatherName || s.father_name || s.parentName || '').trim();
+                const fatherOccupation = String(s.fatherOccupation || s.father_occupation || '').trim();
+                const address = String(s.address || '').trim();
+                const city = String(s.city || s.town || s.location || '').trim();
+                const studyCategory = String(s.studyCategory || s.category || '12th').trim();
+                const loginPassword = dob || regNo;
+
+                const studentDoc = {
+                    ...s,
+                    regNo,
+                    dob,
+                    firstName,
+                    lastName,
+                    email: primaryEmail,
+                    primaryEmail,
+                    domainEmail,
+                    branch,
+                    degree,
+                    batch: batchYear,
+                    currentYear,
+                    currentSemester,
+                    section,
+                    gender,
+                    mobileNo,
+                    fatherName,
+                    fatherOccupation,
+                    fatherMobile: String(s.fatherMobile || s.father_mobile || s.fatherPhone || '').trim(),
+                    motherName: String(s.motherName || s.mother_name || '').trim(),
+                    motherOccupation: String(s.motherOccupation || s.mother_occupation || '').trim(),
+                    motherMobile: String(s.motherMobile || s.mother_mobile || s.motherPhone || '').trim(),
+                    guardianName: String(s.guardianName || s.guardian_name || '').trim(),
+                    guardianNumber: String(s.guardianNumber || s.guardianMobile || s.guardian_mobile || '').trim(),
+                    address,
+                    city,
+                    bloodGroup: String(s.bloodGroup || s.blood_group || '').trim(),
+                    community: String(s.community || '').trim(),
+                    mediumOfStudy: String(s.mediumOfStudy || s.medium_of_study || '').trim(),
+                    aadhaarNo: String(s.aadhaarNo || s.aadhaar || s.aadhar || '').trim(),
+                    panNo: String(s.panNo || s.pan || '').trim(),
+                    passportNo: String(s.passportNo || s.passport || '').trim(),
+                    residentialStatus: String(s.residentialStatus || s.residential_status || s['Residential Status *'] || s['Residential Status'] || '').trim(),
+                    quota: String(s.quota || s['Quota *'] || s['Quota'] || '').trim(),
+                    firstGraduate: String(s.firstGraduate || s.first_graduate || s['First Graduate *'] || s['First Graduate'] || '').trim(),
+                    valueAddedCourses: String(s.valueAddedCourses || s.value_added_courses || s['Value Added Courses'] || '').trim(),
+                    aboutSibling: String(s.aboutSibling || s.about_sibling || s['About Sibling'] || '').trim(),
+                    rationCardNo: String(s.rationCardNo || s.ration_card_no || s['Ration Card No. *'] || s['Ration Card No'] || '').trim(),
+                    willingToSignBond: String(s.willingToSignBond || s.willing_to_sign_bond || s['Willing to Sign Bond *'] || s['Willing to Sign Bond'] || '').trim(),
+                    preferredModeOfDrive: String(s.preferredModeOfDrive || s.preferred_mode_of_drive || s['Preferred Mode of Drive *'] || s['Preferred Mode of Drive'] || '').trim(),
+                    studyCategory,
+                    tenthInstitution: String(s.tenthInstitution || s.tenth_institution || s.tenthSchool || '').trim(),
+                    tenthBoard: String(s.tenthBoard || s.tenth_board || '').trim(),
+                    tenthPercentage: String(s.tenthPercentage || s.tenth_percentage || s.tenthMarks || '').trim(),
+                    tenthYear: String(s.tenthYear || s.tenth_year || '').trim(),
+                    twelfthInstitution: String(s.twelfthInstitution || s.twelfth_institution || s.twelfthSchool || '').trim(),
+                    twelfthBoard: String(s.twelfthBoard || s.twelfth_board || '').trim(),
+                    twelfthPercentage: String(s.twelfthPercentage || s.twelfth_percentage || s.twelfthMarks || '').trim(),
+                    twelfthYear: String(s.twelfthYear || s.twelfth_year || '').trim(),
+                    twelfthCutoff: String(s.twelfthCutoff || s.twelfth_cutoff || s.cutoff || '').trim(),
+                    diplomaInstitution: String(s.diplomaInstitution || s.diploma_institution || '').trim(),
+                    diplomaBranch: String(s.diplomaBranch || s.diploma_branch || '').trim(),
+                    diplomaPercentage: String(s.diplomaPercentage || s.diploma_percentage || '').trim(),
+                    diplomaYear: String(s.diplomaYear || s.diploma_year || '').trim(),
+                    familyAnnualIncome: String(s.familyAnnualIncome || s.annual_income || s.income || '').trim(),
+                    languagesKnown: String(s.languagesKnown || s.languages_known || '').trim(),
+                    skillSet: String(s.skillSet || s.skills || s.skill_set || '').trim(),
+                    companyTypes: String(s.companyTypes || s.company_types || '').trim(),
+                    preferredJobLocation: String(s.preferredJobLocation || s.job_location || s.preferred_location || '').trim(),
+                    loginRegNo: regNo,
+                    loginPassword,
+                    isExcelUploaded: true,
+                    isBlocked: false
+                };
+
+                bulkOps.push({
+                    updateOne: {
+                        filter: { regNo },
+                        update: { $set: studentDoc },
+                        upsert: true
+                    }
+                });
+
+                userOps.push({
+                    updateOne: {
+                        filter: { email: primaryEmail },
+                        update: {
+                            $set: {
+                                email: primaryEmail,
+                                password: loginPassword,
+                                role: 'student'
+                            }
+                        },
+                        upsert: true
+                    }
+                });
+            }
+
+            if (bulkOps.length > 0 && isMongoConnected) {
+                const bulkRes = await Student.bulkWrite(bulkOps);
+                insertedCount += (bulkRes.upsertedCount || 0);
+                updatedCount += (bulkRes.modifiedCount || 0) + ((bulkRes.matchedCount || 0) - (bulkRes.upsertedCount || 0));
+                
+                try {
+                    await User.bulkWrite(userOps);
+                } catch (userErr) {
+                    console.warn('User sync bulkWrite note:', userErr.message);
+                }
+            }
+        }
+
+        res.json({
+            success: true,
+            message: `Successfully processed ${rawStudents.length} records.`,
+            total: rawStudents.length,
+            inserted: insertedCount,
+            updated: updatedCount,
+            errors
+        });
+    } catch (error) {
+        console.error('Excel upload endpoint error:', error);
+        res.status(500).json({ error: 'Failed to upload excel students', details: error.message });
+    }
+});
+
+// 2. Fetch Excel Uploaded Students List (STRICTLY Excel Uploaded Students)
+app.get('/api/students/excel-list', async (req, res) => {
+    try {
+        const { search, branch, batch, page = '1', limit = '500' } = req.query;
+        const isMongoConnected = mongoose.connection.readyState === 1 || (typeof ensureConnection === 'function' && await ensureConnection());
+
+        if (isMongoConnected) {
+            const query = { isExcelUploaded: true };
+
+            if (branch && branch !== 'all') query.branch = branch;
+            if (batch && batch !== 'all') query.batch = batch;
+            if (search) {
+                query.$or = [
+                    { regNo: { $regex: search, $options: 'i' } },
+                    { firstName: { $regex: search, $options: 'i' } },
+                    { lastName: { $regex: search, $options: 'i' } },
+                    { primaryEmail: { $regex: search, $options: 'i' } },
+                    { email: { $regex: search, $options: 'i' } }
+                ];
+            }
+
+            const pageNum = Math.max(1, parseInt(page) || 1);
+            const limitNum = Math.max(1, parseInt(limit) || 500);
+            const skip = (pageNum - 1) * limitNum;
+
+            const total = await Student.countDocuments(query);
+            const studentsList = await Student.find(query)
+                .select('-profilePicURL -resumeData -uploadedResume -tenthMarksheet -twelfthMarksheet -diplomaMarksheet')
+                .sort({ regNo: 1 })
+                .skip(skip)
+                .limit(limitNum)
+                .lean();
+
+            return res.json({
+                success: true,
+                students: studentsList,
+                total,
+                page: pageNum,
+                totalPages: Math.ceil(total / limitNum)
+            });
+        }
+
+        res.json({ success: true, students: [], total: 0, page: 1, totalPages: 1 });
+    } catch (error) {
+        console.error('Fetch excel students error:', error);
+        res.status(500).json({ error: 'Failed to fetch excel students', details: error.message });
+    }
+});
+
+// 3. Delete All Excel Uploaded Students
+app.delete('/api/students/excel-clear-all', async (req, res) => {
+    try {
+        const isMongoConnected = mongoose.connection.readyState === 1 || (typeof ensureConnection === 'function' && await ensureConnection());
+        if (isMongoConnected) {
+            const result = await Student.deleteMany({ isExcelUploaded: true });
+            return res.json({
+                success: true,
+                message: `Successfully deleted ${result.deletedCount} excel uploaded student records.`,
+                deletedCount: result.deletedCount
+            });
+        }
+        res.status(400).json({ error: 'MongoDB connection not active' });
+    } catch (error) {
+        console.error('Clear all excel students error:', error);
+        res.status(500).json({ error: 'Failed to clear excel students', details: error.message });
+    }
+});
+
+// 4. Delete Single Excel Uploaded Student
+app.delete('/api/students/excel-delete/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const isMongoConnected = mongoose.connection.readyState === 1 || (typeof ensureConnection === 'function' && await ensureConnection());
+        if (isMongoConnected) {
+            let student = null;
+            if (ObjectId.isValid(id)) {
+                student = await Student.findByIdAndDelete(id);
+            } else {
+                student = await Student.findOneAndDelete({ regNo: id });
+            }
+
+            if (student) {
+                if (student.email || student.primaryEmail) {
+                    await User.deleteMany({ email: { $in: [student.email, student.primaryEmail] } });
+                }
+                return res.json({ success: true, message: 'Student deleted successfully' });
+            }
+            return res.status(404).json({ error: 'Student record not found' });
+        }
+        res.status(400).json({ error: 'MongoDB connection not active' });
+    } catch (error) {
+        console.error('Delete excel student error:', error);
+        res.status(500).json({ error: 'Failed to delete student', details: error.message });
+    }
+});
+
 app.get('/api/students', async (req, res) => {
     const { name, regNo, department, branch, batch, page = '1', limit = '100', includeImages = 'false', includeArchived = 'false', all = 'false' } = req.query;
 
@@ -10028,227 +10305,6 @@ app.delete('/api/students/:id', authenticateToken, checkRole('admin'), async (re
         return res.status(404).json({ error: 'Student not found' });
     } catch (error) {
         console.error('Delete student error:', error);
-        res.status(500).json({ error: 'Failed to delete student', details: error.message });
-    }
-});
-
-// ==========================================
-// EXCEL STUDENTS UPLOAD & MANAGEMENT API
-// ==========================================
-
-// 1. Upload Excel parsed students batch
-app.post('/api/students/excel-upload', async (req, res) => {
-    try {
-        const { students: rawStudents } = req.body;
-        if (!Array.isArray(rawStudents) || rawStudents.length === 0) {
-            return res.status(400).json({ error: 'No student records provided' });
-        }
-
-        const isMongoConnected = mongoose.connection.readyState === 1 || (typeof ensureConnection === 'function' && await ensureConnection());
-        let insertedCount = 0;
-        let updatedCount = 0;
-        let errors = [];
-
-        const batchSize = 100;
-        for (let i = 0; i < rawStudents.length; i += batchSize) {
-            const batch = rawStudents.slice(i, i + batchSize);
-            const bulkOps = [];
-            const userOps = [];
-
-            for (const s of batch) {
-                if (!s.regNo && !s.registerNo && !s.reg_no) {
-                    errors.push(`Row missing regNo: ${JSON.stringify(s)}`);
-                    continue;
-                }
-
-                const regNo = String(s.regNo || s.registerNo || s.reg_no || '').trim();
-                const firstName = String(s.firstName || s.first_name || s.name || 'Student').trim();
-                const lastName = String(s.lastName || s.last_name || '').trim();
-                const rawDob = String(s.dob || s.dateOfBirth || s.date_of_birth || '01012000').replace(/[^0-9]/g, '');
-                const dob = rawDob.length >= 8 ? rawDob.slice(0, 8) : rawDob.padEnd(8, '0');
-                const primaryEmail = String(s.primaryEmail || s.email || `${regNo.toLowerCase()}@ksrict.ac.in`).trim().toLowerCase();
-                const domainEmail = String(s.domainEmail || s.domain_email || `${regNo.toLowerCase()}@ksrict.ac.in`).trim().toLowerCase();
-                const branch = String(s.branch || s.department || 'CSE').trim();
-                const degree = String(s.degree || 'Bachelor of Engineering').trim();
-                const batchYear = String(s.batch || '2023-2027').trim();
-                const currentYear = String(s.currentYear || s.year || 'III').trim();
-                const currentSemester = String(s.currentSemester || s.semester || '6').trim();
-                const section = String(s.section || 'A').trim();
-                const gender = String(s.gender || 'male').trim().toLowerCase();
-                const mobileNo = String(s.mobileNo || s.mobile || s.phone || '').trim();
-                const fatherName = String(s.fatherName || s.father_name || '').trim();
-                const fatherOccupation = String(s.fatherOccupation || s.father_occupation || '').trim();
-                const address = String(s.address || '').trim();
-                const city = String(s.city || '').trim();
-                const studyCategory = String(s.studyCategory || '12th').trim();
-                const loginPassword = dob || regNo;
-
-                const studentDoc = {
-                    regNo,
-                    dob,
-                    firstName,
-                    lastName,
-                    email: primaryEmail,
-                    primaryEmail,
-                    domainEmail,
-                    branch,
-                    degree,
-                    batch: batchYear,
-                    currentYear,
-                    currentSemester,
-                    section,
-                    gender,
-                    mobileNo,
-                    fatherName,
-                    fatherOccupation,
-                    address,
-                    city,
-                    studyCategory,
-                    loginPassword,
-                    isExcelUploaded: true,
-                    isBlocked: false
-                };
-
-                bulkOps.push({
-                    updateOne: {
-                        filter: { regNo },
-                        update: { $set: studentDoc },
-                        upsert: true
-                    }
-                });
-
-                userOps.push({
-                    updateOne: {
-                        filter: { email: primaryEmail },
-                        update: {
-                            $set: {
-                                email: primaryEmail,
-                                password: loginPassword,
-                                role: 'student'
-                            }
-                        },
-                        upsert: true
-                    }
-                });
-            }
-
-            if (bulkOps.length > 0 && isMongoConnected) {
-                const bulkRes = await Student.bulkWrite(bulkOps);
-                insertedCount += (bulkRes.upsertedCount || 0);
-                updatedCount += (bulkRes.modifiedCount || 0) + ((bulkRes.matchedCount || 0) - (bulkRes.upsertedCount || 0));
-                
-                try {
-                    await User.bulkWrite(userOps);
-                } catch (userErr) {
-                    console.warn('User sync bulkWrite note:', userErr.message);
-                }
-            }
-        }
-
-        res.json({
-            success: true,
-            message: `Successfully processed ${rawStudents.length} records.`,
-            total: rawStudents.length,
-            inserted: insertedCount,
-            updated: updatedCount,
-            errors
-        });
-    } catch (error) {
-        console.error('Excel upload endpoint error:', error);
-        res.status(500).json({ error: 'Failed to upload excel students', details: error.message });
-    }
-});
-
-// 2. Fetch Excel Uploaded Students List
-app.get('/api/students/excel-list', async (req, res) => {
-    try {
-        const { search, branch, batch, page = '1', limit = '100' } = req.query;
-        const isMongoConnected = mongoose.connection.readyState === 1 || (typeof ensureConnection === 'function' && await ensureConnection());
-
-        if (isMongoConnected) {
-            const query = { isExcelUploaded: true };
-            if (branch && branch !== 'all') query.branch = branch;
-            if (batch && batch !== 'all') query.batch = batch;
-            if (search) {
-                query.$or = [
-                    { regNo: { $regex: search, $options: 'i' } },
-                    { firstName: { $regex: search, $options: 'i' } },
-                    { lastName: { $regex: search, $options: 'i' } },
-                    { primaryEmail: { $regex: search, $options: 'i' } }
-                ];
-            }
-
-            const pageNum = Math.max(1, parseInt(page) || 1);
-            const limitNum = Math.max(1, parseInt(limit) || 100);
-            const skip = (pageNum - 1) * limitNum;
-
-            const total = await Student.countDocuments(query);
-            const studentsList = await Student.find(query)
-                .select('-profilePicURL -resumeData -uploadedResume -tenthMarksheet -twelfthMarksheet -diplomaMarksheet')
-                .sort({ regNo: 1 })
-                .skip(skip)
-                .limit(limitNum)
-                .lean();
-
-            return res.json({
-                success: true,
-                students: studentsList,
-                total,
-                page: pageNum,
-                totalPages: Math.ceil(total / limitNum)
-            });
-        }
-
-        res.json({ success: true, students: [], total: 0, page: 1, totalPages: 1 });
-    } catch (error) {
-        console.error('Fetch excel students error:', error);
-        res.status(500).json({ error: 'Failed to fetch excel students', details: error.message });
-    }
-});
-
-// 3. Delete All Excel Uploaded Students
-app.delete('/api/students/excel-clear-all', async (req, res) => {
-    try {
-        const isMongoConnected = mongoose.connection.readyState === 1 || (typeof ensureConnection === 'function' && await ensureConnection());
-        if (isMongoConnected) {
-            const result = await Student.deleteMany({ isExcelUploaded: true });
-            return res.json({
-                success: true,
-                message: `Successfully deleted ${result.deletedCount} excel uploaded student records.`,
-                deletedCount: result.deletedCount
-            });
-        }
-        res.status(400).json({ error: 'MongoDB connection not active' });
-    } catch (error) {
-        console.error('Clear all excel students error:', error);
-        res.status(500).json({ error: 'Failed to clear excel students', details: error.message });
-    }
-});
-
-// 4. Delete Single Excel Uploaded Student
-app.delete('/api/students/excel-delete/:id', async (req, res) => {
-    try {
-        const { id } = req.params;
-        const isMongoConnected = mongoose.connection.readyState === 1 || (typeof ensureConnection === 'function' && await ensureConnection());
-        if (isMongoConnected) {
-            let student = null;
-            if (ObjectId.isValid(id)) {
-                student = await Student.findByIdAndDelete(id);
-            } else {
-                student = await Student.findOneAndDelete({ regNo: id });
-            }
-
-            if (student) {
-                if (student.email || student.primaryEmail) {
-                    await User.deleteMany({ email: { $in: [student.email, student.primaryEmail] } });
-                }
-                return res.json({ success: true, message: 'Student deleted successfully' });
-            }
-            return res.status(404).json({ error: 'Student record not found' });
-        }
-        res.status(400).json({ error: 'MongoDB connection not active' });
-    } catch (error) {
-        console.error('Delete excel student error:', error);
         res.status(500).json({ error: 'Failed to delete student', details: error.message });
     }
 });

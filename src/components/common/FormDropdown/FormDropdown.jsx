@@ -2,11 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import styles from './FormDropdown.module.css';
 
 const roleColors = {
-  admin: { thumb: '#4EA24E', hover: '#3d8a3d', borderHover: '#4EA24E', shadow: 'rgba(78, 162, 78, 0.2)' },
-  coo: { thumb: '#D23B42', hover: '#b32d34', borderHover: '#D23B42', shadow: 'rgba(210, 59, 66, 0.2)' },
-  coordinator: { thumb: '#D23B42', hover: '#b32d34', borderHover: '#D23B42', shadow: 'rgba(210, 59, 66, 0.2)' },
-  stu: { thumb: '#2085f6', hover: '#4338CA', borderHover: '#2085f6', shadow: 'rgba(32, 133, 246, 0.2)' },
-  student: { thumb: '#2085f6', hover: '#4338CA', borderHover: '#2085f6', shadow: 'rgba(32, 133, 246, 0.2)' }
+  admin: { bg: '#f4fbf4', border: '#d0ebd0', thumb: '#4EA24E', hover: '#3d8a3d', borderHover: '#4EA24E', shadow: 'rgba(78, 162, 78, 0.2)' },
+  coo: { bg: '#fff9f9', border: '#f4dddd', thumb: '#D23B42', hover: '#b32d34', borderHover: '#D23B42', shadow: 'rgba(210, 59, 66, 0.2)' },
+  coordinator: { bg: '#fff9f9', border: '#f4dddd', thumb: '#D23B42', hover: '#b32d34', borderHover: '#D23B42', shadow: 'rgba(210, 59, 66, 0.2)' },
+  stu: { bg: '#f8fbff', border: '#dde6f4', thumb: '#2085f6', hover: '#4338CA', borderHover: '#2085f6', shadow: 'rgba(32, 133, 246, 0.2)' },
+  student: { bg: '#f8fbff', border: '#dde6f4', thumb: '#2085f6', hover: '#4338CA', borderHover: '#2085f6', shadow: 'rgba(32, 133, 246, 0.2)' }
 };
 
 const FormDropdown = ({ 
@@ -73,6 +73,8 @@ const FormDropdown = ({
       id={id}
       className={`${styles['dropdown-wrapper']} ${disabled ? styles['dropdown-disabled'] : ''} ${className}`} 
       style={{
+        '--form-dropdown-bg': themeColors.bg,
+        '--form-dropdown-border': themeColors.border,
         '--form-dropdown-hover-border': themeColors.borderHover,
         '--form-dropdown-focus-shadow': themeColors.shadow
       }}

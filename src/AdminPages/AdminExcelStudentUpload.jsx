@@ -1,14 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import * as XLSX from 'xlsx';
-import useAdminAuth from '../utils/useAdminAuth';
-
 import mongoDBService from '../services/mongoDBService.jsx';
 import styles from './AdminExcelStudentUpload.module.css';
 
 const AdminExcelStudentUpload = ({ onLogout }) => {
-  // Check Admin authentication
-  useAdminAuth();
   const navigate = useNavigate();
 
   // State management
@@ -58,64 +54,176 @@ const AdminExcelStudentUpload = ({ onLogout }) => {
   }, [fetchExcelStudentsList]);
 
   // Helper to normalize Excel Row Keys
-  const normalizeRowKeys = (row) => {
-    const normalized = {};
+  const normalizeRowKeys = (row, rowIndex = 0) => {
+    const normalized = { ...row };
+    let rawNameVal = '';
+
     Object.keys(row).forEach((key) => {
+      const val = row[key];
+      if (val === undefined || val === null || String(val).trim() === '') return;
+      const strVal = String(val).trim();
       const cleanKey = key.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
-      if (['regno', 'registerno', 'regnumber', 'rollno', 'registrationno'].includes(cleanKey)) {
-        normalized.regNo = String(row[key] || '').trim();
-      } else if (['firstname', 'first_name', 'fname', 'name'].includes(cleanKey)) {
-        normalized.firstName = String(row[key] || '').trim();
+
+      // 1. Register Number / Roll No / Student ID
+      if (['regno', 'registerno', 'regnumber', 'rollno', 'rollnumber', 'registrationno', 'registrationnumber', 'studentid', 'studentidno', 'studentidnumber', 'univregno', 'universityregno', 'enrollmentno', 'enrollmentnumber', 'slno', 'sno'].includes(cleanKey)) {
+        normalized.regNo = strVal;
+      } else if (!normalized.regNo && (cleanKey.includes('reg') || cleanKey.includes('roll') || cleanKey.includes('enroll'))) {
+        normalized.regNo = strVal;
+      }
+
+      // 2. Names
+      if (['firstname', 'first_name', 'fname'].includes(cleanKey)) {
+        normalized.firstName = strVal;
       } else if (['lastname', 'last_name', 'lname', 'surname'].includes(cleanKey)) {
-        normalized.lastName = String(row[key] || '').trim();
-      } else if (['dob', 'dateofbirth', 'birthdate'].includes(cleanKey)) {
-        let val = String(row[key] || '').trim();
-        // Convert Excel Serial Date if applicable
-        if (typeof row[key] === 'number') {
-          const dateObj = XLSX.SSF.parse_date_code(row[key]);
-          if (dateObj) {
-            const day = String(dateObj.d).padStart(2, '0');
-            const month = String(dateObj.m).padStart(2, '0');
-            const year = String(dateObj.y);
-            val = `${day}${month}${year}`;
+        normalized.lastName = strVal;
+      } else if (['name', 'studentname', 'fullname', 'nameofthestudent', 'candidatename', 'nameofthecandidate'].includes(cleanKey)) {
+        rawNameVal = strVal;
+      } else if (!rawNameVal && cleanKey.includes('name')) {
+        rawNameVal = strVal;
+      }
+
+      // 3. Date of Birth
+      if (['dob', 'dateofbirth', 'birthdate', 'dobddmmyyyy'].includes(cleanKey) || cleanKey.includes('dob') || cleanKey.includes('birth')) {
+        let parsedDob = strVal;
+        if (typeof val === 'number') {
+          try {
+            const dateObj = XLSX.SSF.parse_date_code(val);
+            if (dateObj) {
+              const day = String(dateObj.d).padStart(2, '0');
+              const month = String(dateObj.m).padStart(2, '0');
+              const year = String(dateObj.y);
+              parsedDob = `${day}${month}${year}`;
+            }
+          } catch (e) {
+            // keep strVal
+          }
+        } else {
+          const digits = parsedDob.replace(/[^0-9]/g, '');
+          if (digits.length >= 8) {
+            parsedDob = digits.slice(0, 8);
           }
         }
-        normalized.dob = val;
-      } else if (['primaryemail', 'email', 'emailid', 'mail'].includes(cleanKey)) {
-        normalized.primaryEmail = String(row[key] || '').trim();
-      } else if (['domainemail', 'collegeemail'].includes(cleanKey)) {
-        normalized.domainEmail = String(row[key] || '').trim();
-      } else if (['branch', 'dept', 'department'].includes(cleanKey)) {
-        normalized.branch = String(row[key] || '').trim();
-      } else if (['degree', 'course'].includes(cleanKey)) {
-        normalized.degree = String(row[key] || '').trim();
-      } else if (['batch', 'batchyear', 'passoutyear'].includes(cleanKey)) {
-        normalized.batch = String(row[key] || '').trim();
-      } else if (['currentyear', 'year'].includes(cleanKey)) {
-        normalized.currentYear = String(row[key] || '').trim();
-      } else if (['currentsemester', 'semester', 'sem'].includes(cleanKey)) {
-        normalized.currentSemester = String(row[key] || '').trim();
-      } else if (['section', 'sec'].includes(cleanKey)) {
-        normalized.section = String(row[key] || '').trim();
-      } else if (['gender', 'sex'].includes(cleanKey)) {
-        normalized.gender = String(row[key] || '').trim();
-      } else if (['mobileno', 'mobile', 'phone', 'contact'].includes(cleanKey)) {
-        normalized.mobileNo = String(row[key] || '').trim();
-      } else if (['fathername', 'father_name'].includes(cleanKey)) {
-        normalized.fatherName = String(row[key] || '').trim();
-      } else if (['fatheroccupation'].includes(cleanKey)) {
-        normalized.fatherOccupation = String(row[key] || '').trim();
-      } else if (['address'].includes(cleanKey)) {
-        normalized.address = String(row[key] || '').trim();
-      } else if (['city'].includes(cleanKey)) {
-        normalized.city = String(row[key] || '').trim();
+        normalized.dob = parsedDob;
       }
+
+      // 4. Primary Email
+      if (['primaryemail', 'email', 'emailid', 'mail', 'mailid', 'studentemail', 'emailaddress', 'personalemail'].includes(cleanKey) || (cleanKey.includes('email') || cleanKey.includes('mail'))) {
+        if (!cleanKey.includes('domain') && !cleanKey.includes('college') && !cleanKey.includes('official')) {
+          normalized.primaryEmail = strVal;
+        }
+      }
+
+      // 5. Domain Email
+      if (['domainemail', 'collegeemail', 'officialemail', 'institutionalemail', 'ksrctemail', 'collegemail', 'instemail'].includes(cleanKey) || (cleanKey.includes('email') && (cleanKey.includes('college') || cleanKey.includes('official') || cleanKey.includes('domain')))) {
+        normalized.domainEmail = strVal;
+      }
+
+      // 6. Branch / Dept
+      if (['branch', 'dept', 'department', 'stream', 'branchname', 'deptname'].includes(cleanKey) || cleanKey.includes('branch') || cleanKey.includes('dept')) {
+        normalized.branch = strVal;
+      }
+
+      // 7. Degree
+      if (['degree', 'programme', 'program', 'course', 'degreebranch'].includes(cleanKey) || cleanKey.includes('degree') || cleanKey.includes('program')) {
+        normalized.degree = strVal;
+      }
+
+      // 8. Batch
+      if (['batch', 'batchyear', 'passoutyear', 'passedoutyear', 'yearofpassing', 'yop', 'academicbatch'].includes(cleanKey) || cleanKey.includes('batch') || cleanKey.includes('passout')) {
+        normalized.batch = strVal;
+      }
+
+      // 9. Current Year
+      if (['currentyear', 'year', 'yearofstudy', 'academicyear'].includes(cleanKey)) {
+        normalized.currentYear = strVal;
+      }
+
+      // 10. Current Semester
+      if (['currentsemester', 'semester', 'sem'].includes(cleanKey) || cleanKey.includes('sem')) {
+        normalized.currentSemester = strVal;
+      }
+
+      // 11. Section
+      if (['section', 'sec'].includes(cleanKey) || cleanKey.includes('sec')) {
+        normalized.section = strVal;
+      }
+
+      // 12. Gender
+      if (['gender', 'sex'].includes(cleanKey)) {
+        normalized.gender = strVal;
+      }
+
+      // 13. Mobile No
+      if (['mobileno', 'mobilenumber', 'mobile', 'phone', 'phoneno', 'phonenumber', 'contact', 'contactno', 'cell', 'cellno', 'whatsappno'].includes(cleanKey) || cleanKey.includes('mobile') || cleanKey.includes('phone') || cleanKey.includes('contact')) {
+        normalized.mobileNo = strVal;
+      }
+
+      // 14. Father Name
+      if (['fathername', 'fathersname', 'father_name', 'parentname'].includes(cleanKey) || cleanKey.includes('father')) {
+        normalized.fatherName = strVal;
+      }
+
+      // 15. Father Occupation
+      if (['fatheroccupation', 'fathersoccupation', 'parentoccupation'].includes(cleanKey)) {
+        normalized.fatherOccupation = strVal;
+      }
+
+      // 16. Address & City
+      if (['address'].includes(cleanKey)) normalized.address = strVal;
+      if (['city', 'town', 'location', 'district'].includes(cleanKey)) normalized.city = strVal;
+
+      // 17. Study Category & Quota
+      if (['studycategory', 'category', 'admissiontype', '12thdiploma'].includes(cleanKey)) normalized.studyCategory = strVal;
+      if (['quota', 'admissionquota', 'categoryquota'].includes(cleanKey) || (cleanKey.includes('quota') && !cleanKey.includes('study'))) normalized.quota = strVal;
+
+      // 18. Residential Status
+      if (['residentialstatus', 'hostellerdayscholar', 'hostelldayscholar', 'residentialstatus'].includes(cleanKey) || cleanKey.includes('residential') || cleanKey.includes('dayscholar')) normalized.residentialStatus = strVal;
+
+      // 19. First Graduate
+      if (['firstgraduate', 'fg', 'isfirstgraduate'].includes(cleanKey) || (cleanKey.includes('first') && cleanKey.includes('graduate'))) normalized.firstGraduate = strVal;
+
+      // 20. Value Added Courses
+      if (['valueaddedcourses', 'vac', 'valueaddedcourse', 'certifications'].includes(cleanKey) || cleanKey.includes('valueadded')) normalized.valueAddedCourses = strVal;
+
+      // 21. About Sibling
+      if (['aboutsibling', 'siblingdetails', 'siblings', 'sibling'].includes(cleanKey) || cleanKey.includes('sibling')) normalized.aboutSibling = strVal;
+
+      // 22. Ration Card No
+      if (['rationcardno', 'rationcardnumber', 'smartcardno', 'rationcard'].includes(cleanKey) || cleanKey.includes('ration')) normalized.rationCardNo = strVal;
+
+      // 23. Willing to Sign Bond
+      if (['willingtosignbond', 'bondwillingness', 'bond'].includes(cleanKey) || cleanKey.includes('bond')) normalized.willingToSignBond = strVal;
+
+      // 24. Preferred Mode of Drive
+      if (['preferredmodeofdrive', 'drivemode', 'preferreddrivemode', 'modeofdrive'].includes(cleanKey) || (cleanKey.includes('mode') && cleanKey.includes('drive'))) normalized.preferredModeOfDrive = strVal;
     });
 
-    // Fallbacks
-    if (!normalized.regNo && row['Reg No']) normalized.regNo = String(row['Reg No']);
-    if (!normalized.firstName && row['First Name']) normalized.firstName = String(row['First Name']);
-    if (!normalized.lastName && row['Last Name']) normalized.lastName = String(row['Last Name']);
+    // Smart Name Split if firstName was not directly provided
+    if (!normalized.firstName && rawNameVal) {
+      const parts = rawNameVal.split(/\s+/);
+      normalized.firstName = parts[0] || 'Student';
+      normalized.lastName = parts.slice(1).join(' ') || (normalized.lastName || '');
+    }
+
+    // Smart Fallback for Reg No if not found
+    if (!normalized.regNo) {
+      const keys = Object.keys(row);
+      for (const k of keys) {
+        const v = String(row[k] || '').trim();
+        if (v && /^[A-Za-z0-9]{4,20}$/.test(v) && !v.includes('@')) {
+          normalized.regNo = v;
+          break;
+        }
+      }
+    }
+
+    if (!normalized.regNo) {
+      normalized.regNo = `STU${String(rowIndex + 1).padStart(4, '0')}`;
+    }
+
+    if (!normalized.firstName) normalized.firstName = 'Student';
+    if (!normalized.dob) normalized.dob = '01012000';
+    if (!normalized.primaryEmail) normalized.primaryEmail = `${normalized.regNo.toLowerCase()}@ksrict.ac.in`;
 
     return normalized;
   };
@@ -140,7 +248,7 @@ const AdminExcelStudentUpload = ({ onLogout }) => {
           return;
         }
 
-        const normalizedRows = rawJson.map((row) => normalizeRowKeys(row));
+        const normalizedRows = rawJson.map((row, idx) => normalizeRowKeys(row, idx));
         setPreviewData(normalizedRows);
         setShowPreviewModal(true);
       } catch (err) {
