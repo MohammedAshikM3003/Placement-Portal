@@ -9,7 +9,7 @@ async function connectToDatabase() {
     }
     const mongoUri = process.env.MONGODB_URI;
     if (!mongoUri) {
-        throw new Error('MONGODB_URI environment variable is missing.');
+        throw new Error('MONGODB_URI environment variable is missing in Vercel settings.');
     }
     cachedDb = await mongoose.connect(mongoUri, {
         bufferCommands: false,
@@ -50,18 +50,18 @@ module.exports = async function handler(req, res) {
         return res.status(200).end();
     }
 
-    if (req.method !== 'POST') {
-        return res.status(405).json({ success: false, error: 'Method not allowed' });
-    }
-
-    const { email, purpose, role, name } = req.body || {};
-    if (!email || !purpose || !role) {
-        return res.status(400).json({ success: false, error: 'Missing required fields: email, purpose, role' });
-    }
-
-    const normalizedEmail = email.toLowerCase().trim();
-
     try {
+        if (req.method !== 'POST') {
+            return res.status(405).json({ success: false, error: 'Method not allowed' });
+        }
+
+        const { email, purpose, role, name } = req.body || {};
+        if (!email || !purpose || !role) {
+            return res.status(400).json({ success: false, error: 'Missing required fields: email, purpose, role' });
+        }
+
+        const normalizedEmail = email.toLowerCase().trim();
+
         await connectToDatabase();
 
         // 1. Cooldown & Resend limit checks
@@ -93,7 +93,10 @@ module.exports = async function handler(req, res) {
         const resendKey = process.env.RESEND_API_KEY;
         const brevoKey = process.env.BREVO_API_KEY;
         if (!resendKey && !brevoKey) {
-            throw new Error('RESEND_API_KEY or BREVO_API_KEY environment variable is missing.');
+            return res.status(500).json({
+                success: false,
+                error: 'Missing environment variable: BREVO_API_KEY or RESEND_API_KEY must be set in Vercel settings.'
+            });
         }
 
         const fromName = process.env.MAIL_FROM_NAME || 'K S R College of Engineering - Placement Cell';
@@ -168,7 +171,11 @@ module.exports = async function handler(req, res) {
 
         const resData = await response.json();
         if (!response.ok) {
-            throw new Error(resData.message || resData.error || 'Brevo HTTPS API Error');
+            return res.status(response.status || 500).json({
+                success: false,
+                error: resData.message || resData.error || 'Brevo/Resend HTTPS API Error',
+                providerResponse: resData
+            });
         }
 
         // 6. Save or Update OTP in DB ONLY after successful email delivery
@@ -194,16 +201,16 @@ module.exports = async function handler(req, res) {
 
         return res.status(200).json({
             success: true,
-            message: 'Verification code sent successfully via Brevo HTTPS REST API.',
+            message: 'Verification code sent successfully via HTTPS REST API.',
             maskedEmail: maskEmail(normalizedEmail),
-            messageId: resData.messageId
+            messageId: resData.messageId || resData.id
         });
 
     } catch (err) {
         console.error('[Vercel Serverless OTP Send Error]:', err);
         return res.status(500).json({
             success: false,
-            error: 'Failed to dispatch verification code via Brevo HTTPS REST API.',
+            error: 'Failed to dispatch verification code.',
             details: err.message
         });
     }
