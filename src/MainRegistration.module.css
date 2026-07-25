@@ -1541,11 +1541,28 @@
     .mr-skills-row {
         flex-direction: column;
         align-items: stretch;
-        gap: 8px;
+        gap: 12px;
+        border-bottom: 1px dashed #dde6f4;
+        padding-bottom: 14px;
+        margin-bottom: 14px;
+    }
+
+    .mr-skill-category-field {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
     }
 
     .mr-skill-label-box {
+        flex: 1;
+        width: auto;
+    }
+
+    .mr-skills-chips-container {
         width: 100%;
+        margin-top: 4px;
     }
 
     .mr-form-grid {
@@ -1931,4 +1948,58 @@
 .mr-add-skill-btn-icon {
     font-weight: bold;
     font-size: 1.1rem;
+}
+
+.mr-skill-category-field {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.mr-category-remove-btn {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: #ef4444;
+    color: #fff;
+    border: none;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    transition: background 0.2s ease, transform 0.2s ease;
+    padding: 0;
+    flex-shrink: 0;
+}
+
+.mr-category-remove-btn:hover {
+    background: #dc2626;
+    transform: scale(1.1);
+}
+
+.mr-add-category-btn {
+    background: #2085f6;
+    color: #fff;
+    border: none;
+    padding: 10px 22px;
+    border-radius: 25px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 2px 8px rgba(32, 133, 246, 0.25);
+    transition: all 0.2s ease;
+    font-family: 'Poppins', sans-serif;
+    margin-top: 10px;
+}
+
+.mr-add-category-btn:hover {
+    background: #1976d2;
+    transform: translateY(-1px);
 }

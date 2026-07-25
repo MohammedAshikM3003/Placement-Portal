@@ -7,7 +7,9 @@ export default function ConfettiSideCannons({
   type = "button",
   onClick,
   fireSignal = 0,
-  children = "Confetti",
+  children = null,
+  style,
+  ...props
 }) {
   const removeTimerRef = useRef(null);
   const lastFireSignalRef = useRef(fireSignal);
@@ -31,24 +33,27 @@ export default function ConfettiSideCannons({
     confetti.reset();
 
     const colors = [
-      "#ff1744",
-      "#ff9100",
-      "#ffea00",
-      "#00e676",
-      "#00e5ff",
-      "#2979ff",
-      "#d500f9",
-      "#ff4081",
+      "#2085F6", // Royal Blue
+      "#00e676", // Vibrant Green
+      "#ff1744", // Crimson Red
+      "#ffea00", // Bright Yellow
+      "#d500f9", // Neon Purple
+      "#00e5ff", // Electric Cyan
+      "#ff9100", // Vibrant Orange
+      "#4EA24E", // Emerald Green
     ];
 
-    // Reduce particle count by 20%
-    const baseParticleCount = 6;
+    // Check if mobile display (< 768px)
+    const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+
+    // Particle count: 5 on mobile so all 8 colors fire in equal proportion
+    const baseParticleCount = isMobile ? 5 : 6;
     const particleCount = Math.max(1, Math.round(baseParticleCount * 0.8));
 
-    // Smooth ramp-up + fade-out
-    const duration = 2.5 * 1000; // total spawn duration (ms)
-    const fadeDuration = 1000; // ms for smooth fade-out at end
-    const startupDuration = 1000; // ms for smooth ramp-up at start
+    // Smooth ramp-up + fade-out (mobile duration reduced by 10%)
+    const duration = isMobile ? 1.35 * 1000 : 1.7 * 1000; // total spawn duration (ms)
+    const fadeDuration = isMobile ? 600 : 700; // ms for smooth fade-out at end
+    const startupDuration = isMobile ? 450 : 500; // ms for smooth ramp-up at start
     const start = Date.now();
     const end = start + duration;
     const stopSpawningAt = end - fadeDuration;
@@ -72,54 +77,69 @@ export default function ConfettiSideCannons({
       const totalFactor = rampIn * rampOut;
 
       let spawnCount = Math.round(particleCount * totalFactor);
-      let scalar = Math.max(0.3, 1.25 * (0.5 + totalFactor * 0.5));
-      let startVelocityLeft = Math.max(8, Math.round(72 * totalFactor));
+      let scalar = Math.max(0.4, 1.25 * (0.5 + totalFactor * 0.5));
+      if (isMobile) scalar *= 0.95;
+
+      let startVelocityLeft = Math.max(10, Math.round((isMobile ? 58 : 72) * totalFactor));
       let startVelocitySide = Math.max(6, Math.round(58 * totalFactor));
 
-      if (spawnCount > 0) {
-        confetti({
-          particleCount: spawnCount,
-          angle: 60,
-          spread: 70,
-          startVelocity: startVelocityLeft,
-          origin: { x: 0, y: 0.5 },
-          colors,
-          scalar,
-          zIndex: 9999,
-        });
-        confetti({
-          particleCount: spawnCount,
-          angle: 120,
-          spread: 70,
-          startVelocity: startVelocityLeft,
-          origin: { x: 1, y: 0.5 },
-          colors,
-          scalar,
-          zIndex: 9999,
-        });
-        confetti({
-          particleCount: spawnCount,
-          angle: 75,
-          spread: 82,
-          startVelocity: startVelocitySide,
-          origin: { x: 0.18, y: 0.48 },
-          colors,
-          scalar,
-          zIndex: 9999,
-        });
-        confetti({
-          particleCount: spawnCount,
-          angle: 105,
-          spread: 82,
-          startVelocity: startVelocitySide,
-          origin: { x: 0.82, y: 0.48 },
-          colors,
-          scalar,
-          zIndex: 9999,
+      if (totalFactor > 0.05) {
+        // Spawn exact equal count per color on every animation frame
+        const countPerColor = 1;
+
+        colors.forEach((color) => {
+          // 1. Left side cannon
+          confetti({
+            particleCount: countPerColor,
+            angle: 60,
+            spread: isMobile ? 55 : 70,
+            startVelocity: startVelocityLeft,
+            origin: { x: 0, y: isMobile ? 0.6 : 0.5 },
+            colors: [color],
+            scalar,
+            zIndex: 99999,
+          });
+
+          // 2. Right side cannon
+          confetti({
+            particleCount: countPerColor,
+            angle: 120,
+            spread: isMobile ? 55 : 70,
+            startVelocity: startVelocityLeft,
+            origin: { x: 1, y: isMobile ? 0.6 : 0.5 },
+            colors: [color],
+            scalar,
+            zIndex: 99999,
+          });
+
+          // 3 & 4. Additional secondary cannons on desktop screens only (>= 768px)
+          if (!isMobile) {
+            confetti({
+              particleCount: countPerColor,
+              angle: 75,
+              spread: 82,
+              startVelocity: startVelocitySide,
+              origin: { x: 0.18, y: 0.48 },
+              colors: [color],
+              scalar,
+              zIndex: 99999,
+            });
+            confetti({
+              particleCount: countPerColor,
+              angle: 105,
+              spread: 82,
+              startVelocity: startVelocitySide,
+              origin: { x: 0.82, y: 0.48 },
+              colors: [color],
+              scalar,
+              zIndex: 99999,
+            });
+          }
         });
       }
 
-      removeTimerRef.current = window.setTimeout(frame, 16);
+      // Throttled frame delay (36ms on mobile vs 32ms on desktop) to reduce mobile paper count by 10%
+      removeTimerRef.current = window.setTimeout(frame, isMobile ? 36 : 32);
     };
 
     frame();
@@ -135,14 +155,18 @@ export default function ConfettiSideCannons({
 
   const handleClick = (event) => {
     if (disabled) return;
-
+    fireConfetti();
     if (typeof onClick === "function") {
       onClick(event);
     }
   };
 
+  if (!children) {
+    return null;
+  }
+
   return (
-    <button type={type} className={className} onClick={handleClick} disabled={disabled}>
+    <button type={type} className={className} onClick={handleClick} disabled={disabled} style={style} {...props}>
       {children}
     </button>
   );

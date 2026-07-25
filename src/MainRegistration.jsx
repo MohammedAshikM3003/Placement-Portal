@@ -2663,8 +2663,18 @@ function MainRegistration() {
                 <div className={cx("mr-skills-list-container")}>
                   {skills.map((cat, catIndex) => (
                     <div key={catIndex} className={cx("mr-skills-row")}>
-                      <div className={cx("mr-skill-label-box")}>
-                        {cat.category}
+                      <div className={cx("mr-skill-category-field")}>
+                        <div className={cx("mr-skill-label-box")}>
+                          {cat.category}
+                        </div>
+                        <button
+                          type="button"
+                          className={cx("mr-category-remove-btn")}
+                          onClick={() => setSkills(prev => prev.filter((_, ci) => ci !== catIndex))}
+                          title="Remove category"
+                        >
+                          ×
+                        </button>
                       </div>
                       <div className={cx("mr-skills-chips-container")}>
                         {cat.items.map((skill, i) => (
@@ -2683,7 +2693,7 @@ function MainRegistration() {
                             </button>
                           </span>
                         ))}
-                        {activeSkillCategory === catIndex ? (
+                        {activeSkillCategory === catIndex && (
                           <input
                             type="text"
                             className={cx("mr-skill-input")}
@@ -2718,24 +2728,23 @@ function MainRegistration() {
                               setActiveSkillCategory(null);
                             }}
                           />
-                        ) : (
-                          <button
-                            type="button"
-                            className={cx("mr-add-skill-btn")}
-                            onClick={() => { setActiveSkillCategory(catIndex); setNewSkillName(''); }}
-                          >
-                            <span className={cx("mr-add-skill-btn-icon")}>+</span>
-                            Add Skill
-                          </button>
                         )}
+                        <button
+                          type="button"
+                          className={cx("mr-add-skill-btn")}
+                          onClick={() => { setActiveSkillCategory(catIndex); setNewSkillName(''); }}
+                        >
+                          <span className={cx("mr-add-skill-btn-icon")}>+</span>
+                          Add Skill
+                        </button>
                       </div>
                     </div>
                   ))}
 
                   {/* Add custom category */}
-                  <div style={{ marginTop: '20px' }}>
-                    {showAddCategory ? (
-                      <div className={cx("mr-skills-chips-container")}>
+                  <div style={{ marginTop: '16px' }}>
+                    <div className={cx("mr-skills-chips-container")}>
+                      {showAddCategory && (
                         <input
                           type="text"
                           className={cx("mr-skill-input")}
@@ -2767,17 +2776,16 @@ function MainRegistration() {
                             setShowAddCategory(false);
                           }}
                         />
-                      </div>
-                    ) : (
+                      )}
                       <button
                         type="button"
-                        className={cx("mr-add-skill-btn")}
+                        className={cx("mr-add-category-btn")}
                         onClick={() => { setShowAddCategory(true); setNewCategoryName(''); }}
                       >
                         <span className={cx("mr-add-skill-btn-icon")}>+</span>
                         Add Category
                       </button>
-                    )}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -2862,6 +2870,28 @@ function MainRegistration() {
                 >
                   Cancel
                 </button>
+
+                <ConfettiSideCannons
+                  fireSignal={isPopupOpen ? 1 : 0}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                    padding: '10px 18px',
+                    backgroundColor: '#2085F6',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontWeight: '600',
+                    fontSize: '14px',
+                    cursor: 'pointer',
+                    boxShadow: '0 2px 8px rgba(32, 133, 246, 0.3)',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  🎉 Test Confetti
+                </ConfettiSideCannons>
 
                 <button
                   type="submit"
@@ -2959,7 +2989,6 @@ function MainRegistration() {
       {/* ── Overlays & Popups ── */}
       {isSidebarOpen && <div className={cx("mr-overlay")} onClick={() => setIsSidebarOpen(false)} />}
 
-      <ConfettiSideCannons fireSignal={isPopupOpen ? 1 : 0} style={{ display: 'none' }} />
       <SuccessPopup isOpen={isPopupOpen} onClose={closePopup} />
       <ConfirmDiscardPopup isOpen={isDiscardPopupOpen} onConfirm={handleConfirmDiscard} onCancel={handleCancelDiscard} />
       <ExistingRegNoPopup isOpen={isExistingRegNoPopupOpen} onClose={closeExistingRegNoPopup} regNo={existingRegNo} />
