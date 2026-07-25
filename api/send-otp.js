@@ -3,25 +3,21 @@ const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 
-const MONGODB_URI = process.env.MONGODB_URI;
+const DEFAULT_MONGO_URI = 'mongodb://placement-portal-user:PlacementPortal2026@ac-zqool3s-shard-00-00.0zhp6cb.mongodb.net:27017,ac-zqool3s-shard-00-01.0zhp6cb.mongodb.net:27017,ac-zqool3s-shard-00-02.0zhp6cb.mongodb.net:27017/placement-portal?ssl=true&replicaSet=atlas-b7o3lr-shard-0&authSource=admin&retryWrites=true&w=majority&appName=placement-portal-cluster';
 
-// Cached database connection for Vercel Serverless execution
 let cachedDb = null;
 async function connectToDatabase() {
     if (cachedDb && mongoose.connection.readyState === 1) {
         return cachedDb;
     }
-    if (!MONGODB_URI) {
-        throw new Error('MONGODB_URI environment variable is missing on Vercel.');
-    }
-    cachedDb = await mongoose.connect(MONGODB_URI, {
+    const mongoUri = process.env.MONGODB_URI || DEFAULT_MONGO_URI;
+    cachedDb = await mongoose.connect(mongoUri, {
         bufferCommands: false,
-        serverSelectionTimeoutMS: 5000
+        serverSelectionTimeoutMS: 8000
     });
     return cachedDb;
 }
 
-// Minimal inline Otp Schema for Vercel Serverless Function
 const otpSchema = new mongoose.Schema({
     email: { type: String, required: true, lowercase: true, trim: true, index: true },
     hashedOtp: { type: String, required: true },
@@ -45,7 +41,6 @@ function maskEmail(email) {
 }
 
 module.exports = async function handler(req, res) {
-    // CORS Headers for Vercel
     res.setHeader('Access-Control-Allow-Credentials', 'true');
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
@@ -94,10 +89,10 @@ module.exports = async function handler(req, res) {
         const hashedOtp = await bcrypt.hash(otpVal, 10);
         const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 mins
 
-        // 3. Create Nodemailer transporter on Vercel AWS Lambda
+        // 3. Create Nodemailer transporter on Vercel Serverless
         const mailUser = process.env.MAIL_USER || 'placementportalksrce@gmail.com';
         const mailPass = process.env.MAIL_PASSWORD || 'lyutcrsjomgwlbrx';
-        const fromName = process.env.MAIL_FROM_NAME || 'K S R College of Engineering - Placement Portal';
+        const fromName = process.env.MAIL_FROM_NAME || 'K S R College of Engineering - Placement Cell';
         const fromAddress = process.env.MAIL_FROM_ADDRESS || mailUser;
 
         const transporter = nodemailer.createTransport({
