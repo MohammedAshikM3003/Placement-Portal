@@ -1,16 +1,16 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
-const nodemailer = require('nodemailer');
-
-const DEFAULT_MONGO_URI = 'mongodb://placement-portal-user:PlacementPortal2026@ac-zqool3s-shard-00-00.0zhp6cb.mongodb.net:27017,ac-zqool3s-shard-00-01.0zhp6cb.mongodb.net:27017,ac-zqool3s-shard-00-02.0zhp6cb.mongodb.net:27017/placement-portal?ssl=true&replicaSet=atlas-b7o3lr-shard-0&authSource=admin&retryWrites=true&w=majority&appName=placement-portal-cluster';
 
 let cachedDb = null;
 async function connectToDatabase() {
     if (cachedDb && mongoose.connection.readyState === 1) {
         return cachedDb;
     }
-    const mongoUri = process.env.MONGODB_URI || DEFAULT_MONGO_URI;
+    const mongoUri = process.env.MONGODB_URI;
+    if (!mongoUri) {
+        throw new Error('MONGODB_URI environment variable is missing.');
+    }
     cachedDb = await mongoose.connect(mongoUri, {
         bufferCommands: false,
         serverSelectionTimeoutMS: 8000
@@ -89,23 +89,17 @@ module.exports = async function handler(req, res) {
         const hashedOtp = await bcrypt.hash(otpVal, 10);
         const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 mins
 
-        // 3. Create Nodemailer transporter on Vercel Serverless
-        const mailUser = process.env.MAIL_USER || 'placementportalksrce@gmail.com';
-        const mailPass = process.env.MAIL_PASSWORD || 'lyutcrsjomgwlbrx';
+        // 3. Environment Variable Enforcement (Fail Fast if missing)
+        const resendKey = process.env.RESEND_API_KEY;
+        const brevoKey = process.env.BREVO_API_KEY;
+        if (!resendKey && !brevoKey) {
+            throw new Error('RESEND_API_KEY or BREVO_API_KEY environment variable is missing.');
+        }
+
         const fromName = process.env.MAIL_FROM_NAME || 'K S R College of Engineering - Placement Cell';
-        const fromAddress = process.env.MAIL_FROM_ADDRESS || mailUser;
+        const fromAddress = process.env.MAIL_FROM_ADDRESS || 'placementportalksrce@gmail.com';
 
-        const transporter = nodemailer.createTransport({
-            service: 'gmail',
-            auth: {
-                user: mailUser.trim(),
-                pass: mailPass.trim()
-            },
-            connectionTimeout: 10000,
-            socketTimeout: 15000
-        });
-
-        // Determine Theme Color per role
+        // 4. Role Theme Styling & HTML Template
         const themeColor = role === 'admin' ? '#4EA24E' : role === 'coordinator' ? '#D23B42' : '#2085F6';
         const resolvedName = name || normalizedEmail.split('@')[0];
 
@@ -139,9 +133,24 @@ module.exports = async function handler(req, res) {
 </body>
 </html>`;
 
-        const brevoKey = process.env.BREVO_API_KEY;
-        if (brevoKey) {
-            const brevoRes = await fetch('https://api.brevo.com/v3/smtp/email', {
+        // 5. Dispatch Email via Resend or Brevo HTTPS REST API (Port 443)
+        let response = null;
+        if (resendKey) {
+            response = await fetch('https://api.resend.com/emails', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${resendKey.trim()}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    from: fromAddress,
+                    to: [normalizedEmail],
+                    subject: `${otpVal} is your Placement Portal Verification Code`,
+                    html: htmlContent
+                })
+            });
+        } else {
+            response = await fetch('https://api.brevo.com/v3/smtp/email', {
                 method: 'POST',
                 headers: {
                     'accept': 'application/json',
@@ -155,20 +164,14 @@ module.exports = async function handler(req, res) {
                     htmlContent: htmlContent
                 })
             });
-            const brevoData = await brevoRes.json();
-            if (!brevoRes.ok) {
-                throw new Error(brevoData.message || 'Brevo HTTPS API Error');
-            }
-        } else {
-            await transporter.sendMail({
-                from: `"${fromName}" <${fromAddress}>`,
-                to: normalizedEmail,
-                subject: `${otpVal} is your Placement Portal Verification Code`,
-                html: htmlContent
-            });
         }
 
-        // 5. Save or Update OTP in DB ONLY after successful email delivery
+        const resData = await response.json();
+        if (!response.ok) {
+            throw new Error(resData.message || resData.error || 'Brevo HTTPS API Error');
+        }
+
+        // 6. Save or Update OTP in DB ONLY after successful email delivery
         if (existingOtp) {
             existingOtp.hashedOtp = hashedOtp;
             existingOtp.expiresAt = expiresAt;
@@ -191,15 +194,16 @@ module.exports = async function handler(req, res) {
 
         return res.status(200).json({
             success: true,
-            message: 'Verification code sent successfully via Vercel Serverless Mailer.',
-            maskedEmail: maskEmail(normalizedEmail)
+            message: 'Verification code sent successfully via Brevo HTTPS REST API.',
+            maskedEmail: maskEmail(normalizedEmail),
+            messageId: resData.messageId
         });
 
     } catch (err) {
         console.error('[Vercel Serverless OTP Send Error]:', err);
         return res.status(500).json({
             success: false,
-            error: 'Failed to dispatch verification code via Vercel.',
+            error: 'Failed to dispatch verification code via Brevo HTTPS REST API.',
             details: err.message
         });
     }

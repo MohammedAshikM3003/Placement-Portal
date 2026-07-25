@@ -67,11 +67,45 @@ async function sendMail({ eventType, to, role, data = {}, idempotencyKey = null 
 
     // 4. Send email using Brevo HTTPS API (Port 443) or Nodemailer SMTP
     try {
+        const resendKey = process.env.RESEND_API_KEY;
         const brevoKey = process.env.BREVO_API_KEY;
         let messageId = null;
 
-        if (brevoKey) {
-            console.log(`[MailService] Dispatching email via Brevo HTTPS API. Event: ${eventType}, To: ${to}`);
+        if (resendKey) {
+            console.log(`[MailService] Dispatching email via Resend HTTPS API. Event: ${eventType}, To: ${to}`);
+            const fromAddr = process.env.MAIL_FROM_ADDRESS || 'onboarding@resend.dev';
+            const resendRes = await fetch('https://api.resend.com/emails', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${resendKey.trim()}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    from: fromAddr,
+                    to: [to.trim()],
+                    subject: emailDetails.subject,
+                    html: emailDetails.htmlBody
+                })
+            });
+
+            const resendData = await resendRes.json();
+            if (!resendRes.ok) {
+                throw new Error(resendData.message || resendData.name || 'Resend HTTPS API Error');
+            }
+            messageId = resendData.id || `resend_${Date.now()}`;
+            console.log(`[MailService] Resend HTTPS API dispatch success. MessageId: ${messageId}`);
+        } else if (brevoKey) {
+            console.log(`[MailService] Dispatching email via Brevo HTTPS REST API. Event: ${eventType}, To: ${to}`);
+            const fromName = process.env.MAIL_FROM_NAME || 'K S R College of Engineering - Placement Cell';
+            const fromAddr = process.env.MAIL_FROM_ADDRESS || 'placementportalksrce@gmail.com';
+
+            const brevoPayload = {
+                sender: { name: fromName, email: fromAddr },
+                to: [{ email: to.trim() }],
+                subject: emailDetails.subject,
+                htmlContent: emailDetails.htmlBody
+            };
+
             const brevoRes = await fetch('https://api.brevo.com/v3/smtp/email', {
                 method: 'POST',
                 headers: {
@@ -79,21 +113,17 @@ async function sendMail({ eventType, to, role, data = {}, idempotencyKey = null 
                     'api-key': brevoKey.trim(),
                     'content-type': 'application/json'
                 },
-                body: JSON.stringify({
-                    sender: { name: process.env.MAIL_FROM_NAME || 'K S R College of Engineering - Placement Cell', email: process.env.MAIL_FROM_ADDRESS || process.env.MAIL_USER || 'no-reply@ksrce.ac.in' },
-                    to: [{ email: to.trim() }],
-                    subject: emailDetails.subject,
-                    htmlContent: emailDetails.htmlBody
-                })
+                body: JSON.stringify(brevoPayload)
             });
 
             const brevoData = await brevoRes.json();
             if (!brevoRes.ok) {
-                throw new Error(brevoData.message || brevoData.error || 'Brevo HTTPS API Error');
+                throw new Error(brevoData.message || brevoData.error || 'Brevo HTTPS REST API Error');
             }
             messageId = brevoData.messageId || `brevo_${Date.now()}`;
-            console.log(`[MailService] Brevo HTTPS dispatch success. MessageId: ${messageId}`);
+            console.log(`[MailService] Brevo HTTPS REST API dispatch success. MessageId: ${messageId}`);
         } else {
+            console.log(`[MailService] BREVO_API_KEY not set. Falling back to Nodemailer SMTP. Event: ${eventType}, To: ${to}`);
             const transporter = createTransporter();
             const mailOptions = {
                 from: fromEmail,
@@ -105,10 +135,9 @@ async function sendMail({ eventType, to, role, data = {}, idempotencyKey = null 
                 mailOptions.attachments = emailDetails.attachments;
             }
 
-            console.log(`[MailService] Dispatching email via SMTP. Event: ${eventType}, To: ${to}, Role: ${role}`);
             const info = await transporter.sendMail(mailOptions);
             messageId = info.messageId;
-            console.log(`[MailService] SMTP dispatch success. MessageId: ${messageId}`);
+            console.log(`[MailService] Nodemailer SMTP dispatch success. MessageId: ${messageId}`);
         }
 
         // Update log as successful
