@@ -23,6 +23,8 @@ import mongoDBService from './services/mongoDBService';
 import gridfsService from './services/gridfsService';
 import DOBDatePicker from './components/Calendar/DOBDatePicker';
 import OtpModal from './components/dialog/OtpModal/OtpModal';
+import { normalizeSkillCategories, flattenSkillsToSkillSet } from './utils/skillUtils';
+import { validateGmailUsername, cleanDomainEmailUsername } from './utils/emailUtils';
 import { changeFavicon, FAVICON_TYPES } from './utils/faviconUtils';
 import ConfettiSideCannons from './components/Confetti/ConfettiSideCannons';
 import confetti from "canvas-confetti";
@@ -715,6 +717,7 @@ function MainRegistration() {
     () => [
       { key: "personal", label: "Personal Information", icon: personalinfo },
       { key: "academic", label: "Academic Background", icon: academicIcon },
+      { key: "skills", label: "Core Skills", icon: otherDetailsIcon },
       { key: "other", label: "Other Details", icon: otherDetailsIcon },
       { key: "login", label: "Login Details", icon: logindetailsIcon },
     ],
@@ -724,6 +727,7 @@ function MainRegistration() {
   const formRef = useRef(null);
   const personalSectionRef = useRef(null);
   const academicSectionRef = useRef(null);
+  const skillsSectionRef = useRef(null);
   const otherSectionRef = useRef(null);
   const loginSectionRef = useRef(null);
 
@@ -731,6 +735,7 @@ function MainRegistration() {
     () => ({
       personal: personalSectionRef,
       academic: academicSectionRef,
+      skills: skillsSectionRef,
       other: otherSectionRef,
       login: loginSectionRef,
     }),
@@ -786,6 +791,8 @@ function MainRegistration() {
   const [isMismatchedRegNoPopupOpen, setMismatchedRegNoPopupOpen] = useState(false);
   const [personalRegNo, setPersonalRegNo] = useState("");
   const [loginRegNo, setLoginRegNo] = useState("");
+  const [primaryEmailPrefix, setPrimaryEmailPrefix] = useState("");
+  const [domainEmailPrefix, setDomainEmailPrefix] = useState("");
   const [isFileSizeErrorOpen, setIsFileSizeErrorOpen] = useState(false);
   const [fileSizeErrorKB, setFileSizeErrorKB] = useState("");
   const [isFileFormatErrorOpen, setIsFileFormatErrorOpen] = useState(false);
@@ -1079,11 +1086,14 @@ function MainRegistration() {
         }
       }
 
-      // Handle mobile prefix input wrapper
+      // Handle mobile prefix or suffix input wrappers
       if (!wrapperToBlink && field && field.closest) {
         const mobileWrapper = field.closest('[class*="mr-mobile-input-wrapper"]');
+        const suffixWrapper = field.closest('[class*="mr-input-with-suffix"]');
         if (mobileWrapper) {
           wrapperToBlink = mobileWrapper;
+        } else if (suffixWrapper) {
+          wrapperToBlink = suffixWrapper;
         }
       }
 
@@ -1805,6 +1815,19 @@ function MainRegistration() {
           invalidMessages.push("Registration number must be exactly 11 digits");
         }
 
+        const rawPrimary = formData.get("primaryEmail") || "";
+        const cleanPrimaryPrefix = rawPrimary.replace(/@gmail\.com$/i, '').trim();
+        const primaryEmailFull = cleanPrimaryPrefix ? `${cleanPrimaryPrefix}@gmail.com` : "";
+
+        const rawDomain = formData.get("domainEmail") || "";
+        const cleanDomainPrefix = rawDomain.replace(/@ksrce\.ac\.in$/i, '').trim();
+        const domainEmailFull = cleanDomainPrefix ? `${cleanDomainPrefix}@ksrce.ac.in` : "";
+
+        const gmailValidation = validateGmailUsername(cleanPrimaryPrefix);
+        if (!gmailValidation.isValid) {
+          invalidMessages.push(gmailValidation.error);
+        }
+
         if (invalidMessages.length) {
           setValidationErrorMessage(invalidMessages.join("\n"));
           setValidationErrorPopupOpen(true);
@@ -1841,9 +1864,9 @@ function MainRegistration() {
           gender: formData.get("gender") || "male",
           address: formData.get("address") || "Campus",
           city: formData.get("city") || "City",
-          email: formData.get("domainEmail") || formData.get("primaryEmail") || "",
-          primaryEmail: formData.get("domainEmail") || "",
-          domainEmail: formData.get("domainEmail") || "",
+          email: primaryEmailFull || domainEmailFull || "",
+          primaryEmail: primaryEmailFull,
+          domainEmail: domainEmailFull,
           mobileNo: "+91" + (formData.get("mobileNo") || "9876543210"),
           fatherName: formData.get("fatherName") || "Father Name",
           fatherOccupation: formData.get("fatherOccupation") || "Business",
@@ -1875,8 +1898,8 @@ function MainRegistration() {
           quota: formData.get("quota") || quota || "Government",
           languagesKnown: formData.get("languagesKnown") || "English",
           firstGraduate: formData.get("firstGraduate") || firstGraduate || "No",
-          passportNo: formData.get("passportNo") || "",
-          skillSet: formData.get("skillSet") || "Javascript",
+          skillSet: flattenSkillsToSkillSet(skills),
+          skills: skills,
           valueAddedCourses: formData.get("valueAddedCourses") || "",
           aboutSibling: formData.get("aboutSibling") || "",
           rationCardNo: formData.get("rationCardNo") || "12345",
@@ -2031,11 +2054,25 @@ function MainRegistration() {
                   <div className={cx("mr-personal-info-fields")}>
                     <div className={cx("mr-field")}>
                       <label>First Name <RequiredStar /></label>
-                      <input type="text" name="firstName" placeholder="Enter First Name" required />
+                      <input
+                        type="text"
+                        name="firstName"
+                        placeholder="Enter First Name"
+                        required
+                        onKeyDown={(e) => { if (/[0-9]/.test(e.key)) e.preventDefault(); }}
+                        onInput={(e) => { e.target.value = e.target.value.replace(/[0-9]/g, ''); }}
+                      />
                     </div>
                     <div className={cx("mr-field")}>
                       <label>Last Name <RequiredStar /></label>
-                      <input type="text" name="lastName" placeholder="Enter Last Name" required />
+                      <input
+                        type="text"
+                        name="lastName"
+                        placeholder="Enter Last Name"
+                        required
+                        onKeyDown={(e) => { if (/[0-9]/.test(e.key)) e.preventDefault(); }}
+                        onInput={(e) => { e.target.value = e.target.value.replace(/[0-9]/g, ''); }}
+                      />
                     </div>
                     <div className={cx("mr-field")}>
                       <label>Register Number <RequiredStar /></label>
@@ -2087,14 +2124,17 @@ function MainRegistration() {
                     </div>
                     <div className={cx("mr-field")}>
                       <label>Age</label>
-                      <input
-                        type="text"
-                        name="age"
-                        value={age}
-                        readOnly
-                        placeholder="Auto-calculated from DOB"
-                        style={{ backgroundColor: "#f9fbff", cursor: "not-allowed" }}
-                      />
+                      <div className={cx("mr-input-with-suffix")}>
+                        <input
+                          type="text"
+                          name="age"
+                          value={age}
+                          readOnly
+                          placeholder="Auto-calculated from DOB"
+                          style={{ backgroundColor: "#f9fbff", cursor: "not-allowed" }}
+                        />
+                        <div className={cx("mr-suffix-chip")}>Years</div>
+                      </div>
                     </div>
                     <div className={cx("mr-field")}>
                       <label>Degree <RequiredStar /></label>
@@ -2212,11 +2252,40 @@ function MainRegistration() {
                     </div>
                     <div className={cx("mr-field")}>
                       <label>Primary Email <RequiredStar /></label>
-                      <input type="email" name="primaryEmail" placeholder="Enter Primary Email" required />
+                      <div className={cx("mr-input-with-suffix")}>
+                        <input
+                          type="text"
+                          name="primaryEmail"
+                          placeholder="Enter Primary Email"
+                          required
+                          value={primaryEmailPrefix}
+                          onChange={(e) => {
+                            let raw = e.target.value.replace(/@gmail\.com$/i, '').trim();
+                            raw = raw.replace(/[\s$#%&*!?/\\,:]/g, '');
+                            setPrimaryEmailPrefix(raw);
+                            setTimeout(handleInputChange, 0);
+                          }}
+                        />
+                        <div className={cx("mr-suffix-chip")}>@gmail.com</div>
+                      </div>
                     </div>
                     <div className={cx("mr-field")}>
                       <label>Domain Email <RequiredStar /></label>
-                      <input type="email" name="domainEmail" placeholder="Enter Domain Email" required />
+                      <div className={cx("mr-input-with-suffix")}>
+                        <input
+                          type="text"
+                          name="domainEmail"
+                          placeholder="Enter Domain Email"
+                          required
+                          value={domainEmailPrefix}
+                          onChange={(e) => {
+                            let raw = e.target.value.replace(/@ksrce\.ac\.in$/i, '').trim();
+                            setDomainEmailPrefix(raw);
+                            setTimeout(handleInputChange, 0);
+                          }}
+                        />
+                        <div className={cx("mr-suffix-chip")}>@ksrce.ac.in</div>
+                      </div>
                     </div>
                     <div className={cx("mr-field")}>
                       <label>Mobile No. <RequiredStar /></label>
@@ -2224,7 +2293,14 @@ function MainRegistration() {
                     </div>
                     <div className={cx("mr-field")}>
                       <label>Father Name <RequiredStar /></label>
-                      <input type="text" name="fatherName" placeholder="Enter Father Name" required />
+                      <input
+                        type="text"
+                        name="fatherName"
+                        placeholder="Enter Father Name"
+                        required
+                        onKeyDown={(e) => { if (/[0-9]/.test(e.key)) e.preventDefault(); }}
+                        onInput={(e) => { e.target.value = e.target.value.replace(/[0-9]/g, ''); }}
+                      />
                     </div>
                     <div className={cx("mr-field")}>
                       <label>Father Occupation</label>
@@ -2236,7 +2312,14 @@ function MainRegistration() {
                     </div>
                     <div className={cx("mr-field")}>
                       <label>Mother Name <RequiredStar /></label>
-                      <input type="text" name="motherName" placeholder="Enter Mother Name" required />
+                      <input
+                        type="text"
+                        name="motherName"
+                        placeholder="Enter Mother Name"
+                        required
+                        onKeyDown={(e) => { if (/[0-9]/.test(e.key)) e.preventDefault(); }}
+                        onInput={(e) => { e.target.value = e.target.value.replace(/[0-9]/g, ''); }}
+                      />
                     </div>
                     <div className={cx("mr-field")}>
                       <label>Mother Occupation</label>
@@ -2248,7 +2331,13 @@ function MainRegistration() {
                     </div>
                     <div className={cx("mr-field")}>
                       <label>Guardian Name</label>
-                      <input type="text" name="guardianName" placeholder="Enter Guardian Name" />
+                      <input
+                        type="text"
+                        name="guardianName"
+                        placeholder="Enter Guardian Name"
+                        onKeyDown={(e) => { if (/[0-9]/.test(e.key)) e.preventDefault(); }}
+                        onInput={(e) => { e.target.value = e.target.value.replace(/[0-9]/g, ''); }}
+                      />
                     </div>
                   </div>
 
@@ -2457,6 +2546,139 @@ function MainRegistration() {
                 </div>
               </div>
 
+              {/* ── Core Skills ── */}
+              <div className={cx("mr-profile-section-container")} ref={sectionRefs.skills}>
+                <h3 className={cx("mr-section-header")}>Core Skills</h3>
+                <div className={cx("mr-skills-list-container")}>
+                  {skills.map((cat, catIndex) => (
+                    <div key={catIndex} className={cx("mr-skills-row")}>
+                      <div className={cx("mr-skill-category-field")}>
+                        <div className={cx("mr-skill-label-box")}>
+                          {cat.category}
+                        </div>
+                        <button
+                          type="button"
+                          className={cx("mr-category-remove-btn")}
+                          onClick={() => setSkills(prev => prev.filter((_, ci) => ci !== catIndex))}
+                          title="Remove category"
+                        >
+                          ×
+                        </button>
+                      </div>
+                      <div className={cx("mr-skills-chips-container")}>
+                        {cat.items.map((skill, i) => (
+                          <span key={i} className={cx("mr-skill-chip")}>
+                            {skill}
+                            <button
+                              type="button"
+                              className={cx("mr-skill-chip-remove")}
+                              onClick={() => {
+                                setSkills(prev => prev.map((c, ci) =>
+                                  ci === catIndex ? { ...c, items: c.items.filter((_, si) => si !== i) } : c
+                                ));
+                              }}
+                            >
+                              ×
+                            </button>
+                          </span>
+                        ))}
+                        {activeSkillCategory === catIndex && (
+                          <input
+                            type="text"
+                            className={cx("mr-skill-input")}
+                            placeholder="Enter Skill"
+                            value={newSkillName}
+                            onChange={e => setNewSkillName(e.target.value)}
+                            autoFocus
+                            onKeyDown={e => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                const val = newSkillName.trim();
+                                if (val && !cat.items.includes(val)) {
+                                  setSkills(prev => prev.map((c, ci) =>
+                                    ci === catIndex ? { ...c, items: [...c.items, val] } : c
+                                  ));
+                                }
+                                setNewSkillName('');
+                              }
+                              if (e.key === 'Escape') {
+                                setActiveSkillCategory(null);
+                                setNewSkillName('');
+                              }
+                            }}
+                            onBlur={() => {
+                              const val = newSkillName.trim();
+                              if (val && !cat.items.includes(val)) {
+                                setSkills(prev => prev.map((c, ci) =>
+                                  ci === catIndex ? { ...c, items: [...c.items, val] } : c
+                                ));
+                              }
+                              setNewSkillName('');
+                              setActiveSkillCategory(null);
+                            }}
+                          />
+                        )}
+                        <button
+                          type="button"
+                          className={cx("mr-add-skill-btn")}
+                          onClick={() => { setActiveSkillCategory(catIndex); setNewSkillName(''); }}
+                        >
+                          <span className={cx("mr-add-skill-btn-icon")}>+</span>
+                          Add Skill
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+
+                  {/* Add custom category */}
+                  <div style={{ marginTop: '16px' }}>
+                    <div className={cx("mr-skills-chips-container")}>
+                      {showAddCategory && (
+                        <input
+                          type="text"
+                          className={cx("mr-skill-input")}
+                          placeholder="Category Name"
+                          value={newCategoryName}
+                          onChange={e => setNewCategoryName(e.target.value)}
+                          autoFocus
+                          onKeyDown={e => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              const val = newCategoryName.trim();
+                              if (val && !skills.some(c => c.category === val)) {
+                                setSkills(prev => [...prev, { category: val, items: [] }]);
+                              }
+                              setNewCategoryName('');
+                              setShowAddCategory(false);
+                            }
+                            if (e.key === 'Escape') {
+                              setShowAddCategory(false);
+                              setNewCategoryName('');
+                            }
+                          }}
+                          onBlur={() => {
+                            const val = newCategoryName.trim();
+                            if (val && !skills.some(c => c.category === val)) {
+                              setSkills(prev => [...prev, { category: val, items: [] }]);
+                            }
+                            setNewCategoryName('');
+                            setShowAddCategory(false);
+                          }}
+                        />
+                      )}
+                      <button
+                        type="button"
+                        className={cx("mr-add-category-btn")}
+                        onClick={() => { setShowAddCategory(true); setNewCategoryName(''); }}
+                      >
+                        <span className={cx("mr-add-skill-btn-icon")}>+</span>
+                        Add Category
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               {/* ── Other Details ── */}
               <div className={cx("mr-profile-section-container")} ref={sectionRefs.other}>
                 <h3 className={cx("mr-section-header")}>Other Details</h3>
@@ -2652,139 +2874,6 @@ function MainRegistration() {
                           </label>
                         );
                       })}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* ── Core Skills ── */}
-              <div className={cx("mr-profile-section-container")}>
-                <h3 className={cx("mr-section-header")}>Core Skills</h3>
-                <div className={cx("mr-skills-list-container")}>
-                  {skills.map((cat, catIndex) => (
-                    <div key={catIndex} className={cx("mr-skills-row")}>
-                      <div className={cx("mr-skill-category-field")}>
-                        <div className={cx("mr-skill-label-box")}>
-                          {cat.category}
-                        </div>
-                        <button
-                          type="button"
-                          className={cx("mr-category-remove-btn")}
-                          onClick={() => setSkills(prev => prev.filter((_, ci) => ci !== catIndex))}
-                          title="Remove category"
-                        >
-                          ×
-                        </button>
-                      </div>
-                      <div className={cx("mr-skills-chips-container")}>
-                        {cat.items.map((skill, i) => (
-                          <span key={i} className={cx("mr-skill-chip")}>
-                            {skill}
-                            <button
-                              type="button"
-                              className={cx("mr-skill-chip-remove")}
-                              onClick={() => {
-                                setSkills(prev => prev.map((c, ci) =>
-                                  ci === catIndex ? { ...c, items: c.items.filter((_, si) => si !== i) } : c
-                                ));
-                              }}
-                            >
-                              ×
-                            </button>
-                          </span>
-                        ))}
-                        {activeSkillCategory === catIndex && (
-                          <input
-                            type="text"
-                            className={cx("mr-skill-input")}
-                            placeholder="Enter Skill"
-                            value={newSkillName}
-                            onChange={e => setNewSkillName(e.target.value)}
-                            autoFocus
-                            onKeyDown={e => {
-                              if (e.key === 'Enter') {
-                                e.preventDefault();
-                                const val = newSkillName.trim();
-                                if (val && !cat.items.includes(val)) {
-                                  setSkills(prev => prev.map((c, ci) =>
-                                    ci === catIndex ? { ...c, items: [...c.items, val] } : c
-                                  ));
-                                }
-                                setNewSkillName('');
-                              }
-                              if (e.key === 'Escape') {
-                                setActiveSkillCategory(null);
-                                setNewSkillName('');
-                              }
-                            }}
-                            onBlur={() => {
-                              const val = newSkillName.trim();
-                              if (val && !cat.items.includes(val)) {
-                                setSkills(prev => prev.map((c, ci) =>
-                                  ci === catIndex ? { ...c, items: [...c.items, val] } : c
-                                ));
-                              }
-                              setNewSkillName('');
-                              setActiveSkillCategory(null);
-                            }}
-                          />
-                        )}
-                        <button
-                          type="button"
-                          className={cx("mr-add-skill-btn")}
-                          onClick={() => { setActiveSkillCategory(catIndex); setNewSkillName(''); }}
-                        >
-                          <span className={cx("mr-add-skill-btn-icon")}>+</span>
-                          Add Skill
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-
-                  {/* Add custom category */}
-                  <div style={{ marginTop: '16px' }}>
-                    <div className={cx("mr-skills-chips-container")}>
-                      {showAddCategory && (
-                        <input
-                          type="text"
-                          className={cx("mr-skill-input")}
-                          placeholder="Category Name"
-                          value={newCategoryName}
-                          onChange={e => setNewCategoryName(e.target.value)}
-                          autoFocus
-                          onKeyDown={e => {
-                            if (e.key === 'Enter') {
-                              e.preventDefault();
-                              const val = newCategoryName.trim();
-                              if (val && !skills.some(c => c.category === val)) {
-                                setSkills(prev => [...prev, { category: val, items: [] }]);
-                              }
-                              setNewCategoryName('');
-                              setShowAddCategory(false);
-                            }
-                            if (e.key === 'Escape') {
-                              setShowAddCategory(false);
-                              setNewCategoryName('');
-                            }
-                          }}
-                          onBlur={() => {
-                            const val = newCategoryName.trim();
-                            if (val && !skills.some(c => c.category === val)) {
-                              setSkills(prev => [...prev, { category: val, items: [] }]);
-                            }
-                            setNewCategoryName('');
-                            setShowAddCategory(false);
-                          }}
-                        />
-                      )}
-                      <button
-                        type="button"
-                        className={cx("mr-add-category-btn")}
-                        onClick={() => { setShowAddCategory(true); setNewCategoryName(''); }}
-                      >
-                        <span className={cx("mr-add-skill-btn-icon")}>+</span>
-                        Add Category
-                      </button>
                     </div>
                   </div>
                 </div>

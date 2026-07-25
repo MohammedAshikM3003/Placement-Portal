@@ -2003,3 +2003,51 @@
     background: #1976d2;
     transform: translateY(-1px);
 }
+
+.mr-input-with-suffix {
+    display: flex;
+    align-items: center;
+    border: 1px solid #dde6f4;
+    border-radius: 8px;
+    background-color: #f9fbff;
+    overflow: hidden;
+    height: 50.8px;
+    box-sizing: border-box;
+    transition: all 0.2s ease;
+    width: 100%;
+}
+
+.mr-input-with-suffix:focus-within {
+    border-color: #2085f6;
+    box-shadow: 0 0 0 3px rgba(32, 133, 246, 0.2);
+}
+
+.mr-input-with-suffix input {
+    flex: 1;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    height: 100% !important;
+    padding: 0.75rem 1rem !important;
+    font-size: 0.95rem;
+    font-family: 'Poppins', sans-serif;
+    color: #1f2933;
+}
+
+.mr-suffix-chip {
+    background: #2085f6;
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 0.85rem;
+    padding: 0 14px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-left: 1px solid #dde6f4;
+    flex-shrink: 0;
+    font-family: 'Poppins', sans-serif;
+    user-select: none;
+    white-space: nowrap;
+}

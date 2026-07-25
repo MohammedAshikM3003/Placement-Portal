@@ -5,6 +5,7 @@ import styles from './ResumeBuilder.module.css';
 import '../components/alerts/AlertStyles.css';
 import { API_BASE_URL, joinApiUrl } from '../utils/apiConfig';
 import { PreviewProgressAlert } from '../components/alerts/DownloadPreviewAlerts';
+import { normalizeSkillCategories, DEFAULT_SKILL_CATEGORIES } from '../utils/skillUtils';
 
 // Lazy load popups
 const PopupExperience = lazy(() => import('./PopupExperience.jsx'));
@@ -90,13 +91,7 @@ const ATS_KEYWORDS = {
   ]
 };
 
-const DEFAULT_SKILL_CATEGORIES = [
-  { category: 'Languages', items: [] },
-  { category: 'Frameworks & Libraries', items: [] },
-  { category: 'Databases', items: [] },
-  { category: 'Tools & Platforms', items: [] },
-  { category: 'Other', items: [] },
-];
+
 
 // ===== MAIN CONTENT =====
 function BuilderContent({ onViewChange, studentData: parentStudentData }) {
@@ -269,25 +264,12 @@ function BuilderContent({ onViewChange, studentData: parentStudentData }) {
       batch10: prev.batch10 || studentData.tenthYear || '',
     }));
 
-    // Skills — parse comma-separated skillSet from profile into 'Other' category (only if not skipped and no skills exist)
+    // Skills — populate normalized categories from student profile (only if not skipped and no skills exist)
     if (!skipSkills) {
       setSkills(prev => {
         const hasAny = prev.some(cat => cat.items.length > 0);
         if (hasAny) return prev; // Keep existing skills
-        if (studentData.skillSet) {
-          const profileSkills = studentData.skillSet
-            .split(',')
-            .map(s => s.trim())
-            .filter(s => s.length > 0);
-          if (profileSkills.length > 0) {
-            return prev.map(cat =>
-              cat.category === 'Other'
-                ? { ...cat, items: [...new Set([...cat.items, ...profileSkills])] }
-                : cat
-            );
-          }
-        }
-        return prev;
+        return normalizeSkillCategories(studentData.skills, studentData.skillSet);
       });
     }
   }, [studentData]);

@@ -48,6 +48,7 @@ const sidebarItems = [
 
   { icon: ManageStudents, text: 'Student Database', view: 'admin-student-database' },
 
+
   { icon: AdminCompanyProfileicon, text: 'Company Profile', view: 'admin-company-profile' },
 
   { icon: AdminCompanydriveicon, text: 'Company Drive', view: 'admin-company-drive' },

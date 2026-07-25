@@ -217,8 +217,8 @@ function OtpModal({
 
     return (
         <div className={styles.overlay}>
-            <div 
-                className={styles.container} 
+            <div
+                className={styles.container}
                 style={{ '--role-primary': roleColors[role] }}
             >
                 {/* Colored Header */}
@@ -229,7 +229,7 @@ function OtpModal({
                         {/* Security Icon - Animated Green Circle & Lock Icon */}
                         <div className={styles.successIconWrapper}>
                             <svg className={styles.successIcon} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
-                                <circle className={styles.successIconCircle} cx="26" cy="26" r="25" fill="none"/>
+                                <circle className={styles.successIconCircle} cx="26" cy="26" r="25" fill="none" />
                             </svg>
                             <div className={styles.lockIconOverlay}>
                                 <svg className={styles.lockIconAnimated} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
@@ -274,15 +274,15 @@ function OtpModal({
                             ) : (
                                 <span style={{ color: '#b91c1c', fontWeight: 600 }}>Verification code has expired!</span>
                             )}
-                            
+
                             <span>&bull;</span>
-                            
+
                             {cooldown > 0 ? (
                                 <span style={{ color: '#94a3b8' }}>Resend in {cooldown}s</span>
                             ) : (
-                                <button 
-                                    type="button" 
-                                    onClick={sendOtp} 
+                                <button
+                                    type="button"
+                                    onClick={sendOtp}
                                     disabled={isSending}
                                     className={styles.resendBtn}
                                 >
@@ -294,16 +294,16 @@ function OtpModal({
 
                     {/* Action buttons */}
                     <div className={styles.footer}>
-                        <button 
-                            type="button" 
-                            onClick={onClose} 
+                        <button
+                            type="button"
+                            onClick={onClose}
                             className={`${styles.btn} ${styles.cancelBtn}`}
                             disabled={isVerifying}
                         >
                             Cancel
                         </button>
-                        <button 
-                            type="submit" 
+                        <button
+                            type="submit"
                             className={`${styles.btn} ${styles.verifyBtn}`}
                             disabled={isVerifyDisabled}
                         >
@@ -313,7 +313,7 @@ function OtpModal({
                                     {isRegisteringStage ? 'Registering...' : 'Verifying...'}
                                 </>
                             ) : (
-                                'Verify Code'
+                                'Verify'
                             )}
                         </button>
                     </div>

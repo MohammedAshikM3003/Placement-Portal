@@ -1335,6 +1335,41 @@ class MongoDBService {
     return response?.history || [];
   }
 
+  // ============ EXCEL STUDENT OPERATIONS ============
+
+  async uploadExcelStudents(studentsArray) {
+    return await this.apiCall('/students/excel-upload', {
+      method: 'POST',
+      body: JSON.stringify({ students: studentsArray })
+    });
+  }
+
+  async getExcelStudents(filters = {}) {
+    const query = new URLSearchParams();
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        query.append(key, value);
+      }
+    });
+    const qs = query.toString();
+    const endpoint = qs ? `/students/excel-list?${qs}` : '/students/excel-list';
+    return await this.apiCall(endpoint, {
+      method: 'GET'
+    });
+  }
+
+  async deleteExcelStudent(id) {
+    return await this.apiCall(`/students/excel-delete/${id}`, {
+      method: 'DELETE'
+    });
+  }
+
+  async clearAllExcelStudents() {
+    return await this.apiCall('/students/excel-clear-all', {
+      method: 'DELETE'
+    });
+  }
+
   // ============ HEALTH CHECK ============
 
   async healthCheck() {

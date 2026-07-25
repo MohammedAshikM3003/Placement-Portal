@@ -1349,9 +1349,274 @@
     min-height: 52px;
 }
 
+/* --- CORE SKILLS SECTION --- */
+.skillsListContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    width: 100%;
+}
+
+.skillsRow {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.skillCategoryField {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.skillLabelBox {
+    width: 180px;
+    padding: 0.75rem 1rem;
+    border: 1px solid #dde6f4;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #1f2933;
+    background-color: #f9fbff;
+    text-align: center;
+    box-sizing: border-box;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 50.8px;
+    font-family: 'Poppins', sans-serif;
+}
+
+.categoryRemoveBtn {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: #ef4444;
+    color: #fff;
+    border: none;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    transition: background 0.2s ease, transform 0.2s ease;
+    padding: 0;
+    flex-shrink: 0;
+}
+
+.categoryRemoveBtn:hover {
+    background: #dc2626;
+    transform: scale(1.1);
+}
+
+.skillsChipsContainer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    flex: 1;
+}
+
+.skillChip {
+    background: #f9fbff;
+    border: 1px solid #dde6f4;
+    border-radius: 25px;
+    padding: 8px 16px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #1a2a4a;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 38px;
+    box-sizing: border-box;
+    transition: all 0.2s ease;
+    font-family: 'Poppins', sans-serif;
+}
+
+.skillChip:hover {
+    border-color: #2085f6;
+    background: #f0f6ff;
+}
+
+.skillChipRemove {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #94a3b8;
+    color: #fff;
+    border: none;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    padding: 0;
+    transition: background 0.2s ease;
+}
+
+.skillChipRemove:hover {
+    background: #ef4444;
+}
+
+.skillNameInput {
+    border: 1px solid #dde6f4;
+    border-radius: 25px;
+    padding: 8px 16px;
+    font-size: 0.9rem;
+    font-family: 'Poppins', sans-serif;
+    color: #1a2a4a;
+    outline: none;
+    min-width: 120px;
+    max-width: 250px;
+    height: 38px;
+    background: #f9fbff;
+    box-sizing: border-box;
+}
+
+.skillNameInput:focus {
+    border-color: #2085f6;
+    box-shadow: 0 0 0 3px rgba(32, 133, 246, 0.2);
+}
+
+.addChipBtn {
+    background: #2085f6;
+    color: #fff;
+    border: none;
+    padding: 8px 18px;
+    border-radius: 25px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 38px;
+    box-sizing: border-box;
+    transition: all 0.2s ease;
+    font-family: 'Poppins', sans-serif;
+}
+
+.addChipBtn:hover {
+    background: #1976d2;
+    transform: translateY(-1px);
+}
+
+.addChipBtnIcon {
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+.addCategoryBtn {
+    background: #2085f6;
+    color: #fff;
+    border: none;
+    padding: 10px 22px;
+    border-radius: 25px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 2px 8px rgba(32, 133, 246, 0.25);
+    transition: all 0.2s ease;
+    font-family: 'Poppins', sans-serif;
+    margin-top: 10px;
+}
+
+.addCategoryBtn:hover {
+    background: #1976d2;
+    transform: translateY(-1px);
+}
+
+@media screen and (max-width: 768px) {
+    .skillsRow {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+        border-bottom: 1px dashed #dde6f4;
+        padding-bottom: 14px;
+        margin-bottom: 14px;
+    }
+
+    .skillCategoryField {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+    }
+
+    .skillLabelBox {
+        flex: 1;
+        width: auto;
+    }
+
+    .skillsChipsContainer {
+        width: 100%;
+        margin-top: 4px;
+    }
+}
+
 .addSkillBtn:hover {
     background: #0d65e0;
     transform: translateY(-1px);
+}
+
+.inputWithSuffix {
+    display: flex;
+    align-items: center;
+    border: 1px solid #dde6f4;
+    border-radius: 8px;
+    background-color: #f9fbff;
+    overflow: hidden;
+    height: 50.8px;
+    box-sizing: border-box;
+    transition: all 0.2s ease;
+    width: 100%;
+}
+
+.inputWithSuffix:focus-within {
+    border-color: #2085f6;
+    box-shadow: 0 0 0 3px rgba(32, 133, 246, 0.2);
+}
+
+.inputWithSuffix input {
+    flex: 1;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    height: 100% !important;
+    padding: 0.75rem 1rem !important;
+    font-size: 0.95rem;
+    font-family: 'Poppins', sans-serif;
+    color: #1f2933;
+}
+
+.suffixChip {
+    background: #2085f6;
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 0.85rem;
+    padding: 0 14px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-left: 1px solid #dde6f4;
+    flex-shrink: 0;
+    font-family: 'Poppins', sans-serif;
+    user-select: none;
+    white-space: nowrap;
 }
 
 .addSkillBtn:disabled {

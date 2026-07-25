@@ -6,6 +6,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import Cropper from 'react-easy-crop';
 import 'react-easy-crop/react-easy-crop.css';
 import { API_BASE_URL } from '../utils/apiConfig';
+import { normalizeSkillCategories, flattenSkillsToSkillSet } from '../utils/skillUtils';
 
 import Navbar from '../components/Navbar/Navbar';
 import Sidebar from '../components/Sidebar/Sidebar';
@@ -743,6 +744,10 @@ function StuProfile({ onLogout, onViewChange }) {
     const [urlErrorType, setUrlErrorType] = useState('');
     const [invalidUrl, setInvalidUrl] = useState('');
     const [skills, setSkills] = useState([]);
+    const [activeSkillCategory, setActiveSkillCategory] = useState(null);
+    const [newSkillName, setNewSkillName] = useState('');
+    const [newCategoryName, setNewCategoryName] = useState('');
+    const [showAddCategory, setShowAddCategory] = useState(false);
     const [showAnalysis, setShowAnalysis] = useState(false);
     const [hoveredRound, setHoveredRound] = useState(null);
     const [selectedRound, setSelectedRound] = useState(null);
@@ -966,8 +971,8 @@ function StuProfile({ onLogout, onViewChange }) {
         const changed = detectChangedFields(originalFormData, studentData);
 
         // Track skills changes - just show "Skills" if any skill was added/removed/modified
-        const currentSkillsFiltered = skills.filter(s => s.trim()).sort().join(',');
-        const originalSkillsFiltered = originalSkills.filter(s => s.trim()).sort().join(',');
+        const currentSkillsFiltered = flattenSkillsToSkillSet(skills);
+        const originalSkillsFiltered = flattenSkillsToSkillSet(originalSkills);
 
         if (currentSkillsFiltered !== originalSkillsFiltered && !changed.includes('Skills')) {
             changed.push('Skills');
@@ -1894,7 +1899,7 @@ function StuProfile({ onLogout, onViewChange }) {
         setHasUnsavedChanges(false);
         setChangedFieldsList([]);
         setHasNewProfilePhoto(false);
-        const processedSkills = Array.isArray(merged.skills) ? merged.skills : parseMultiValue(merged.skillSet || '');
+        const processedSkills = normalizeSkillCategories(merged.skills, merged.skillSet || '');
         setStudyCategory(merged.studyCategory || '12th');
         setCurrentYear(merged.currentYear ? String(merged.currentYear) : '');
         setCurrentSemester(merged.currentSemester ? String(merged.currentSemester) : '');
@@ -2329,8 +2334,8 @@ function StuProfile({ onLogout, onViewChange }) {
                 languagesKnown: formData.get('languagesKnown') || studentData?.languagesKnown || '',
                 firstGraduate: formData.get('firstGraduate') || studentData?.firstGraduate || '', 
                 passportNo: formData.get('passportNo') || studentData?.passportNo || '', 
-                skillSet: formData.get('skillSet') || studentData?.skillSet || '',
-                skills: skills.filter(s => s.trim()),
+                skillSet: flattenSkillsToSkillSet(skills),
+                skills: skills,
                 valueAddedCourses: formData.get('valueAddedCourses') || studentData?.valueAddedCourses || '', 
                 aboutSibling: formData.get('aboutSibling') || studentData?.aboutSibling || '', 
                 rationCardNo: formData.get('rationCardNo') || studentData?.rationCardNo || '',
@@ -2422,8 +2427,7 @@ function StuProfile({ onLogout, onViewChange }) {
             window.dispatchEvent(new CustomEvent('profileUpdated', { detail: updatedStudentData }));
 
             // Update the reference for next comparison (this makes the banner disappear)
-            setOriginalFormData({ ...updatedStudentData });
-            setOriginalSkills([...skills.filter(s => s.trim())]); // Reset original skills after save
+            setOriginalSkills(JSON.parse(JSON.stringify(skills))); // Reset original skills after save
             setHasUnsavedChanges(false);
             setChangedFieldsList([]);
             setHasNewProfilePhoto(false); // Reset profile photo change flag after save
@@ -2433,7 +2437,7 @@ function StuProfile({ onLogout, onViewChange }) {
             // Show success popup immediately after everything is ready
             setIsSaving(false);
             setPopupOpen(true);
-            savedDataRef.current = { ...updatedStudentData, skills: skills.filter(s => s.trim()) };
+            savedDataRef.current = { ...updatedStudentData, skills: skills };
         } catch (error) {
             afterSaveNavRef.current = null;
             if (error.message.includes('permission')) { alert('Permission denied.'); }
@@ -2507,8 +2511,8 @@ function StuProfile({ onLogout, onViewChange }) {
         const changed = [];
         for (const [key, label] of Object.entries(EDITABLE_FIELD_LABELS)) {
             if (key === 'skills') {
-                const savedSkills = Array.isArray(saved.skills) ? saved.skills.filter(s => s).join(',') : '';
-                const curSkills = skills.filter(s => s.trim()).join(',');
+                const savedSkills = flattenSkillsToSkillSet(saved.skills);
+                const curSkills = flattenSkillsToSkillSet(skills);
                 if (savedSkills !== curSkills) changed.push(label);
             } else if (key === 'profilePicURL') {
                 if (profilePhotoFile) changed.push(label);
@@ -3504,44 +3508,142 @@ function StuProfile({ onLogout, onViewChange }) {
                         </div>
                         )}
 
-                        {/* --- SKILLS --- */}
+                        {/* --- CORE SKILLS --- */}
                         <div className={styles.profileSectionContainer}>
-                            <h3 className={styles.sectionHeader}>Skills</h3>
-                            <div className={styles.skillsGrid}>
-                                {skills.map((skill, index) => (
-                                    <div key={index} className={styles.skillCard}>
-                                        <input
-                                            type="text"
-                                            className={styles.skillInput}
-                                            value={skill}
-                                            onChange={(e) => handleSkillChange(index, e.target.value)}
-                                            placeholder={`Skill ${index + 1}`}
-                                            disabled={isSaving}
-                                        />
-                                        <button
-                                            type="button"
-                                            className={styles.removeSkillBtn}
-                                            onClick={() => handleRemoveSkill(index)}
-                                            disabled={isSaving}
-                                            aria-label="Remove skill"
-                                        >
-                                            <svg viewBox="0 0 512 512" fill="currentColor" style={{width:'14px',height:'14px'}}><path d="M289.94 256l95-95A24 24 0 00351 127l-95 95-95-95a24 24 0 00-34 34l95 95-95 95a24 24 0 1034 34l95-95 95 95a24 24 0 0034-34z"/></svg>
-                                        </button>
+                            <h3 className={styles.sectionHeader}>Core Skills</h3>
+                            <div className={styles.skillsListContainer}>
+                                {skills.map((cat, catIndex) => (
+                                    <div key={catIndex} className={styles.skillsRow}>
+                                        <div className={styles.skillCategoryField}>
+                                            <div className={styles.skillLabelBox}>
+                                                {cat.category}
+                                            </div>
+                                            <button
+                                                type="button"
+                                                className={styles.categoryRemoveBtn}
+                                                onClick={() => setSkills(prev => prev.filter((_, ci) => ci !== catIndex))}
+                                                title="Remove category"
+                                                disabled={isSaving}
+                                            >
+                                                ×
+                                            </button>
+                                        </div>
+                                        <div className={styles.skillsChipsContainer}>
+                                            {cat.items.map((skill, i) => (
+                                                <span key={i} className={styles.skillChip}>
+                                                    {skill}
+                                                    <button
+                                                        type="button"
+                                                        className={styles.skillChipRemove}
+                                                        onClick={() => {
+                                                            setSkills(prev => prev.map((c, ci) =>
+                                                                ci === catIndex ? { ...c, items: c.items.filter((_, si) => si !== i) } : c
+                                                            ));
+                                                        }}
+                                                        disabled={isSaving}
+                                                    >
+                                                        ×
+                                                    </button>
+                                                </span>
+                                            ))}
+                                            {activeSkillCategory === catIndex && (
+                                                <input
+                                                    type="text"
+                                                    className={styles.skillNameInput}
+                                                    placeholder="Enter Skill"
+                                                    value={newSkillName}
+                                                    onChange={e => setNewSkillName(e.target.value)}
+                                                    autoFocus
+                                                    disabled={isSaving}
+                                                    onKeyDown={e => {
+                                                        if (e.key === 'Enter') {
+                                                            e.preventDefault();
+                                                            const val = newSkillName.trim();
+                                                            if (val && !cat.items.includes(val)) {
+                                                                setSkills(prev => prev.map((c, ci) =>
+                                                                    ci === catIndex ? { ...c, items: [...c.items, val] } : c
+                                                                ));
+                                                            }
+                                                            setNewSkillName('');
+                                                        }
+                                                        if (e.key === 'Escape') {
+                                                            setActiveSkillCategory(null);
+                                                            setNewSkillName('');
+                                                        }
+                                                    }}
+                                                    onBlur={() => {
+                                                        const val = newSkillName.trim();
+                                                        if (val && !cat.items.includes(val)) {
+                                                            setSkills(prev => prev.map((c, ci) =>
+                                                                ci === catIndex ? { ...c, items: [...c.items, val] } : c
+                                                            ));
+                                                        }
+                                                        setNewSkillName('');
+                                                        setActiveSkillCategory(null);
+                                                    }}
+                                                />
+                                            )}
+                                            <button
+                                                type="button"
+                                                className={styles.addChipBtn}
+                                                onClick={() => { setActiveSkillCategory(catIndex); setNewSkillName(''); }}
+                                                disabled={isSaving}
+                                            >
+                                                <span className={styles.addChipBtnIcon}>+</span>
+                                                Add Skill
+                                            </button>
+                                        </div>
                                     </div>
                                 ))}
-                                <button
-                                    type="button"
-                                    className={styles.addSkillBtn}
-                                    onClick={handleAddSkill}
-                                    disabled={isSaving}
-                                >
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{width:'22px',height:'22px',flexShrink:0}}>
-                                        <circle cx="12" cy="12" r="10" fill="white" stroke="white"/>
-                                        <line x1="12" y1="7" x2="12" y2="17" stroke="#197AFF" strokeWidth="2.5"/>
-                                        <line x1="7" y1="12" x2="17" y2="12" stroke="#197AFF" strokeWidth="2.5"/>
-                                    </svg>
-                                    <span>Click to Add Skill</span>
-                                </button>
+
+                                {/* Add custom category */}
+                                <div style={{ marginTop: '16px' }}>
+                                    <div className={styles.skillsChipsContainer}>
+                                        {showAddCategory && (
+                                            <input
+                                                type="text"
+                                                className={styles.skillNameInput}
+                                                placeholder="Category Name"
+                                                value={newCategoryName}
+                                                onChange={e => setNewCategoryName(e.target.value)}
+                                                autoFocus
+                                                disabled={isSaving}
+                                                onKeyDown={e => {
+                                                    if (e.key === 'Enter') {
+                                                        e.preventDefault();
+                                                        const val = newCategoryName.trim();
+                                                        if (val && !skills.some(c => c.category === val)) {
+                                                            setSkills(prev => [...prev, { category: val, items: [] }]);
+                                                        }
+                                                        setNewCategoryName('');
+                                                        setShowAddCategory(false);
+                                                    }
+                                                    if (e.key === 'Escape') {
+                                                        setShowAddCategory(false);
+                                                        setNewCategoryName('');
+                                                    }
+                                                }}
+                                                onBlur={() => {
+                                                    const val = newCategoryName.trim();
+                                                    if (val && !skills.some(c => c.category === val)) {
+                                                        setSkills(prev => [...prev, { category: val, items: [] }]);
+                                                    }
+                                                    setNewCategoryName('');
+                                                    setShowAddCategory(false);
+                                                }}
+                                            />
+                                        )}
+                                        <button
+                                            type="button"
+                                            className={styles.addCategoryBtn}
+                                            onClick={() => { setShowAddCategory(true); setNewCategoryName(''); }}
+                                            disabled={isSaving}
+                                        >
+                                            <span className={styles.addChipBtnIcon}>+</span>
+                                            Add Category
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
