@@ -25,6 +25,7 @@ import DOBDatePicker from './components/Calendar/DOBDatePicker';
 import OtpModal from './components/dialog/OtpModal/OtpModal';
 import { changeFavicon, FAVICON_TYPES } from './utils/faviconUtils';
 import ConfettiSideCannons from './components/Confetti/ConfettiSideCannons';
+import confetti from "canvas-confetti";
 import Dropdown from "./components/common/Dropdown/Dropdown";
 
 // URL validation patterns for profile links
@@ -199,6 +200,44 @@ const CalendarIcon = () => (
 /* ─── Popup Components ─── */
 
 const SuccessPopup = ({ isOpen, onClose }) => {
+  useEffect(() => {
+    if (!isOpen) return;
+
+    // Trigger dual side-cannon celebration confetti
+    const duration = 3 * 1000;
+    const animationEnd = Date.now() + duration;
+    const colors = ['#2085F6', '#4EA24E', '#ffea00', '#ff1744', '#00e5ff', '#d500f9'];
+
+    const frame = () => {
+      confetti({
+        particleCount: 5,
+        angle: 60,
+        spread: 70,
+        origin: { x: 0, y: 0.6 },
+        colors,
+        zIndex: 99999,
+      });
+      confetti({
+        particleCount: 5,
+        angle: 120,
+        spread: 70,
+        origin: { x: 1, y: 0.6 },
+        colors,
+        zIndex: 99999,
+      });
+
+      if (Date.now() < animationEnd) {
+        requestAnimationFrame(frame);
+      }
+    };
+
+    frame();
+
+    return () => {
+      confetti.reset();
+    };
+  }, [isOpen]);
+
   if (!isOpen) return null;
   return (
     <div className={cx("mr-popup-overlay")}>
