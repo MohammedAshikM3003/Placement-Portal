@@ -85,11 +85,19 @@ function OtpModal({
         setIsSending(true);
         setErrorMsg('');
         try {
-            const response = await fetch(`${API_BASE_URL}/auth/otp/send`, {
+            let response = await fetch('/api/send-otp', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, purpose, role, name })
-            });
+            }).catch(() => null);
+
+            if (!response || !response.ok) {
+                response = await fetch(`${API_BASE_URL}/auth/otp/send`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, purpose, role, name })
+                });
+            }
 
             const result = await response.json();
             if (!response.ok || !result.success) {
@@ -119,11 +127,19 @@ function OtpModal({
         setIsVerifying(true);
         setErrorMsg('');
         try {
-            const response = await fetch(`${API_BASE_URL}/auth/otp/verify`, {
+            let response = await fetch('/api/verify-otp', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, otp: otpString, purpose, role })
-            });
+            }).catch(() => null);
+
+            if (!response || !response.ok) {
+                response = await fetch(`${API_BASE_URL}/auth/otp/verify`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, otp: otpString, purpose, role })
+                });
+            }
 
             const result = await response.json();
             if (!response.ok || !result.success) {

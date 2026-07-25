@@ -1,7 +1,11 @@
 {
-  "name": "placement-portal-frontend",
+  "name": "placement-portal",
   "version": 2,
   "builds": [
+    {
+      "src": "api/*.js",
+      "use": "@vercel/node"
+    },
     {
       "src": "package.json",
       "use": "@vercel/static-build",
@@ -11,6 +15,14 @@
     }
   ],
   "routes": [
+    {
+      "src": "/api/send-otp",
+      "dest": "/api/send-otp.js"
+    },
+    {
+      "src": "/api/verify-otp",
+      "dest": "/api/verify-otp.js"
+    },
     {
       "src": "/static/(.*)",
       "dest": "/static/$1"

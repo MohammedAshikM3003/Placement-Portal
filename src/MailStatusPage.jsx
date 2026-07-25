@@ -47,22 +47,31 @@ export default function MailStatusPage() {
         }
 
         setSendingTest(true);
-        setTestLog('Initiating test email dispatch via backend...');
+        setTestLog('Initiating test email dispatch via Vercel Serverless Function...');
         try {
-            const baseUrlClean = API_BASE_URL.endsWith('/api') ? API_BASE_URL : `${API_BASE_URL}/api`;
-            const res = await fetch(`${baseUrlClean}/health/test-email`, {
+            let res = await fetch('/api/send-otp', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ targetEmail: testEmail })
-            });
+                body: JSON.stringify({ email: testEmail, purpose: 'testing', role: 'student', name: 'Diagnostic Test User' })
+            }).catch(() => null);
+
+            if (!res || !res.ok) {
+                const baseUrlClean = API_BASE_URL.endsWith('/api') ? API_BASE_URL : `${API_BASE_URL}/api`;
+                res = await fetch(`${baseUrlClean}/health/test-email`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ targetEmail: testEmail })
+                });
+            }
+
             const data = await res.json();
             if (res.ok && data.success) {
-                setTestLog(`✅ SUCCESS: ${data.message}\nMessage ID: ${data.details?.messageId || 'Accepted'}`);
+                setTestLog(`✅ SUCCESS: ${data.message}\nRecipient: ${data.maskedEmail || testEmail}`);
             } else {
-                setTestLog(`❌ DISPATCH FAILED: ${data.error || data.message}\nDetails: ${data.message || 'Check Render server logs.'}`);
+                setTestLog(`❌ DISPATCH FAILED: ${data.error || data.message}\nDetails: ${data.details || 'Check server logs.'}`);
             }
         } catch (err) {
-            setTestLog(`❌ CONNECTION ERROR: Failed to reach backend API: ${err.message}`);
+            setTestLog(`❌ CONNECTION ERROR: ${err.message}`);
         } finally {
             setSendingTest(false);
         }
