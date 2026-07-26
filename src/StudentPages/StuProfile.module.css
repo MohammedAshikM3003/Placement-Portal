@@ -320,9 +320,63 @@
 .uploadBtnContent { display: flex; align-items: center; gap: 5px; }
 .removeImageBtn { background: #fde8e8; border: 1px solid #f9c6c6; color: #d9534f; border-radius: 8px; cursor: pointer; width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; flex-shrink: 0; }
 
-.uploadInfoContainer { margin-top: 1rem; margin-bottom: 1rem; padding: 1rem; background-color: #f9fbff; border: 1px solid #dde6f4; border-radius: 8px; text-align: left; font-size: 0.85rem; word-break: break-all; }
-.uploadInfoItem { display: flex; align-items: center; color: #555; }
-.uploadInfoItem:not(:last-child) { margin-bottom: 0.75rem; }
+.uploadInfoContainer {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    padding: 1rem;
+    background-color: #f9fbff;
+    border: 1px solid #dde6f4;
+    border-radius: 8px;
+    text-align: left;
+    font-size: 0.85rem;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.uploadInfoItem {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #555;
+    max-width: 100%;
+    min-width: 0;
+}
+
+.uploadInfoItem:not(:last-child) {
+    margin-bottom: 0.75rem;
+}
+
+.uploadFilenameDesktop {
+    display: inline;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+.uploadFilenameMobile {
+    display: none;
+    word-break: break-all;
+    overflow-wrap: anywhere;
+    word-wrap: break-word;
+    white-space: normal;
+    max-width: 100%;
+}
+
+@media (max-width: 768px) {
+    .uploadInfoItem {
+        align-items: flex-start;
+    }
+
+    .uploadFilenameDesktop {
+        display: none !important;
+    }
+
+    .uploadFilenameMobile {
+        display: inline !important;
+    }
+}
 
 
 .semesterGrid {

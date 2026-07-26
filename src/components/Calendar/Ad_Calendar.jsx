@@ -184,8 +184,29 @@ const Ad_Calendar = forwardRef(function Ad_Calendar({
             </div>
           ) : viewMode === 'year' ? (
             <div style={{ position: 'relative', height: '100%', display: 'flex' }}>
+              <style>{`
+                .ad-year-scroll::-webkit-scrollbar {
+                  width: 6px;
+                }
+                .ad-year-scroll::-webkit-scrollbar-track {
+                  background: #e8f5e9;
+                  border-radius: 10px;
+                }
+                .ad-year-scroll::-webkit-scrollbar-thumb {
+                  background-color: #4EA24E;
+                  border-radius: 10px;
+                }
+                .ad-year-scroll::-webkit-scrollbar-thumb:hover {
+                  background-color: #3d8a3d;
+                }
+                .ad-year-scroll {
+                  scrollbar-width: thin;
+                  scrollbar-color: #4EA24E #e8f5e9;
+                }
+              `}</style>
               <div
                 ref={yearListRef}
+                className="ad-year-scroll"
                 style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}
               >
                 <div className="ad-year-list">

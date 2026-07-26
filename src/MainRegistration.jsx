@@ -710,6 +710,22 @@ const URLValidationErrorPopup = ({ isOpen, onClose, urlType, invalidUrl }) => {
   );
 };
 
+const formatFileNameForDesktop = (fileName, maxLen = 22) => {
+  if (!fileName) return '';
+  if (fileName.length <= maxLen) return fileName;
+  const lastDotIndex = fileName.lastIndexOf('.');
+  if (lastDotIndex === -1 || lastDotIndex === 0) {
+    return fileName.slice(0, maxLen - 3) + '...';
+  }
+  const ext = fileName.slice(lastDotIndex);
+  const nameWithoutExt = fileName.slice(0, lastDotIndex);
+  const availableChars = maxLen - ext.length - 3;
+  if (availableChars <= 3) {
+    return nameWithoutExt.slice(0, 5) + '...' + ext;
+  }
+  return nameWithoutExt.slice(0, availableChars) + '...' + ext;
+};
+
 /* ─── Main Component ─── */
 
 function MainRegistration() {
@@ -1269,14 +1285,21 @@ function MainRegistration() {
       errors.push({ message: "Please select a valid date of birth", field: "dob" });
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const primaryEmail = formData.get("primaryEmail");
-    const domainEmail = formData.get("domainEmail");
-    if (primaryEmail && !emailRegex.test(primaryEmail)) {
-      errors.push({ message: "Primary email format is invalid", field: "primaryEmail" });
+    const rawPrimary = (formData.get("primaryEmail") || "").replace(/@gmail\.com$/i, '').trim();
+    if (rawPrimary) {
+      const gmailValidation = validateGmailUsername(rawPrimary);
+      if (!gmailValidation.isValid) {
+        errors.push({ message: gmailValidation.error || "Primary email format is invalid", field: "primaryEmail" });
+      }
     }
-    if (domainEmail && !emailRegex.test(domainEmail)) {
-      errors.push({ message: "Domain email format is invalid", field: "domainEmail" });
+
+    const rawDomain = (formData.get("domainEmail") || "").replace(/@ksrce\.ac\.in$/i, '').trim();
+    if (rawDomain) {
+      const domainEmailFull = `${rawDomain}@ksrce.ac.in`;
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(domainEmailFull) || !/^[a-zA-Z0-9._+-]+$/.test(rawDomain)) {
+        errors.push({ message: "Domain email format is invalid", field: "domainEmail" });
+      }
     }
 
     const mobileNo = formData.get("mobileNo");
@@ -2363,7 +2386,12 @@ function MainRegistration() {
                         <div className={cx("mr-upload-info-container")}>
                           <div className={cx("mr-upload-info-item")}>
                             <FileIcon />
-                            <span>{uploadInfo.name}</span>
+                            <span className={cx("mr-upload-filename-desktop")} title={uploadInfo.name}>
+                              {formatFileNameForDesktop(uploadInfo.name, 22)}
+                            </span>
+                            <span className={cx("mr-upload-filename-mobile")}>
+                              {uploadInfo.name}
+                            </span>
                           </div>
                           <div className={cx("mr-upload-info-item")}>
                             <CalendarIcon />

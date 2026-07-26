@@ -48,7 +48,7 @@
 
 .note-heading {
     margin: 0;
-    font-weight: 600;
+    font-weight: 1000;
     letter-spacing: 2px;
 }
 
@@ -143,12 +143,12 @@
     transition: transform 0.2s ease-in-out;
 }
 
-.checkbox-container input[type="checkbox"]:checked + label::before {
+.checkbox-container input[type="checkbox"]:checked+label::before {
     background-color: #4CAF50;
     border-color: #4CAF50;
 }
 
-.checkbox-container input[type="checkbox"]:checked + label::after {
+.checkbox-container input[type="checkbox"]:checked+label::after {
     transform: translateY(-50%) scale(1);
 }
 

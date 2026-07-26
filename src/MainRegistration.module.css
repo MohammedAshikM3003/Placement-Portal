@@ -591,6 +591,9 @@
     border-radius: 8px;
     text-align: left;
     font-size: 0.85rem;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
 }
 
 .mr-upload-info-item {
@@ -599,6 +602,39 @@
     gap: 8px;
     color: #555;
     margin-bottom: 0.5rem;
+    max-width: 100%;
+    min-width: 0;
+}
+
+.mr-upload-filename-desktop {
+    display: inline;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+.mr-upload-filename-mobile {
+    display: none;
+    word-break: break-all;
+    overflow-wrap: anywhere;
+    word-wrap: break-word;
+    white-space: normal;
+    max-width: 100%;
+}
+
+@media (max-width: 768px) {
+    .mr-upload-info-item {
+        align-items: flex-start;
+    }
+
+    .mr-upload-filename-desktop {
+        display: none !important;
+    }
+
+    .mr-upload-filename-mobile {
+        display: inline !important;
+    }
 }
 
 /* Radio Buttons */

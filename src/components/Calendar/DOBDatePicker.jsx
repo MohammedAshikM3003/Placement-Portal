@@ -13,6 +13,7 @@
 
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import ReactDOM from 'react-dom';
+import './DOBDatePicker.css';
 
 function DOBDatePicker({ value, onChange }) {
   const [open, setOpen] = useState(false);
@@ -203,8 +204,55 @@ function DOBDatePicker({ value, onChange }) {
             </div>
           ) : viewMode === 'year' ? (
             <div style={{ position: 'relative', height: '100%', display: 'flex' }}>
+              <style>{`
+                .dob-year-scroll::-webkit-scrollbar {
+                  width: 6px !important;
+                  height: 6px !important;
+                  display: block !important;
+                }
+                .dob-year-scroll::-webkit-scrollbar-track {
+                  background: #e8eef7 !important;
+                  border-radius: 10px !important;
+                }
+                .dob-year-scroll::-webkit-scrollbar-thumb {
+                  background-color: #197AFF !important;
+                  border-radius: 10px !important;
+                }
+                .dob-year-scroll::-webkit-scrollbar-thumb:hover {
+                  background-color: #1263d4 !important;
+                }
+                .dob-year-scroll::-webkit-scrollbar-button,
+                .dob-year-scroll::-webkit-scrollbar-button:single-button,
+                .dob-year-scroll::-webkit-scrollbar-button:start:increment,
+                .dob-year-scroll::-webkit-scrollbar-button:start:decrement,
+                .dob-year-scroll::-webkit-scrollbar-button:end:increment,
+                .dob-year-scroll::-webkit-scrollbar-button:end:decrement,
+                .dob-year-scroll::-webkit-scrollbar-button:vertical:start:increment,
+                .dob-year-scroll::-webkit-scrollbar-button:vertical:start:decrement,
+                .dob-year-scroll::-webkit-scrollbar-button:vertical:end:increment,
+                .dob-year-scroll::-webkit-scrollbar-button:vertical:end:decrement,
+                .dob-year-scroll::-webkit-scrollbar-button:vertical:increment,
+                .dob-year-scroll::-webkit-scrollbar-button:vertical:decrement,
+                .dob-year-scroll::-webkit-scrollbar-button:horizontal:increment,
+                .dob-year-scroll::-webkit-scrollbar-button:horizontal:decrement,
+                .dob-year-scroll::-webkit-scrollbar-button:increment,
+                .dob-year-scroll::-webkit-scrollbar-button:decrement {
+                  display: none !important;
+                  width: 0 !important;
+                  height: 0 !important;
+                  background: transparent !important;
+                  border: none !important;
+                }
+                @supports (-moz-appearance: none) {
+                  .dob-year-scroll {
+                    scrollbar-width: thin;
+                    scrollbar-color: #197AFF #e8eef7;
+                  }
+                }
+              `}</style>
               <div
                 ref={yearListRef}
+                className="dob-year-scroll"
                 style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}
               >
                 <div className="dob-year-list">

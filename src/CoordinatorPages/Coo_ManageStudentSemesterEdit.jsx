@@ -125,6 +125,22 @@ const normalizeTrainingPhaseKey = (value) => {
     return match ? match[0] : text.toLowerCase();
 };
 
+const formatFileNameForDesktop = (fileName, maxLen = 22) => {
+  if (!fileName) return '';
+  if (fileName.length <= maxLen) return fileName;
+  const lastDotIndex = fileName.lastIndexOf('.');
+  if (lastDotIndex === -1 || lastDotIndex === 0) {
+    return fileName.slice(0, maxLen - 3) + '...';
+  }
+  const ext = fileName.slice(lastDotIndex);
+  const nameWithoutExt = fileName.slice(0, lastDotIndex);
+  const availableChars = maxLen - ext.length - 3;
+  if (availableChars <= 3) {
+    return nameWithoutExt.slice(0, 5) + '...' + ext;
+  }
+  return nameWithoutExt.slice(0, availableChars) + '...' + ext;
+};
+
 const parseTrainingDurationToDays = (durationValue) => {
     const raw = (durationValue || '').toString().trim().toLowerCase();
     if (!raw) return 0;
@@ -2872,7 +2888,12 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                             <div className={styles.uploadInfoContainer}>
                                                 <div className={styles.uploadInfoItem}>
                                                     <FileIcon />
-                                                    <span>{uploadInfo.name}</span>
+                                                    <span className={styles.uploadFilenameDesktop} title={uploadInfo.name}>
+                                                        {formatFileNameForDesktop(uploadInfo.name, 22)}
+                                                    </span>
+                                                    <span className={styles.uploadFilenameMobile}>
+                                                        {uploadInfo.name}
+                                                    </span>
                                                 </div>
                                                 <div className={styles.uploadInfoItem}>
                                                     <CalendarIcon />

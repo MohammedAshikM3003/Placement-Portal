@@ -188,8 +188,29 @@ const Coo_Calendar = forwardRef(function Coo_Calendar({
             </div>
           ) : viewMode === 'year' ? (
             <div style={{ position: 'relative', height: '100%', display: 'flex' }}>
+              <style>{`
+                .coo-year-scroll::-webkit-scrollbar {
+                  width: 6px;
+                }
+                .coo-year-scroll::-webkit-scrollbar-track {
+                  background: #fce8e9;
+                  border-radius: 10px;
+                }
+                .coo-year-scroll::-webkit-scrollbar-thumb {
+                  background-color: #D23B42;
+                  border-radius: 10px;
+                }
+                .coo-year-scroll::-webkit-scrollbar-thumb:hover {
+                  background-color: #b32d34;
+                }
+                .coo-year-scroll {
+                  scrollbar-width: thin;
+                  scrollbar-color: #D23B42 #fce8e9;
+                }
+              `}</style>
               <div
                 ref={yearListRef}
+                className="coo-year-scroll"
                 style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}
               >
                 <div className="coo-year-list">

@@ -126,6 +126,22 @@ const normalizeProfilePicValue = (value) => {
     return raw.toLowerCase();
 };
 
+const formatFileNameForDesktop = (fileName, maxLen = 22) => {
+  if (!fileName) return '';
+  if (fileName.length <= maxLen) return fileName;
+  const lastDotIndex = fileName.lastIndexOf('.');
+  if (lastDotIndex === -1 || lastDotIndex === 0) {
+    return fileName.slice(0, maxLen - 3) + '...';
+  }
+  const ext = fileName.slice(lastDotIndex);
+  const nameWithoutExt = fileName.slice(0, lastDotIndex);
+  const availableChars = maxLen - ext.length - 3;
+  if (availableChars <= 3) {
+    return nameWithoutExt.slice(0, 5) + '...' + ext;
+  }
+  return nameWithoutExt.slice(0, availableChars) + '...' + ext;
+};
+
 // Helper components
 const MdUpload = () => (
     <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 24 24" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"></path></svg>
@@ -2907,7 +2923,12 @@ function StuProfile({ onLogout, onViewChange }) {
                                             <div className={styles.uploadInfoContainer}>
                                                 <div className={styles.uploadInfoItem}>
                                                     <FileIcon />
-                                                    <span>{uploadInfo.name}</span>
+                                                    <span className={styles.uploadFilenameDesktop} title={uploadInfo.name}>
+                                                        {formatFileNameForDesktop(uploadInfo.name, 22)}
+                                                    </span>
+                                                    <span className={styles.uploadFilenameMobile}>
+                                                        {uploadInfo.name}
+                                                    </span>
                                                 </div>
                                                 <div className={styles.uploadInfoItem}>
                                                     <CalendarIcon />
