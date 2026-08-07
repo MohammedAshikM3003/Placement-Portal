@@ -2694,7 +2694,7 @@ function Admainprofile() {
             setOtpEmail(adminEmail);
             return await triggerOtpOrExecute({
                 onSkipOtp: async () => {
-                    await executeConfirmSave();
+                    await executeSave();
                 },
                 onOpenOtp: () => {
                     setIsOtpOpen(true);
