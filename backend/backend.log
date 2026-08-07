@@ -1,0 +1,12 @@
+
+> placement-portal-backend@1.0.0 start
+> node server-mongodb.js
+
+🔍 ENV DEBUG:
+  NODE_ENV: development
+  RENDER: not set
+  MONGODB_URI exists: true
+  JWT_SECRET exists: true
+  PORT: 5000
+✅ Public college images route loaded successfully
+✅ Admin profile routes loaded successfully with JWT authentication
