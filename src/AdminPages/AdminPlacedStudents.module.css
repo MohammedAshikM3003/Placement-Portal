@@ -1,0 +1,1118 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+.Admin-ps-portal-container {
+  display: flex;
+  background: #FCFCFC;
+  font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  min-height: calc(100vh - 72px);
+  padding-top: 64px;
+}
+
+/* Transparent overlay for mobile sidebar toggle.
+   Keep z-index below the sidebar so sidebar links remain clickable on mobile. */
+.Admin-ps-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  background: transparent;
+}
+
+/* Main Content Styles */
+.Admin-ps-main-content {
+  background: #f6f6f6;
+  padding: 10px 10px 10px 20px;
+  gap: 10px;
+  margin: 0;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  margin-left: 280px;
+  margin-top: 0;
+}
+
+.Admin-ps-main-header {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.Admin-ps-filters-container {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  margin: 0;
+  background: #e8e8e8;
+  border-radius: 18px;
+  padding: 20px;
+  box-shadow: 0 2px 8px #eee;
+  height: auto;
+  box-sizing: border-box;
+}
+
+.Admin-ps-filter-select {
+  flex-grow: 1;
+  padding: 10px 20px;
+  border-radius: 12px;
+  border: 2px solid #808080;
+  background-color: #ffffff;
+  color: #888;
+  font-size: 1.1rem;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 15px center;
+  background-size: 20px;
+  padding-right: 45px;
+  height: 44px;
+  transition: border-color 0.2s;
+}
+
+.Admin-ps-filter-select:hover {
+  border-color: #4EA24E;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.Admin-ps-filter-select:focus {
+  outline: none;
+  border-color: #4EA24E;
+  box-shadow: 0 0 0 3px rgba(78, 162, 78, 0.1);
+}
+
+.Admin-ps-filter-btn {
+  background-color: #4EA24E;
+  color: white;
+  border: none;
+  padding: 0 30px;
+  border-radius: 42px;
+  font-weight: 600;
+  font-size: 1.1rem;
+  cursor: pointer;
+  flex-shrink: 0;
+  height: 44px;
+  box-shadow: 0 2px 8px #eee;
+  transition: all 0.2s;
+}
+
+.Admin-ps-filter-btn:hover{
+  background-color: #ffffff;
+  color: #4EA24E;
+  border: 2px solid #4EA24E;
+}
+
+.Admin-ps-dashboard-grid {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  margin-left: 0;
+  margin-top: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.Admin-ps-stats-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 18px;
+  flex: 1;
+  margin-left: 0;
+  box-sizing: border-box;
+}
+
+.Admin-ps-stat-card {
+  color: white;
+  border-radius: 16px;
+  padding: 12px 0;
+  text-align: center;
+  box-shadow: 0 2px 8px #eee;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 124px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.Admin-ps-stat-card h3 {
+  margin: 0;
+  font-size: 29px;
+  font-weight: 500;
+  margin-bottom: -9px;
+}
+
+.Admin-ps-stat-card p {
+  margin: 0;
+  font-size: 58px;
+  font-weight: 700;
+}
+
+/* Specific Stat Card Styling */
+.Admin-ps-card-purple {
+  background: linear-gradient(135deg, #6f42c1, #9d78e3);
+}
+
+.Admin-ps-card-teal {
+  background: linear-gradient(135deg, #19787D, #2a9ba1);
+}
+
+.Admin-ps-card-blue {
+  background: linear-gradient(135deg, #0522BC, #1e3dd6);
+}
+
+.Admin-ps-card-orange {
+  background: linear-gradient(135deg, #007BFF, #3395ff);
+}
+
+/* Bar Chart Styles */
+.Admin-ps-chart-container {
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 2px 8px #eee;
+  border: none;
+  padding: 22px;
+  flex: 1;
+  max-width: 450px;
+  display: flex;
+  flex-direction: column;
+  margin-left: 0;
+  margin-top: 0;
+  height: 270px;
+  box-sizing: border-box;
+}
+
+.Admin-ps-chart-container h3 {
+  font-weight: bold;
+  font-size: 20px;
+  color: #222;
+  margin-top: -15px;
+  margin-bottom: 16px;
+}
+
+/* Table Styles */
+.Admin-ps-table-container {
+  background: #fff;
+  padding: 12px 20px;
+  border-radius: 15px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: none;
+  margin-left: 0;
+  margin-top: 0;
+  overflow-y: hidden;
+  overflow-x: hidden;
+  min-height: 267px;
+  box-sizing: border-box;
+}
+
+.Admin-ps-table-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0px;
+  padding: 0 9px;
+}
+
+.Admin-ps-table-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  margin-bottom: 0px;
+  color: #333;
+  margin-left: 0;
+}
+
+.Admin-ps-table-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.Admin-ps-search-input {
+  width: 240px;
+  height: 40px;
+  border: 1.5px solid #cfd5dc;
+  border-radius: 10px;
+  padding: 0 14px;
+  font-size: 0.95rem;
+  color: #1f2937;
+  background: #fff;
+  outline: none;
+}
+
+.Admin-ps-search-input::placeholder {
+  color: #9aa0a6;
+}
+
+.Admin-ps-search-input:focus {
+  border-color: #4EA24E;
+  box-shadow: 0 0 0 3px rgba(78, 162, 78, 0.12);
+}
+
+.Admin-ps-table-container h3 {
+  margin-top: 0;
+  font-weight: 600;
+  font-size: 1.2rem;
+}
+
+.Admin-ps-students-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.Admin-ps-students-table th {
+  padding: 12px 15px;
+  text-align: center;
+  border-bottom: 1px solid #eee;
+  font-size: 0.9rem;
+  word-wrap: break-word;
+}
+
+.Admin-ps-students-table td {
+  padding: 12px 15px;
+  text-align: center;
+  border-bottom: 1px solid #eee;
+  font-size: 0.9rem;
+}
+
+.Admin-ps-student-name {
+  font-weight: 600;
+  color: #111111;
+}
+
+.Admin-ps-student-name-accepted {
+  color: #1b8f3b;
+  text-decoration: line-through;
+  text-decoration-thickness: 2px;
+}
+
+.Admin-ps-student-name-rejected {
+  color: #d32f2f;
+  text-decoration: line-through;
+  text-decoration-thickness: 2px;
+}
+
+.Admin-ps-row-accepted td {
+  color: #1b8f3b;
+  text-decoration: line-through;
+  text-decoration-thickness: 2px;
+}
+
+.Admin-ps-row-rejected td {
+  color: #d32f2f;
+  text-decoration: line-through;
+  text-decoration-thickness: 2px;
+}
+
+.Admin-ps-table-scroll {
+  height: 186px;
+  overflow-y: auto;
+  overflow-x: auto;
+}
+.Admin-ps-table-scroll::-webkit-scrollbar {
+        width: 12px;
+    }
+
+    .Admin-ps-table-scroll::-webkit-scrollbar-track {
+        background: #f0f2f5;
+    }
+
+    .Admin-ps-table-scroll::-webkit-scrollbar-thumb {
+        background-color: #4EA24E;
+        border-radius: 20px;
+        border: 3px solid #f0f2f5;
+    }
+
+    .Admin-ps-table-scroll::-webkit-scrollbar-thumb:hover {
+        background-color: #3d8a3d;
+    }
+
+/* New table structure similar to AdminAttendance */
+.Admin-ps-students-table-header, 
+.Admin-ps-students-table-body {
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+.Admin-ps-table-body-scroll {
+  height: 100px; 
+  overflow-y: auto;
+  overflow-x: hidden;
+  width: 100%;
+}
+
+/* Green scrollbar styling */
+.Admin-ps-table-body-scroll::-webkit-scrollbar {
+  width: 10px;
+}
+
+.Admin-ps-table-body-scroll::-webkit-scrollbar-track {
+  background: #f0f2f5;
+}
+
+.Admin-ps-table-body-scroll::-webkit-scrollbar-thumb {
+  background-color: #4EA24E;
+  border-radius: 20px;
+  border: 3px solid #f0f2f5;
+}
+
+.Admin-ps-table-body-scroll::-webkit-scrollbar-thumb:hover {
+  background-color: #2E7D32;
+}
+
+/* Remove scrollbar buttons */
+.Admin-ps-table-body-scroll::-webkit-scrollbar-button {
+  display: none;
+}
+
+.Admin-ps-students-table-header thead th {
+  text-align: center;
+  padding: 12px 4px;
+  color: #777;
+  font-weight: 600;
+  font-size: 0.9rem;
+  border-bottom: 1px solid #eee;
+  vertical-align: middle;
+}
+
+.Admin-ps-students-table-body tbody td {
+  text-align: center;
+  padding: 14px 4px;
+  font-size: 0.95rem;
+  color: #000;
+  border-bottom: 1px solid #eee;
+  vertical-align: middle;
+}
+
+.Admin-ps-students-table-body tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.Admin-ps-students-table th {
+  font-weight: 600;
+  color: #888;
+  position: sticky;
+  top: 0;
+  background-color: #ffffff; /* Sticky background */
+  z-index: 10;
+}
+
+.Admin-ps-status-badge {
+  padding: 5px 12px;
+  border-radius: 15px;
+  font-weight: 500;
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+.Admin-ps-status-accepted {
+  background-color: #D0F2EA;
+  color: #0F9575;
+}
+
+.Admin-ps-status-rejected {
+  background-color: #f8d7da;
+  color: #E80000;
+}
+
+.Admin-ps-status-pending {
+  background-color: #D9D9D9;
+  color: #787878;
+}
+
+.Admin-ps-action-icon {
+  color: #4EA24E;
+  cursor: pointer;
+}
+
+.Admin-ps-view-btn {
+  border: none;
+  background: transparent;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.Admin-ps-offer-cell {
+  text-align: center;
+}
+
+.Admin-ps-offer-upload-btn {
+  border: none;
+  background: transparent;
+  color: #9AA0A6;
+  cursor: pointer;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.Admin-ps-offer-upload-btn svg {
+  width: 22px;
+  height: 22px;
+  display: block;
+}
+
+.Admin-ps-offer-upload-btn:hover {
+  color: #6b7280;
+}
+
+.Admin-ps-upload-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(17, 24, 39, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3000;
+  padding: 20px;
+}
+
+.Admin-ps-upload-modal {
+  width: min(540px, 100%);
+  background: #fff;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+}
+
+.Admin-ps-upload-header {
+  background: linear-gradient(135deg, #4EA24E, #3d8a3d);
+  color: #fff;
+  font-weight: 700;
+  padding: 20px 24px;
+  font-size: 1.15rem;
+  text-align: center;
+  letter-spacing: 0.3px;
+}
+
+.Admin-ps-upload-body {
+  padding: 28px 24px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.Admin-ps-student-details {
+  background: linear-gradient(135deg, #f8fbf8 0%, #f2f9f2 100%);
+  border-radius: 14px;
+  padding: 18px;
+  margin-bottom: 26px;
+  box-shadow: 0 2px 8px rgba(78, 162, 78, 0.08);
+}
+
+.Admin-ps-detail-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  gap: 12px;
+}
+
+.Admin-ps-detail-row:last-child {
+  margin-bottom: 0;
+}
+
+.Admin-ps-detail-row:first-child {
+  margin-bottom: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1.5px solid #d4e0d4;
+}
+
+.Admin-ps-upload-student {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #111;
+  flex: 1;
+}
+
+.Admin-ps-offer-status {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  color: #92400e;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: 0 2px 4px rgba(178, 45, 45, 0.1);
+}
+
+.Admin-ps-detail-label {
+  color: #666666;
+  font-size: 0.9rem;
+  font-weight: 500;
+  min-width: 75px;
+}
+
+.Admin-ps-detail-value {
+  color: #111111;
+  font-size: 0.95rem;
+  font-weight: 600;
+  flex: 1;
+  text-align: right;
+}
+
+.Admin-ps-dropzone {
+  position: relative;
+  border: 2px dashed #b0c0b0;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #f9fcf9 0%, #f3f8f3 100%);
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 28px 24px;
+  transition: all 0.25s ease;
+  cursor: pointer;
+}
+
+.Admin-ps-dropzone-active {
+  border-color: #4EA24E;
+  background: linear-gradient(180deg, #eff8ef 0%, #e8f3e8 100%);
+  box-shadow: 0 0 0 3px rgba(78, 162, 78, 0.1);
+}
+
+.Admin-ps-dropzone-input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.Admin-ps-dropzone-icon {
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  background: #eceff1;
+  color: #9aa0a6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 14px;
+}
+
+.Admin-ps-dropzone-icon svg {
+  width: 28px;
+  height: 28px;
+}
+
+.Admin-ps-dropzone-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.Admin-ps-dropzone-text {
+  margin: 6px 0 0 0;
+  color: #6b7280;
+  font-size: 0.92rem;
+  font-weight: 400;
+}
+
+.Admin-ps-selected-file {
+  margin-top: 16px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  background: #e8f1e8;
+  color: #1f5e20;
+  font-size: 0.9rem;
+  font-weight: 600;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  box-shadow: 0 2px 4px rgba(78, 162, 78, 0.12);
+}
+
+.Admin-ps-upload-footer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+  padding: 24px;
+  border-top: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+
+.Admin-ps-upload-close-btn,
+.Admin-ps-upload-send-btn {
+  min-width: 110px;
+  padding: 12px 22px;
+  border-radius: 8px;
+  border: none;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.Admin-ps-upload-close-btn {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.Admin-ps-upload-close-btn:hover:not(:disabled) {
+  background: #d1d5db;
+}
+
+.Admin-ps-upload-close-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.Admin-ps-upload-send-btn {
+  background: #4EA24E;
+  color: #fff;
+}
+
+.Admin-ps-upload-send-btn:hover:not(:disabled) {
+  background: #3d8a3d;
+  box-shadow: 0 4px 12px rgba(78, 162, 78, 0.3);
+}
+
+.Admin-ps-upload-send-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Print Button Styles */
+.Admin-ps-print-button-container {
+  position: relative;
+  display: inline-block;
+  z-index: 15;
+}
+
+.Admin-ps-print-btn {
+  background-color: #4EA24E;
+  color: white;
+  border: none;
+  padding: 8px 30px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.Admin-ps-print-btn:hover {
+  background-color: #3d8a3d;
+}
+
+/* Export Menu Styles */
+.Admin-ps-export-menu {
+  position: absolute;
+  top: 40px;
+  right: 0;
+  z-index: 2000;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  min-width: 180px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.Admin-ps-export-menu button {
+  padding: 12px 16px;
+  border: none;
+  background: white;
+  text-align: left;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: background-color 0.2s;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.Admin-ps-export-menu button:last-child {
+  border-bottom: none;
+}
+
+.Admin-ps-export-menu button:hover {
+  background-color: #f8f9fa;
+}
+
+.Admin-ps-dropdown-container {
+  position: relative;
+  margin-left: auto;
+  margin-bottom: 10px;
+  margin-top: -62px;
+  width: fit-content;
+}
+
+.Admin-ps-dropdown-menu {
+  position: absolute;
+  top: 110%;
+  right: 0;
+  background-color: #fff;
+  min-width: 160px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+}
+
+.Admin-ps-dropdown-menu span {
+  display: block;
+  padding: 10px 16px;
+  color: #333;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.Admin-ps-dropdown-menu span:hover {
+  background-color: #f1f1f1;
+}
+
+/* Responsive Styles */
+
+/* Tablet Styles (768px - 1024px) */
+@media (max-width: 1200px) {
+  .Admin-ps-main-content {
+    margin-left: 220px;
+  }
+
+  .Admin-ps-dashboard-grid {
+    flex-direction: column;
+    align-items: stretch;
+    flex: none;
+  }
+
+  .Admin-ps-stats-section,
+  .Admin-ps-chart-container {
+    min-width: 100%;
+    max-width: 100%;
+    margin-left: 0;
+    flex: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .Admin-ps-portal-container {
+    flex-direction: column;
+    padding-top: 0;
+    min-height: 100vh;
+    width: 100%;
+  }
+
+  .Admin-ps-main-content {
+    margin-left: 0;
+    margin-top: 64px;
+    padding: 10px 10px 10px 20px;
+    width: 100%;
+    box-sizing: border-box;
+    height: calc(100vh - 64px);
+    height: calc(100dvh - 64px);
+    max-height: calc(100vh - 64px);
+    max-height: calc(100dvh - 64px);
+    overflow-y: auto !important;
+  }
+
+  .Admin-ps-main-content::-webkit-scrollbar {
+    width: 10px;
+  }
+
+  .Admin-ps-main-content::-webkit-scrollbar-track {
+    background: #f0f2f5;
+  }
+
+  .Admin-ps-main-content::-webkit-scrollbar-thumb {
+    background-color: #4EA24E;
+    border-radius: 20px;
+    border: 3px solid #f0f2f5;
+  }
+
+  .Admin-ps-main-content::-webkit-scrollbar-thumb:hover {
+    background-color: #3d8a3d;
+  }
+
+  /* Horizontal scrollbar for tables on mobile */
+  .Admin-ps-table-scroll::-webkit-scrollbar:horizontal {
+    height: 10px;
+  }
+
+  .Admin-ps-table-scroll::-webkit-scrollbar-track:horizontal {
+    background: transparent;
+  }
+
+  .Admin-ps-table-scroll::-webkit-scrollbar-thumb:horizontal {
+    background: #afadad;
+    border-radius: 8px;
+  }
+
+  .Admin-ps-table-scroll::-webkit-scrollbar {
+    width: 12px;
+  }
+
+  .Admin-ps-table-scroll::-webkit-scrollbar-track {
+    background: #f0f2f5;
+  }
+
+  .Admin-ps-table-scroll::-webkit-scrollbar-thumb {
+    background-color: #4EA24E;
+    border-radius: 20px;
+    border: 3px solid #f0f2f5;
+  }
+
+  /* Remove scrollbar buttons */
+  .Admin-ps-table-scroll::-webkit-scrollbar-button {
+    display: none;
+  }
+
+  /* Filter bar: stack controls vertically full width */
+  .Admin-ps-filters-container {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    width: 100%;
+    height: auto;
+    padding: 14px 16px;
+    border-radius: 20px;
+    margin-bottom: 16px;
+    margin-left: 0;
+    margin-right: 0;
+    margin-top: 15px;
+    box-sizing: border-box;
+  }
+
+  .Admin-ps-filter-select {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .Admin-ps-filter-btn {
+    width: 100%;
+    max-width: 100%;
+    align-self: stretch;
+  }
+
+  /* Summary cards and chart stacked */
+  .Admin-ps-dashboard-grid {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+    margin-bottom: 16px;
+    margin-left: 0;
+    margin-top: 0;
+    width: 100%;
+    box-sizing: border-box;
+    overflow-x: hidden;
+    flex: none;
+  }
+
+  .Admin-ps-stats-section,
+  .Admin-ps-chart-container {
+    min-width: 100%;
+    max-width: 100%;
+    margin-left: 0;
+    flex: none;
+  }
+
+  .Admin-ps-stats-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 18px;
+    width: 100%;
+    order: -1;
+  }
+
+  .Admin-ps-stat-card {
+    width: 100%;
+    padding: 15px 10px;
+    height: auto;
+    min-height: 120px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .Admin-ps-stat-card h3 {
+    font-size: 16px;
+    margin-bottom: 4px;
+  }
+
+  .Admin-ps-stat-card p {
+    font-size: 28px;
+  }
+
+  .Admin-ps-chart-container {
+    height: auto;
+    margin-bottom: 16px;
+  }
+
+  /* Table section: full-width with internal scroll */
+  .Admin-ps-table-container {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+    box-sizing: border-box;
+    min-height: 500px;
+    margin-bottom: 20px;
+    margin-top: 10px;
+    padding: 12px 20px;
+  }
+
+  .Admin-ps-table-header-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .Admin-ps-search-input {
+    width: 100%;
+  }
+
+  .Admin-ps-table-scroll {
+    width: 100%;
+    overflow-x: auto !important;
+    overflow-y: auto !important;
+    min-height: 350px;
+    max-height: 350px;
+    height: 350px;
+    padding-bottom: 25px !important;
+  }
+
+  /* Center loading spinner and messages in table on mobile */
+  .Admin-ps-loading-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 350px;
+  }
+
+  .Admin-ps-loading-cell {
+    text-align: center;
+    height: 200px;
+    vertical-align: middle;
+    width: 100%;
+  }
+
+  .Admin-ps-loading-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    text-align: center;
+    width: 100%;
+  }
+
+  .Admin-ps-spinner {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 4px solid rgba(78, 162, 78, 0.25);
+    border-top-color: #4EA24E;
+    animation: adminPlacedStudentsSpin 0.7s linear infinite;
+    margin: 0 auto;
+  }
+
+  /* Keep table semantics on mobile so each student stays in its own row */
+  .Admin-ps-students-table {
+    min-width: 980px;
+    width: 980px;
+    display: table;
+    table-layout: fixed;
+    border-collapse: collapse;
+  }
+
+  .Admin-ps-students-table tbody {
+    display: table-row-group;
+  }
+
+  .Admin-ps-students-table tbody tr {
+    display: table-row;
+  }
+
+  .Admin-ps-students-table tbody td {
+    white-space: nowrap;
+  }
+
+  .Admin-ps-students-table tbody td[colspan] {
+    display: table-cell !important;
+    text-align: center;
+    padding: 40px 20px !important;
+    font-size: 1.1rem;
+    width: 100%;
+    white-space: normal;
+  }
+}
+
+/* Loading Spinner Styles */
+.Admin-ps-loading-cell {
+  text-align: center;
+  height: 200px;
+  vertical-align: middle;
+  width: 100%;
+}
+
+.Admin-ps-loading-row {
+    height: 100%;
+}
+
+.Admin-ps-loading-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  text-align: center;
+  width: 100%;
+}
+
+.Admin-ps-spinner {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 4px solid rgba(78, 162, 78, 0.25);
+  border-top-color: #4EA24E;
+  animation: adminPlacedStudentsSpin 0.7s linear infinite;
+  margin: 0 auto;
+}
+
+@keyframes adminPlacedStudentsSpin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.Admin-ps-loading-text {
+    color: #1f2937;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+/* Custom Dropdown Overrides for AdminPlacedStudents Page */
+.ps-dropdown-wrapper {
+    flex-grow: 1;
+    max-width: 100% !important;
+}
+
+.ps-dropdown-header {
+    height: 44px !important;
+    border: 2px solid #808080 !important;
+    border-radius: 12px !important;
+    background-color: #ffffff !important;
+    color: #888 !important;
+    font-size: 1.1rem !important;
+    font-weight: 500 !important;
+}
+
+.ps-dropdown-header:hover {
+    border-color: #4EA24E !important;
+}

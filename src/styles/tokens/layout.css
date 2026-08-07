@@ -1,0 +1,12 @@
+﻿/*
+ * tokens/layout.css
+ * Structural layout constants (navbar height, sidebar widths).
+ *
+ * NOTE: Breakpoints are NOT CSS variables — they cannot be used in @media queries.
+ * See styles/BREAKPOINTS.md for the standard breakpoint values to use in media queries.
+ */
+:root {
+  --navbar-height:      67px;
+  --sidebar-width:      280px;
+  --sidebar-width-wide: 300px;
+}

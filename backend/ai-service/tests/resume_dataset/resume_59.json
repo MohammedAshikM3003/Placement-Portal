@@ -1,0 +1,77 @@
+{
+  "personalInfo": {
+    "name": "Sneha Patel",
+    "mobile": "9130605709",
+    "email": "sneha.patel@email.com",
+    "linkedin": "linkedin.com/in/snehapatel",
+    "github": "",
+    "portfolio": ""
+  },
+  "summary": "i am hard working persn. got good in coding. learn new things.",
+  "education": {
+    "college": "XYZ Engineering College",
+    "degree": "B.E.",
+    "branch": "Computer Science",
+    "cgpa": "",
+    "graduationYear": "2026"
+  },
+  "skills": [
+    {
+      "category": "Technical",
+      "items": [
+        "Node",
+        "Express",
+        "Mongo",
+        "Python",
+        "SQL"
+      ]
+    }
+  ],
+  "experiences": [
+    {
+      "title": "Software Developer Intern",
+      "companyName": "ABC Corp",
+      "location": "Remote",
+      "mode": "remote",
+      "fromDate": "2024-01-01",
+      "toDate": "2024-04-01",
+      "description": "fixed bugs in website and worked on the database stuff.",
+      "technologies": [
+        "React",
+        "JavaScript"
+      ]
+    }
+  ],
+  "projects": [
+    {
+      "name": "E-Commerce System",
+      "description": "designed weather checker application showing forecasts.",
+      "technologies": [
+        "Node.js",
+        "Express",
+        "MongoDB"
+      ]
+    }
+  ],
+  "certifications": [],
+  "achievements": [
+    {
+      "details": "got first prize in coding compition."
+    }
+  ],
+  "platforms": [
+    {
+      "name": "Leetcode",
+      "url": "leetcode.com/sneha"
+    }
+  ],
+  "additionalInfo": [],
+  "resumeSettings": {
+    "jobRole": "Backend Developer",
+    "customJobRole": "",
+    "fontStyle": "Arial",
+    "pages": "1",
+    "enableAI": true,
+    "linkType": "HyperLink"
+  }
+}

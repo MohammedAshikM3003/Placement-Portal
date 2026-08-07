@@ -1,0 +1,2582 @@
+import React, { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react';
+import Navbar from '../components/Navbar/Navbar.js';
+import Sidebar from '../components/Sidebar/Sidebar.jsx';
+import FormDropdown from '../components/common/FormDropdown/FormDropdown.jsx';
+import styles from './ResumeBuilder.module.css';
+import '../components/alerts/AlertStyles.css';
+import { API_BASE_URL, joinApiUrl } from '../utils/apiConfig';
+import { PreviewProgressAlert } from '../components/alerts/DownloadPreviewAlerts';
+import { normalizeSkillCategories, DEFAULT_SKILL_CATEGORIES } from '../utils/skillUtils';
+
+// Dropdown Options Constants
+const JOB_ROLE_OPTIONS = [
+  'Frontend Developer',
+  'React Developer',
+  'Backend Developer',
+  'Node Developer',
+  'Full Stack Developer',
+  'Data Scientist',
+  'Machine Learning Engineer',
+  'DevOps Engineer',
+  'Mobile Developer',
+  { label: 'QA/Testing Engineer', value: 'QA Engineer' },
+  'Cloud Engineer',
+  'Cyber Security Engineer',
+  'Data Engineer',
+  'UI/UX Designer',
+  'Database Administrator',
+  'Embedded Systems Engineer',
+  'Product Manager',
+  'Others'
+];
+
+const FONT_STYLE_OPTIONS = [
+  'Arial',
+  'Times New Roman',
+  'Calibri',
+  'Georgia',
+  'Helvetica',
+  'Cambria',
+  'Garamond',
+  'Verdana'
+];
+
+const PAGES_OPTIONS = [
+  { label: '1', value: '1' },
+  { label: '2', value: '2' },
+  { label: 'No Limit', value: 'no-limit' }
+];
+
+// Lazy load popups
+const PopupExperience = lazy(() => import('./PopupExperience.jsx'));
+const PopupProject = lazy(() => import('./PopupProject.jsx'));
+const PopupCertification = lazy(() => import('./PopupCertification.jsx'));
+const PopupAchievementBuilder = lazy(() => import('./PopupAchievementBuilder.jsx'));
+const PopupAdditionalInfo = lazy(() => import('./PopupAdditionalInfo.jsx'));
+
+// ===== ATS KEYWORDS MAPPING =====
+// Used by AI for generating relevant content — NOT auto-added to skills
+const ATS_KEYWORDS = {
+  'Frontend Developer': [
+    'HTML', 'CSS', 'JavaScript', 'React', 'Vue', 'Angular', 'TypeScript',
+    'Responsive Design', 'UI/UX', 'Bootstrap', 'Tailwind CSS', 'Material-UI',
+    'Redux', 'REST API', 'GraphQL', 'Webpack', 'Git', 'Agile', 'Cross-browser Compatibility'
+  ],
+  'React Developer': [
+    'React', 'Redux', 'JavaScript', 'TypeScript', 'HTML5', 'CSS3', 'Next.js',
+    'Webpack', 'Babel', 'REST API', 'GraphQL', 'Jest', 'React Testing Library', 'Git'
+  ],
+  'Backend Developer': [
+    'Node.js', 'Python', 'Java', 'Spring Boot', 'Express.js', 'Django', 'Flask',
+    'REST API', 'GraphQL', 'MongoDB', 'MySQL', 'PostgreSQL', 'Redis',
+    'Microservices', 'Docker', 'Kubernetes', 'AWS', 'Azure', 'Git', 'CI/CD', 'Agile'
+  ],
+  'Node Developer': [
+    'Node.js', 'Express.js', 'JavaScript', 'TypeScript', 'REST API', 'GraphQL',
+    'MongoDB', 'MySQL', 'Redis', 'Docker', 'AWS', 'Microservices', 'Socket.io', 'Jest', 'NPM', 'Git'
+  ],
+  'Full Stack Developer': [
+    'HTML', 'CSS', 'JavaScript', 'React', 'Node.js', 'Express.js', 'MongoDB',
+    'MySQL', 'REST API', 'Git', 'Docker', 'AWS', 'TypeScript', 'Redux',
+    'Agile', 'Microservices', 'CI/CD', 'Responsive Design', 'Authentication', 'Security'
+  ],
+  'Data Scientist': [
+    'Python', 'R', 'Machine Learning', 'Deep Learning', 'TensorFlow', 'PyTorch',
+    'Scikit-learn', 'Pandas', 'NumPy', 'Data Visualization', 'Statistics',
+    'SQL', 'Big Data', 'Hadoop', 'Spark', 'NLP', 'Computer Vision', 'A/B Testing', 'Feature Engineering'
+  ],
+  'Machine Learning Engineer': [
+    'Python', 'Machine Learning', 'Deep Learning', 'TensorFlow', 'PyTorch',
+    'Scikit-learn', 'NLP', 'Computer Vision', 'Keras', 'MLOps', 'Docker', 'Kubernetes', 'AWS', 'SQL'
+  ],
+  'DevOps Engineer': [
+    'Docker', 'Kubernetes', 'AWS', 'Azure', 'GCP', 'CI/CD', 'Jenkins',
+    'Terraform', 'Ansible', 'Linux', 'Bash', 'Git', 'Prometheus', 'Grafana', 'Python', 'Shell Scripting'
+  ],
+  'Mobile Developer': [
+    'Swift', 'Kotlin', 'React Native', 'Flutter', 'Java', 'Objective-C',
+    'iOS', 'Android', 'Xcode', 'Android Studio', 'REST API', 'Git', 'App Store Connect', 'Google Play Console'
+  ],
+  'QA Engineer': [
+    'Selenium', 'Cypress', 'Jest', 'JUnit', 'Test Automation', 'Manual Testing',
+    'QA', 'Bug Tracking', 'Jira', 'Postman', 'Regression Testing', 'CI/CD', 'Git'
+  ],
+  'Cloud Engineer': [
+    'AWS', 'Azure', 'GCP', 'Cloud Computing', 'Terraform', 'Docker',
+    'Kubernetes', 'IAM', 'VPC', 'Serverless', 'Lambda', 'Linux', 'CI/CD', 'Git'
+  ],
+  'Cyber Security Engineer': [
+    'Cybersecurity', 'Firewalls', 'SIEM', 'Penetration Testing', 'Vulnerability Assessment',
+    'Network Security', 'Cryptography', 'Linux', 'Wireshark', 'OWASP', 'IAM', 'Security Audits'
+  ],
+  'Data Engineer': [
+    'SQL', 'Python', 'ETL', 'Spark', 'Hadoop', 'Kafka', 'Data Warehousing',
+    'PostgreSQL', 'Redshift', 'Snowflake', 'Airflow', 'NoSQL', 'Big Data'
+  ],
+  'UI/UX Designer': [
+    'Figma', 'Adobe XD', 'Sketch', 'Wireframing', 'Prototyping', 'User Research',
+    'UI/UX Design', 'Interaction Design', 'HTML', 'CSS', 'Information Architecture'
+  ],
+  'Database Administrator': [
+    'SQL', 'MySQL', 'PostgreSQL', 'Oracle', 'SQL Server', 'Database Administration',
+    'Backup & Recovery', 'Performance Tuning', 'NoSQL', 'MongoDB', 'Database Security'
+  ],
+  'Embedded Systems Engineer': [
+    'C', 'C++', 'Microcontrollers', 'Embedded C', 'RTOS', 'Firmware',
+    'IoT', 'Raspberry Pi', 'Arduino', 'PCB Design', 'Debugging', 'Hardware'
+  ],
+  'Product Manager': [
+    'Product Management', 'Agile', 'Scrum', 'Product Roadmap', 'User Stories',
+    'Market Research', 'Jira', 'Confluence', 'Analytics', 'SQL', 'A/B Testing', 'Stakeholder Management'
+  ]
+};
+
+
+
+// ===== MAIN CONTENT =====
+function BuilderContent({ onViewChange, studentData: parentStudentData }) {
+  // Student data from parent (which listens to profile updates)
+  const [studentData, setStudentData] = useState(parentStudentData);
+
+  // Update local state when parent data changes
+  useEffect(() => {
+    if (parentStudentData) {
+      setStudentData(parentStudentData);
+    }
+  }, [parentStudentData]);
+
+  // ===== FORM STATE =====
+  const [personalInfo, setPersonalInfo] = useState({
+    name: '', mobile: '', email: '', linkedin: '', github: '', portfolio: ''
+  });
+  const [summary, setSummary] = useState('');
+  const [education, setEducation] = useState({
+    college: '', degree: '', branch: '', cgpa: '', graduationYear: '',
+    school12: '', percentile12: '', batch12: '',
+    school10: '', percentile10: '', batch10: ''
+  });
+
+  // Coding Platforms
+  const [platforms, setPlatforms] = useState([
+    { name: 'Leetcode', url: '' },
+    { name: 'Hacker Rank', url: '' },
+  ]);
+
+  // Chips-based sections (categorized skills)
+  const [skills, setSkills] = useState(DEFAULT_SKILL_CATEGORIES.map(c => ({ ...c, items: [...c.items] })));
+  const [experiences, setExperiences] = useState([]);
+  const [projects, setProjects] = useState([]);
+  const [certifications, setCertifications] = useState([]);
+  const [achievements, setAchievements] = useState([]);
+  const [additionalInfo, setAdditionalInfo] = useState([]);
+
+  // Resume Settings state
+  const [resumeSettings, setResumeSettings] = useState({
+    jobRole: '',
+    customJobRole: '',
+    fontStyle: 'Arial',
+    pages: '1',
+    enableAI: true,
+    linkType: 'HyperLink',
+    profilePhoto: false,
+    photoPosition: 'Left'
+  });
+
+  // Popup state
+  const [activePopup, setActivePopup] = useState(null); // 'experience' | 'project' | 'certification' | 'achievement' | 'additionalInfo'
+  const [editIndex, setEditIndex] = useState(null);
+
+  // Creating popup state (for Create button)
+  const [isCreating, setIsCreating] = useState(false);
+  const [createProgress, setCreateProgress] = useState(0);
+  const [createStatus, setCreateStatus] = useState(''); // Dynamic status message
+  const [showCreated, setShowCreated] = useState(false);
+  const [hasCreatedOnce, setHasCreatedOnce] = useState(false); // Prevent multiple clicks
+  const [isPreviewing, setIsPreviewing] = useState(false); // Track preview button state
+  const [versions, setVersions] = useState([]);
+  const [showVersionModal, setShowVersionModal] = useState(false);
+  const [selectedVersionIndex, setSelectedVersionIndex] = useState(0);
+  const [validationError, setValidationError] = useState('');
+
+  // ===== USER-SPECIFIC LOCALSTORAGE KEY =====
+  // Prevents resume data from leaking between different student sessions
+  const getStorageKey = useCallback(() => {
+    const id = studentData?._id || studentData?.id || studentData?.regNo;
+    return id ? `resumeBuilderData_${id}` : 'resumeBuilderData';
+  }, [studentData]);
+  
+  // Inline input states (replaces window.prompt)
+  const [editingPlatformIndex, setEditingPlatformIndex] = useState(null);
+  const [activeSkillCategory, setActiveSkillCategory] = useState(null);
+  const [newSkillName, setNewSkillName] = useState('');
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [showAddCategory, setShowAddCategory] = useState(false);
+  const platformNameInputRef = useRef(null);
+  const skillInputRef = useRef(null);
+
+  // Ref for auto-expanding Professional Summary textarea
+  const summaryTextareaRef = useRef(null);
+
+  // Resume PDF URL (after generation)
+  const [resumePdfUrl, setResumePdfUrl] = useState(null);
+
+  // ATS Check state (for progress popup)
+  const [atsPopupState, setAtsPopupState] = useState('none'); // 'none' | 'progress' | 'error'
+  const [atsProgress, setAtsProgress] = useState(0);
+  const [atsProgressMessage, setAtsProgressMessage] = useState('');
+
+  // ===== AUTO-SYNC to MongoDB when popup data changes =====
+  const syncToMongoDB = useCallback(async (updatedFields) => {
+    const studentId = studentData?._id || studentData?.id;
+    if (!studentId) return;
+
+    const token = localStorage.getItem('token');
+    const API_BASE = process.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:5000';
+
+    try {
+      const storageKey = getStorageKey();
+      const currentData = JSON.parse(localStorage.getItem(storageKey) || '{}');
+      const resumeData = { ...currentData, ...updatedFields };
+
+      await fetch(joinApiUrl('/resume-builder/save'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ studentId, resumeData }),
+      });
+      console.log('✅ Auto-synced to MongoDB');
+    } catch (err) {
+      console.warn('⚠️ Auto-sync to MongoDB failed:', err);
+    }
+  }, [studentData, getStorageKey]);
+
+  // ===== AUTO-EXPAND SUMMARY TEXTAREA =====
+  useEffect(() => {
+    const textarea = summaryTextareaRef.current;
+    if (textarea) {
+      // Reset height to measure scrollHeight properly
+      textarea.style.height = '150px';
+      // Set height to scrollHeight to fit content
+      const newHeight = Math.max(150, textarea.scrollHeight);
+      textarea.style.height = `${newHeight}px`;
+    }
+  }, [summary]);
+
+  // ===== AUTO-POPULATE from student data (Profile page) =====
+  // This fills in missing fields from student profile data
+  // skipSkills: if true, don't auto-populate skills (used when skills were explicitly saved)
+  const autoPopulateFromProfile = useCallback((skipSkills = false) => {
+    if (!studentData) return;
+
+    console.log('Resume Builder - Auto-populating from student data:', {
+      linkedinLink: studentData.linkedinLink,
+      githubLink: studentData.githubLink,
+      portfolioLink: studentData.portfolioLink,
+      skipSkills
+    });
+
+    // Personal Info — map profile field names to resume fields
+    setPersonalInfo(prev => ({
+      ...prev,
+      name: prev.name || `${studentData.firstName || ''} ${studentData.lastName || ''}`.trim(),
+      email: prev.email || studentData.primaryEmail || studentData.domainEmail || studentData.email || '',
+      mobile: prev.mobile || studentData.mobileNo || '',
+      linkedin: prev.linkedin || studentData.linkedinLink || studentData.linkedinProfile || '',
+      github: prev.github || studentData.githubLink || studentData.githubProfile || '',
+      portfolio: prev.portfolio || studentData.portfolioLink || studentData.portfolio || '',
+    }));
+
+    // Education — auto-fill college, 12th and 10th details
+    setEducation(prev => ({
+      ...prev,
+      college: prev.college || 'K.S.R. College of Engineering',
+      degree: prev.degree || studentData.degree || 'B.E.',
+      branch: prev.branch || studentData.branch || '',
+      cgpa: prev.cgpa || studentData.overallCGPA || '',
+      graduationYear: prev.graduationYear || studentData.batch || '',
+      school12: prev.school12 || studentData.twelfthInstitution || '',
+      percentile12: prev.percentile12 || studentData.twelfthPercentage || '',
+      batch12: prev.batch12 || studentData.twelfthYear || '',
+      school10: prev.school10 || studentData.tenthInstitution || '',
+      percentile10: prev.percentile10 || studentData.tenthPercentage || '',
+      batch10: prev.batch10 || studentData.tenthYear || '',
+    }));
+
+    // Skills — populate normalized categories from student profile (only if not skipped and no skills exist)
+    if (!skipSkills) {
+      setSkills(prev => {
+        const hasAny = prev.some(cat => cat.items.length > 0);
+        if (hasAny) return prev; // Keep existing skills
+        return normalizeSkillCategories(studentData.skills, studentData.skillSet);
+      });
+    }
+  }, [studentData]);
+
+  // ===== ATS KEYWORD REFERENCE (for AI prompts only, NOT auto-added to skills) =====
+  const getATSKeywords = useCallback((jobRole, customJobRole = '') => {
+    const roleToUse = jobRole === 'Others' ? customJobRole : jobRole;
+    if (!roleToUse || !roleToUse.trim()) return [];
+    return ATS_KEYWORDS[jobRole] || [];
+  }, []);
+
+  // ===== CHIP HELPERS =====
+  const removeChip = useCallback((list, setList, index) => {
+    setList(prev => prev.filter((_, i) => i !== index));
+  }, []);
+
+  // ===== POPUP HANDLERS =====
+  const openExperiencePopup = (index = null) => {
+    setEditIndex(index);
+    setActivePopup('experience');
+  };
+
+  const openProjectPopup = (index = null) => {
+    setEditIndex(index);
+    setActivePopup('project');
+  };
+
+  const openCertificationPopup = (index = null) => {
+    setEditIndex(index);
+    setActivePopup('certification');
+  };
+
+  const openAchievementPopup = (index = null) => {
+    setEditIndex(index);
+    setActivePopup('achievement');
+  };
+
+  const openAdditionalInfoPopup = (index = null) => {
+    setEditIndex(index);
+    setActivePopup('additionalInfo');
+  };
+
+  const closePopup = () => {
+    setActivePopup(null);
+    setEditIndex(null);
+  };
+
+  // ===== SAVE HANDLERS from Popups =====
+  const saveExperience = (data) => {
+    console.log('ResumeBuilder - Received from popup:', data);
+    
+    const label = data.title || data.companyName || 'Experience';
+    const updatedData = { ...data, label };
+
+    setExperiences(prev => {
+      let newExperiences;
+      if (editIndex !== null) {
+        newExperiences = [...prev];
+        newExperiences[editIndex] = updatedData;
+      } else {
+        newExperiences = [...prev, updatedData];
+      }
+      
+      // Save to localStorage immediately so it isn't lost on refresh
+      const storageKey = getStorageKey();
+      const currentStorage = JSON.parse(localStorage.getItem(storageKey) || '{}');
+      localStorage.setItem(storageKey, JSON.stringify({
+        ...currentStorage,
+        experiences: newExperiences
+      }));
+
+      // Auto-sync to MongoDB so technologies/projects persist
+      syncToMongoDB({ experiences: newExperiences });
+      
+      return newExperiences;
+    });
+    
+    closePopup();
+  };
+
+  const saveProject = (data) => {
+    console.log('ResumeBuilder - Received project from popup:', data);
+    
+    const label = data.name || 'Project';
+    const updatedData = { ...data, label };
+
+    setProjects(prev => {
+      let newProjects;
+      if (editIndex !== null) {
+        newProjects = [...prev];
+        newProjects[editIndex] = updatedData;
+      } else {
+        newProjects = [...prev, updatedData];
+      }
+      
+      // Save to localStorage immediately
+      const storageKey = getStorageKey();
+      const currentStorage = JSON.parse(localStorage.getItem(storageKey) || '{}');
+      localStorage.setItem(storageKey, JSON.stringify({
+        ...currentStorage,
+        projects: newProjects
+      }));
+
+      // Auto-sync to MongoDB so technologies persist
+      syncToMongoDB({ projects: newProjects });
+      
+      return newProjects;
+    });
+    
+    closePopup();
+  };
+
+  const saveCertification = (data) => {
+    const label = data.certificateName || 'Certification';
+    if (editIndex !== null) {
+      setCertifications(prev => {
+        const copy = [...prev];
+        copy[editIndex] = { ...data, label };
+        return copy;
+      });
+    } else {
+      setCertifications(prev => [...prev, { ...data, label }]);
+    }
+    closePopup();
+  };
+
+  const saveAchievement = (data) => {
+    const label = data.details ? data.details.substring(0, 40) + (data.details.length > 40 ? '...' : '') : 'Achievement';
+    if (editIndex !== null) {
+      setAchievements(prev => {
+        const copy = [...prev];
+        copy[editIndex] = { ...data, label };
+        return copy;
+      });
+    } else {
+      setAchievements(prev => [...prev, { ...data, label }]);
+    }
+    closePopup();
+  };
+
+  const saveAdditionalInfoItem = (data) => {
+    const label = data.info ? data.info.substring(0, 40) + (data.info.length > 40 ? '...' : '') : 'Info';
+    if (editIndex !== null) {
+      setAdditionalInfo(prev => {
+        const copy = [...prev];
+        copy[editIndex] = { ...data, label };
+        return copy;
+      });
+    } else {
+      setAdditionalInfo(prev => [...prev, { ...data, label }]);
+    }
+    closePopup();
+  };
+
+  // ===== PLATFORM HANDLERS =====
+  const addPlatformRow = () => {
+    setPlatforms(prev => [...prev, { name: '', url: '' }]);
+    setEditingPlatformIndex(platforms.length);
+  };
+
+  const commitPlatformName = (index, name) => {
+    const trimmed = name.trim();
+    if (trimmed) {
+      // Check for duplicate names
+      const isDuplicate = platforms.some((p, i) => i !== index && p.name.toLowerCase() === trimmed.toLowerCase());
+      if (isDuplicate) {
+        // Remove the empty row if duplicate
+        setPlatforms(prev => prev.filter((_, i) => i !== index));
+      } else {
+        setPlatforms(prev => prev.map((p, i) => i === index ? { ...p, name: trimmed } : p));
+      }
+    } else {
+      // Remove empty-named platform
+      setPlatforms(prev => prev.filter((_, i) => i !== index));
+    }
+    setEditingPlatformIndex(null);
+  };
+
+  // Auto-focus platform name input when editing
+  useEffect(() => {
+    if (editingPlatformIndex !== null && platformNameInputRef.current) {
+      platformNameInputRef.current.focus();
+    }
+  }, [editingPlatformIndex]);
+
+  // Auto-focus skill input when shown
+  useEffect(() => {
+    if (activeSkillCategory !== null && skillInputRef.current) {
+      skillInputRef.current.focus();
+    }
+  }, [activeSkillCategory]);
+
+  const removePlatform = (index) => {
+    setPlatforms(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const updatePlatformUrl = (index, url) => {
+    setPlatforms(prev => {
+      const copy = [...prev];
+      copy[index] = { ...copy[index], url };
+      return copy;
+    });
+  };
+
+  // ===== AI CONTENT GENERATION (called automatically during Create when AI is enabled) =====
+  const aiGenerateAllContent = async (resumeData) => {
+    if (!resumeSettings.enableAI) return resumeData;
+    
+    try {
+      const { default: aiService } = await import('../services/aiService.jsx');
+      
+      const sections = {
+        summary: resumeData.summary || '',
+        experiences: resumeData.experiences?.map((exp) => exp.description || '').filter(d => d.trim().length > 0) || [],
+        projects: resumeData.projects?.map((proj) => proj.description || '').filter(d => d.trim().length > 0) || [],
+        certifications: resumeData.certifications?.map((cert) => cert.description || '').filter(d => d.trim().length > 0) || [],
+        achievements: resumeData.achievements?.map((ach) => ach.details || '').filter(d => d.trim().length > 0) || []
+      };
+
+      const hasSummary = !!sections.summary;
+      const hasExperiences = sections.experiences.length > 0;
+      const hasProjects = sections.projects.length > 0;
+      const hasCertifications = sections.certifications.length > 0;
+      const hasAchievements = sections.achievements.length > 0;
+
+      if (hasSummary || hasExperiences || hasProjects || hasCertifications || hasAchievements) {
+        try {
+          console.log('🤖 Sending Batch AI Request with sections:', sections);
+          const resultText = await aiService.generateContent(sections, 'json');
+          
+          // Parse Response
+          const result = aiService.cleanJson(resultText);
+          
+          if (result) {
+            // Apply Summary
+            if (result.summary && hasSummary) {
+              resumeData.summary = result.summary;
+            }
+
+            // Apply Experiences
+            if (Array.isArray(result.experiences)) {
+              let resultIdx = 0;
+              for (let i = 0; i < (resumeData.experiences?.length || 0); i++) {
+                if (resumeData.experiences[i].description && resumeData.experiences[i].description.trim()) {
+                  if (result.experiences[resultIdx]) {
+                    // Ensure we store a string, not an object
+                    const expVal = result.experiences[resultIdx];
+                    const expStr = typeof expVal === 'string' ? expVal : (expVal?.input || expVal?.description || expVal?.text || JSON.stringify(expVal));
+                    resumeData.experiences[i].description = expStr.trim();
+                  }
+                  resultIdx++;
+                }
+              }
+            }
+
+            // Apply Projects
+            if (Array.isArray(result.projects)) {
+              let resultIdx = 0;
+              for (let i = 0; i < (resumeData.projects?.length || 0); i++) {
+                if (resumeData.projects[i].description && resumeData.projects[i].description.trim()) {
+                  if (result.projects[resultIdx]) {
+                    // Ensure we store a string, not an object
+                    const projVal = result.projects[resultIdx];
+                    const projStr = typeof projVal === 'string' ? projVal : (projVal?.input || projVal?.description || projVal?.text || JSON.stringify(projVal));
+                    resumeData.projects[i].description = projStr.trim();
+                  }
+                  resultIdx++;
+                }
+              }
+            }
+
+            // Apply Certifications
+            if (Array.isArray(result.certifications)) {
+              let resultIdx = 0;
+              for (let i = 0; i < (resumeData.certifications?.length || 0); i++) {
+                if (resumeData.certifications[i].description && resumeData.certifications[i].description.trim()) {
+                  if (result.certifications[resultIdx]) {
+                    const certVal = result.certifications[resultIdx];
+                    const certStr = typeof certVal === 'string' ? certVal : (certVal?.input || certVal?.description || certVal?.text || JSON.stringify(certVal));
+                    resumeData.certifications[i].description = certStr.trim();
+                  }
+                  resultIdx++;
+                }
+              }
+            }
+
+            // Apply Achievements
+            if (Array.isArray(result.achievements)) {
+              let resultIdx = 0;
+              for (let i = 0; i < (resumeData.achievements?.length || 0); i++) {
+                if (resumeData.achievements[i].details && resumeData.achievements[i].details.trim()) {
+                  if (result.achievements[resultIdx]) {
+                    const achVal = result.achievements[resultIdx];
+                    const achStr = typeof achVal === 'string' ? achVal : (achVal?.input || achVal?.details || achVal?.text || JSON.stringify(achVal));
+                    resumeData.achievements[i].details = achStr.trim();
+                  }
+                  resultIdx++;
+                }
+              }
+            }
+            
+            console.log('✅ Batch AI generation applied successfully');
+          }
+        } catch (e) {
+          // If rate-limited, propagate so handleCreate can show a user message
+          if (e.message?.includes('RATE_LIMITED')) {
+            throw e;
+          }
+          console.warn('AI batch generation failed:', e.message);
+        }
+      }
+      
+      /* REMOVED INDIVIDUAL LOOPS */
+
+    } catch (err) {
+      console.error('AI content generation error:', err);
+      // Propagate rate limit errors to handleCreate
+      if (err.message?.includes('RATE_LIMITED')) {
+        throw err;
+      }
+    }
+    
+    return resumeData;
+  };
+
+  // ===== CLIENT-SIDE PDF FALLBACK =====
+  const generateClientSidePdf = async () => {
+    const html = buildResumeHtml();
+    // Create a hidden iframe, render the HTML, and use it to generate PDF via print
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(html);
+      printWindow.document.close();
+      
+      // Save the HTML as a data URL so it can be used for preview/download
+      const blob = new Blob([html], { type: 'text/html' });
+      const htmlUrl = URL.createObjectURL(blob);
+      setResumePdfUrl(htmlUrl);
+      
+      // Store resume data in localStorage for resume page compatibility
+      const updatedStudentData = JSON.parse(localStorage.getItem('studentData') || '{}');
+      updatedStudentData.resumeData = {
+        url: htmlUrl,
+        name: `${personalInfo.name || 'Resume'}_Resume.pdf`,
+        createdAt: new Date().toISOString()
+      };
+      localStorage.setItem('studentData', JSON.stringify(updatedStudentData));
+      window.dispatchEvent(new Event('storage'));
+      
+      // Trigger print for PDF save
+      setTimeout(() => printWindow.print(), 500);
+    }
+  };
+
+  const buildResumeHtml = () => {
+    const parseBullets = (text) => {
+      if (!text) return [];
+      return text.split('\n')
+        .map(line => line.trim())
+        .filter(line => line.length > 0)
+        .map(line => line.replace(/^[•\-\*]\s*/, ''));
+    };
+
+    const cleanBranch = (b) => {
+      if (!b) return '';
+      const s = String(b).trim();
+      if (/^computer\s+science\s+(and|&)\s+engineering$/i.test(s)) return 'CSE';
+      if (/^information\s+technology$/i.test(s)) return 'IT';
+      if (/^electronics\s+(and|&)\s+communication\s+engineering$/i.test(s)) return 'ECE';
+      if (/^electrical\s+(and|&)\s+electronics\s+engineering$/i.test(s)) return 'EEE';
+      return s;
+    };
+
+    // Google Fonts mapping for client-side fallback (no font installation needed)
+    const googleFontsMap = {
+      'Arial': { import: 'Arimo:wght@400;700', stack: "'Arimo', 'Arial', 'Helvetica', sans-serif" },
+      'Times New Roman': { import: 'Tinos:wght@400;700', stack: "'Tinos', 'Times New Roman', 'Times', serif" },
+      'Calibri': { import: 'Carlito:wght@400;700', stack: "'Carlito', 'Calibri', 'Candara', sans-serif" },
+      'Georgia': { import: 'Tinos:wght@400;700', stack: "'Tinos', 'Georgia', 'Times New Roman', serif" },
+      'Helvetica': { import: 'Arimo:wght@400;700', stack: "'Arimo', 'Helvetica', 'Arial', sans-serif" },
+      'Cambria': { import: 'Caladea:wght@400;700', stack: "'Caladea', 'Cambria', 'Georgia', serif" },
+      'Garamond': { import: 'EB+Garamond:wght@400;700', stack: "'EB Garamond', 'Garamond', 'Georgia', serif" },
+      'Verdana': { import: 'Open+Sans:wght@400;700', stack: "'Open Sans', 'Verdana', 'Geneva', sans-serif" }
+    };
+    const selectedFont = resumeSettings.fontStyle || 'Arial';
+    const fontConfig = googleFontsMap[selectedFont] || googleFontsMap['Arial'];
+    const fontStack = fontConfig.stack;
+    const googleFontImport = fontConfig.import;
+
+    return `<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>Resume - ${personalInfo.name}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=${googleFontImport}&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: ${fontStack} !important; }
+  body { font-family: ${fontStack} !important; font-size: 11px; line-height: 1.2; color: #333; padding: 0.25in 0.4in; max-width: 8.5in; }
+  h1 { font-family: ${fontStack} !important; font-size: 24px; color: #1a1a1a; text-align: center; margin-bottom: 2px; }
+  .contact { text-align: center; font-size: 10px; color: #555; margin-bottom: 6px; }
+  .contact a { color: #0066cc; text-decoration: none; font-weight: 500; }
+  .contact a:hover { text-decoration: underline; }
+  .header-container { display: flex; align-items: center; justify-content: flex-start; gap: 24px; margin-bottom: 6px; }
+  .header-container.photo-left { flex-direction: row; }
+  .header-container.photo-right { flex-direction: row-reverse; }
+  .header-text { flex: 1; text-align: center; }
+  .profile-photo { width: 80px; height: 80px; border-radius: 50%; border: 1px solid #ccc; object-fit: cover; flex-shrink: 0; display: block; }
+  .section { margin-bottom: 6px; }
+  .section-title { font-size: 14px; font-weight: bold; text-transform: uppercase; border-bottom: 1.5px solid #333; padding-bottom: 1px; margin: 6px 0 3px 0; color: #1a1a1a; letter-spacing: 0.5px; font-family: ${fontStack} !important; }
+  .entry { margin-bottom: 3px; }
+  .entry-header { display: flex; justify-content: space-between; align-items: baseline; font-weight: bold; font-size: 11px; gap: 15px; width: 100%; }
+  .entry-header > span:last-child { white-space: nowrap; flex-shrink: 0; text-align: right; padding-right: 5px; }
+  .entry-sub { font-style: italic; font-size: 10px; color: #555; margin-bottom: 1px; }
+  .entry-desc { font-size: 10px; margin-left: 12px; white-space: pre-line; }
+  .summary-text { font-size: 11px; line-height: 1.2; white-space: pre-line; color: #333; }
+  .entry-bullets { margin-left: 15px; margin-top: 1px; margin-bottom: 1px; list-style-type: disc; }
+  .entry-bullets li { font-size: 10px; line-height: 1.2; color: #333; margin-bottom: 1px; }
+  ul { margin-left: 16px; }
+  li { font-size: 10px; margin-bottom: 1px; }
+  .skills-list { font-size: 10px; margin-left: 16px; }
+  .skills-list li { margin-bottom: 1px; }
+  .skills-list li strong { font-weight: bold; }
+  @media print { body { padding: 0.25in 0.4in; } }
+</style></head><body>
+${(() => {
+  const showPhoto = resumeSettings.profilePhoto === true;
+  const photoPos = resumeSettings.photoPosition || 'Left';
+  const photoUrl = studentData?.profilePicURL || studentData?.profilePic || personalInfo.photo || '';
+  if (showPhoto && photoUrl) {
+    return `<div class="header-container photo-${photoPos.toLowerCase()}">
+      <img src="${photoUrl}" alt="" class="profile-photo" onerror="this.style.display='none';" />
+      <div class="header-text">
+        <h1>${personalInfo.name || 'Your Name'}</h1>
+        <div class="contact">
+          ${[
+            personalInfo.mobile || '',
+            personalInfo.email || '',
+            personalInfo.linkedin ? '<a href="' + (personalInfo.linkedin.startsWith('http') ? personalInfo.linkedin : 'https://' + personalInfo.linkedin) + '" target="_blank">LinkedIn</a>' : '',
+            personalInfo.github ? '<a href="' + (personalInfo.github.startsWith('http') ? personalInfo.github : 'https://' + personalInfo.github) + '" target="_blank">GitHub</a>' : '',
+            personalInfo.portfolio ? '<a href="' + (personalInfo.portfolio.startsWith('http') ? personalInfo.portfolio : 'https://' + personalInfo.portfolio) + '" target="_blank">Portfolio</a>' : ''
+          ].filter(item => item !== '').join(' | ')}
+          ${platforms.filter(p => p.url).length > 0 ? '<br/>' + platforms.filter(p => p.url).map(p => '<a href="' + (p.url.startsWith('http') ? p.url : 'https://' + p.url) + '" target="_blank">' + p.name + '</a>').join(' | ') : ''}
+        </div>
+      </div>
+    </div>`;
+  }
+  return `<h1>${personalInfo.name || 'Your Name'}</h1>
+<div class="contact">
+  ${[
+    personalInfo.mobile || '',
+    personalInfo.email || '',
+    personalInfo.linkedin ? '<a href="' + (personalInfo.linkedin.startsWith('http') ? personalInfo.linkedin : 'https://' + personalInfo.linkedin) + '" target="_blank">LinkedIn</a>' : '',
+    personalInfo.github ? '<a href="' + (personalInfo.github.startsWith('http') ? personalInfo.github : 'https://' + personalInfo.github) + '" target="_blank">GitHub</a>' : '',
+    personalInfo.portfolio ? '<a href="' + (personalInfo.portfolio.startsWith('http') ? personalInfo.portfolio : 'https://' + personalInfo.portfolio) + '" target="_blank">Portfolio</a>' : ''
+  ].filter(item => item !== '').join(' | ')}
+  ${platforms.filter(p => p.url).length > 0 ? '<br/>' + platforms.filter(p => p.url).map(p => '<a href="' + (p.url.startsWith('http') ? p.url : 'https://' + p.url) + '" target="_blank">' + p.name + '</a>').join(' | ') : ''}
+</div>`;
+})()}
+
+${summary ? `<div class="section"><div class="section-title">Professional Summary</div><p class="summary-text">${summary}</p></div>` : ''}
+
+${skills.some(c => c.items?.length > 0) ? `<div class="section"><div class="section-title">Skills</div><ul class="skills-list">${skills.filter(c => c.items?.length > 0).map(c => `<li><strong>${c.category}:</strong> ${c.items.join(', ')}</li>`).join('')}</ul></div>` : ''}
+
+${experiences.length > 0 ? `<div class="section"><div class="section-title">Internship</div>
+${experiences.map(e => {
+  const fmtDate = (d) => { if (!d) return ''; const p = d.split('-'); return p.length === 3 ? (p[0].length === 4 ? p[2]+'-'+p[1]+'-'+p[0] : d) : d; };
+  const modeLabel = e.mode === 'remote' ? 'Remote' : e.mode === 'hybrid' ? 'Hybrid' : e.mode === 'in-person' ? 'On-Site' : '';
+  const titleParts = [];
+  if (e.companyName) titleParts.push(e.companyName);
+  if (e.location) titleParts.push(e.location);
+  const titleStr = titleParts.join(', ') + (modeLabel ? ' (' + modeLabel + ')' : '');
+  const descText = typeof e.description === 'string' ? e.description : (e.description?.input || e.description?.text || e.description?.description || '');
+  const bulletsHtml = `<ul class="entry-bullets">` + parseBullets(descText).map(bullet => `<li>${bullet}</li>`).join('') + `</ul>`;
+  return `<div class="entry">
+  <div class="entry-header"><span>${titleStr}</span><span>${fmtDate(e.fromDate)}${e.fromDate ? ' to ' : ''}${fmtDate(e.toDate) || 'Present'}</span></div>
+  ${bulletsHtml}
+  ${e.technologies?.length ? `<div class="entry-desc" style="margin-top:2px;"><strong>Tech:</strong> ${e.technologies.join(', ')}</div>` : ''}
+</div>`;
+}).join('')}</div>` : ''}
+
+${projects.length > 0 ? `<div class="section"><div class="section-title">Projects</div>
+${projects.map(p => {
+  const name = typeof p === 'string' ? p : (p.name || p.label);
+  const desc = typeof p === 'string' ? '' : p.description;
+  const tech = typeof p === 'string' ? [] : (p.technologies || []);
+  const github = typeof p === 'string' ? '' : p.githubRepo;
+  const hosting = typeof p === 'string' ? '' : (p.hostingLink || '');
+  const bulletsHtml = `<ul class="entry-bullets">` + parseBullets(desc).map(bullet => `<li>${bullet}</li>`).join('') + `</ul>`;
+  return `<div class="entry">
+    <div class="entry-header"><span>${name}</span><span style="font-size:9.5pt;">${github ? `<a href="${github}" target="_blank" style="color:#1565c0;text-decoration:none;">GitHub</a>` : ''}${github && hosting ? ' | ' : ''}${hosting ? `<a href="${hosting}" target="_blank" style="color:#1565c0;text-decoration:none;">Live Demo</a>` : ''}</span></div>
+    ${bulletsHtml}
+    ${tech.length ? `<div class="entry-desc"><strong>Tech:</strong> ${tech.join(', ')}</div>` : ''}
+  </div>`;
+}).join('')}</div>` : ''}
+
+${certifications.length > 0 ? `<div class="section"><div class="section-title">Certifications</div>
+<div style="margin-left: 12px; margin-top: 2px;">
+  ${certifications.map(c => {
+    const name = typeof c === 'string' ? c : c.certificateName;
+    const desc = typeof c === 'string' ? '' : c.description;
+    let displayText = name && desc ? `${name} – ${desc}` : (name || desc || '');
+    displayText = displayText.replace(/\s*\+\s*/g, ' – ');
+    return `<div style="font-size: 10px; line-height: 1.2; margin-bottom: 2px; color: #333;">${displayText}</div>`;
+  }).join('')}
+</div></div>` : ''}
+
+${achievements.length > 0 ? `<div class="section"><div class="section-title">Achievements</div>
+<ul class="entry-bullets">
+  ${achievements.map(a => {
+    const details = typeof a === 'string' ? a : a.details;
+    return parseBullets(details).map(bullet => `<li>${bullet}</li>`).join('');
+  }).join('')}
+</ul></div>` : ''}
+
+${additionalInfo.length > 0 ? `<div class="section"><div class="section-title">Additional Information</div>
+<ul class="entry-bullets">
+  ${additionalInfo.map(a => {
+    const info = typeof a === 'string' ? a : a.info;
+    return parseBullets(info).map(bullet => `<li>${bullet}</li>`).join('');
+  }).join('')}
+</ul></div>` : ''}
+
+${education.college || education.school12 || education.school10 ? `<div class="section"><div class="section-title">Education</div>
+${education.college ? `<div class="entry"><div class="entry-header"><span>${education.degree || 'B.E.'} ${cleanBranch(education.branch)} | ${education.college} | ${education.graduationYear || ''}</span></div><div class="entry-sub">CGPA: ${education.cgpa || 'N/A'}</div></div>` : ''}
+${education.school12 ? `<div class="entry"><div class="entry-header"><span>12th | ${education.school12} | ${education.batch12 || ''}</span></div><div class="entry-sub">Percentile: ${education.percentile12 || 'N/A'}</div></div>` : ''}
+${education.school10 ? `<div class="entry"><div class="entry-header"><span>10th | ${education.school10} | ${education.batch10 || ''}</span></div><div class="entry-sub">Percentile: ${education.percentile10 || 'N/A'}</div></div>` : ''}
+</div>` : ''}
+
+</body></html>`;
+  };
+
+  // ===== PREVIEW =====
+  const handlePreview = () => {
+    if (resumePdfUrl) {
+      window.open(resumePdfUrl, '_blank');
+    } else {
+      // Preview as HTML
+      const html = buildResumeHtml();
+      const win = window.open('', '_blank');
+      if (win) { win.document.write(html); win.document.close(); }
+    }
+  };
+
+  // ===== DOWNLOAD =====
+  const handleDownload = () => {
+    if (resumePdfUrl) {
+      const link = document.createElement('a');
+      link.href = resumePdfUrl;
+      link.download = `${personalInfo.name || 'Resume'}_Resume.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } else {
+      generateClientSidePdf();
+    }
+  };
+
+  // ===== DISCARD ALL =====
+  const handleDiscard = () => {
+    if (window.confirm('Are you sure you want to discard all changes?')) {
+      setPersonalInfo({ name: '', mobile: '', email: '', linkedin: '', github: '', portfolio: '' });
+      setSummary('');
+      setEducation({ college: '', degree: '', branch: '', cgpa: '', graduationYear: '', school12: '', percentile12: '', batch12: '', school10: '', percentile10: '', batch10: '' });
+      setPlatforms([{ name: 'Leetcode', url: '' }, { name: 'Hacker Rank', url: '' }]);
+      setSkills(DEFAULT_SKILL_CATEGORIES.map(c => ({ ...c, items: [...c.items] }))); setExperiences([]); setProjects([]); setCertifications([]); setAchievements([]); setAdditionalInfo([]); setActiveSkillCategory(null);
+      setResumePdfUrl(null);
+      localStorage.removeItem(getStorageKey());
+      // Also remove legacy non-user-specific key if present
+      localStorage.removeItem('resumeBuilderData');
+    }
+  };
+
+  // ===== CREATE RESUME (Save + Generate PDF) =====
+  const handleCreate = async () => {
+    // Prevent multiple clicks
+    if (hasCreatedOnce || isCreating) return;
+    
+    // Reset validation error
+    setValidationError('');
+    
+    // Contact validation checks
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const phoneRegex = /^\d{10}$/;
+    
+    if (personalInfo.email && !emailRegex.test(personalInfo.email.trim())) {
+      setValidationError("Invalid Email Format: Please enter a valid email address (e.g. name@domain.com).");
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+    
+    if (personalInfo.mobile) {
+      const cleanPhone = personalInfo.mobile.trim().replace(/[\s-()+]/g, '');
+      if (!phoneRegex.test(cleanPhone)) {
+        setValidationError("Invalid Mobile Number: Please enter a valid 10-digit mobile number.");
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
+    }
+    
+    setHasCreatedOnce(true); // Disable button after first click
+    setIsCreating(true);
+    setCreateProgress(0);
+    setCreateStatus('Preparing resume data...');
+
+    try {
+      // Step 1: Save data
+      setCreateStatus('Saving your data...');
+      setCreateProgress(5);
+      
+      // Add student's profile photo to personal info
+      const photoUrl = studentData?.profilePicURL || studentData?.profilePic || localStorage.getItem('cachedProfilePicUrl') || '';
+      console.log('📷 Adding profile photo to resume:', photoUrl);
+      console.log('📷 studentData.profilePicURL:', studentData?.profilePicURL);
+      console.log('📷 studentData.profilePic:', studentData?.profilePic);
+      
+      const personalInfoWithPhoto = {
+        ...personalInfo,
+        photo: photoUrl,
+        profilePicURL: photoUrl
+      };
+      
+      const resumeData = {
+        personalInfo: personalInfoWithPhoto, education, platforms, skills,
+        experiences, projects, certifications, achievements, additionalInfo,
+        resumeSettings,
+      };
+      localStorage.setItem(getStorageKey(), JSON.stringify(resumeData));
+
+      // Step 2: Save to backend MongoDB
+      setCreateProgress(10);
+      setCreateStatus('Syncing to database...');
+      const studentId = studentData?._id || studentData?.id;
+      const token = localStorage.getItem('token');
+      const API_BASE = process.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:5000';
+
+      if (studentId) {
+        try {
+          const saveResponse = await fetch(joinApiUrl('/resume-builder/save'), {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            },
+            body: JSON.stringify({ studentId, resumeData }),
+          });
+          if (saveResponse.ok) {
+            console.log('✅ Resume data saved to MongoDB');
+          } else {
+            console.warn('⚠️ MongoDB save failed:', await saveResponse.text());
+          }
+        } catch (saveErr) {
+          console.warn('⚠️ MongoDB save error:', saveErr);
+        }
+      }
+      setCreateProgress(15);
+
+      // Step 3: Build full resume data
+      setCreateStatus('Building resume structure...');
+      let fullResumeData = {
+        ...resumeData,
+        summary,
+        experiences: experiences.map(e => ({
+          title: e.title || e.label,
+          label: e.label || e.title || e.companyName || 'Experience',
+          companyName: e.companyName,
+          location: e.location,
+          mode: e.mode || 'in-person',
+          fromDate: e.fromDate,
+          toDate: e.toDate,
+          technologies: e.technologies || [],
+          projects: e.projects || [],
+          description: typeof e.description === 'object' && e.description !== null
+            ? (e.description.input || e.description.description || e.description.text || '')
+            : (e.description || ''),
+        })),
+        projects: projects.map(p => typeof p === 'string' ? { name: p } : {
+          name: p.name || p.label,
+          label: p.label || p.name || 'Project',
+          technologies: p.technologies || [],
+          description: typeof p.description === 'object' && p.description !== null
+            ? (p.description.input || p.description.description || p.description.text || '')
+            : (p.description || ''),
+          githubRepo: p.githubRepo,
+          hostingLink: p.hostingLink,
+        }),
+      };
+      setCreateProgress(20);
+      
+      // Step 4: AI batch generation (single request)
+      if (resumeSettings.enableAI) {
+        console.log('🤖 AI enabled — auto-generating content...');
+        setCreateStatus('AI is polishing your content...');
+        
+        // Animated progress during AI wait (20% → 55% over ~30s)
+        const aiProgressInterval = setInterval(() => {
+          setCreateProgress(prev => {
+            if (prev >= 55) { clearInterval(aiProgressInterval); return 55; }
+            return prev + 0.5;
+          });
+        }, 500);
+
+        // Dynamic status messages while AI works
+        const aiStatusMessages = [
+          'AI is polishing your content...',
+          'Crafting professional summary...',
+          'Optimizing experience descriptions...',
+          'Enhancing project highlights...',
+          'Weaving in ATS keywords...',
+          'Fine-tuning word count & tone...',
+          'Almost there, reviewing quality...',
+        ];
+        let statusIdx = 0;
+        const aiStatusInterval = setInterval(() => {
+          statusIdx = (statusIdx + 1) % aiStatusMessages.length;
+          setCreateStatus(aiStatusMessages[statusIdx]);
+        }, 4000);
+
+        fullResumeData = await aiGenerateAllContent(fullResumeData);
+        
+        // Phase 3: Compare summary text and record version history
+        if (fullResumeData.summary && fullResumeData.summary !== summary) {
+          const updatedVersions = [...versions, {
+            version: versions.length + 1,
+            timestamp: new Date().toISOString(),
+            originalSummary: summary,
+            enhancedSummary: fullResumeData.summary
+          }];
+          setVersions(updatedVersions);
+          fullResumeData.versions = updatedVersions;
+          setSummary(fullResumeData.summary);
+        } else {
+          fullResumeData.versions = versions;
+        }
+        
+        clearInterval(aiProgressInterval);
+        clearInterval(aiStatusInterval);
+        setCreateProgress(55);
+        setCreateStatus('AI content polished!');
+        console.log('✅ AI content generation complete');
+        // Brief pause to show success
+        await new Promise(r => setTimeout(r, 600));
+
+        // Step 4b: Save AI-polished data back to MongoDB
+        if (studentId) {
+          try {
+            setCreateStatus('Saving AI-polished data...');
+            const polishedSaveResponse = await fetch(joinApiUrl('/resume-builder/save'), {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                ...(token ? { Authorization: `Bearer ${token}` } : {}),
+              },
+              body: JSON.stringify({ studentId, resumeData: fullResumeData }),
+            });
+            if (polishedSaveResponse.ok) {
+              console.log('✅ AI-polished resume data saved to MongoDB');
+            } else {
+              console.warn('⚠️ AI-polished data MongoDB save failed:', await polishedSaveResponse.text());
+            }
+          } catch (polishedSaveErr) {
+            console.warn('⚠️ AI-polished data save error:', polishedSaveErr);
+          }
+        }
+      }
+
+      // Step 5: Generate PDF on server
+      setCreateStatus('Generating PDF...');
+      setCreateProgress(60);
+
+      const pdfProgressInterval = setInterval(() => {
+        setCreateProgress(prev => {
+          if (prev >= 85) { clearInterval(pdfProgressInterval); return 85; }
+          return prev + 2;
+        });
+      }, 400);
+
+      const response = await fetch(joinApiUrl('/resume-builder/generate'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ studentId, resumeData: fullResumeData }),
+      });
+
+      clearInterval(pdfProgressInterval);
+
+      if (!response.ok) throw new Error(`Server error: ${response.status}`);
+
+      setCreateProgress(88);
+      setCreateStatus('Downloading PDF...');
+
+      const blob = await response.blob();
+      const pdfUrl = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result || '');
+        reader.onerror = () => reject(new Error('Failed to prepare PDF preview'));
+        reader.readAsDataURL(blob);
+      });
+      setResumePdfUrl(pdfUrl);
+
+      // Step 6: Upload to GridFS & save
+      setCreateProgress(92);
+      setCreateStatus('Saving to your profile...');
+
+      // Upload the PDF blob to GridFS
+      const pdfFile = new File([blob], `${personalInfo.name || 'Resume'}_Resume.pdf`, { type: 'application/pdf' });
+      let gridfsUrl = '';
+      try {
+        const gridfsService = (await import('../services/gridfsService')).default;
+        const uploadResult = await gridfsService.uploadResume(pdfFile, studentId);
+        gridfsUrl = uploadResult.gridfsFileUrl;
+        console.log('✅ Resume uploaded to GridFS:', gridfsUrl);
+      } catch (gridfsErr) {
+        console.error('⚠️ GridFS upload failed, continuing with blob URL:', gridfsErr);
+      }
+
+      const resumeUrl = gridfsUrl || pdfUrl;
+      const updatedStudentData = JSON.parse(localStorage.getItem('studentData') || '{}');
+      updatedStudentData.resumeData = {
+        url: resumeUrl,
+        gridfsFileUrl: gridfsUrl || '',
+        name: `${personalInfo.name || 'Resume'}_Resume.pdf`,
+        createdAt: new Date().toISOString()
+      };
+      updatedStudentData.resumeURL = resumeUrl;
+      localStorage.setItem('studentData', JSON.stringify(updatedStudentData));
+      
+      // Update resume cache so the Resume page shows buttons immediately
+      localStorage.setItem('studentResumeStatus', JSON.stringify({
+        hasResume: true,
+        checkedAt: Date.now()
+      }));
+      localStorage.setItem('studentResumeData', JSON.stringify({
+        resume: {
+          url: resumeUrl,
+          gridfsFileUrl: gridfsUrl || '',
+          name: `${personalInfo.name || 'Resume'}_Resume.pdf`,
+          createdAt: new Date().toISOString()
+        },
+        cachedAt: Date.now()
+      }));
+      
+      window.dispatchEvent(new Event('storage'));
+      window.dispatchEvent(new Event('profileUpdated'));
+      window.dispatchEvent(new Event('resumeBuilt'));
+      console.log('✅ Resume saved with GridFS URL for resume page');
+
+      // Don't auto-open, let user click Preview button
+      // window.open(pdfUrl, '_blank');
+      console.log('✅ Resume ready for preview');
+
+      setCreateProgress(100);
+      setCreateStatus('Resume ready!');
+
+      setTimeout(() => {
+        setIsCreating(false);
+        setIsPreviewing(false);
+        setShowCreated(true);
+      }, 800);
+    } catch (err) {
+      console.error('Resume creation failed:', err);
+      
+      // Rate-limited: show clear message, don't try fallback
+      if (err.message?.includes('RATE_LIMITED')) {
+        setCreateStatus('API rate limit reached');
+        setCreateProgress(0);
+        setTimeout(() => {
+          setIsCreating(false);
+          alert('AI generation failed. Please make sure the local AI service is running and try again. Your data is saved.');
+        }, 500);
+        return;
+      }
+
+      setCreateStatus('Trying fallback...');
+
+      // Fallback: client-side PDF
+      try {
+        await generateClientSidePdf();
+        setCreateProgress(100);
+        setCreateStatus('Resume ready!');
+        setTimeout(() => {
+          setIsCreating(false);
+          setIsPreviewing(false);
+          setShowCreated(true);
+        }, 600);
+      } catch (fallbackErr) {
+        console.error('Client PDF fallback failed:', fallbackErr);
+        setIsCreating(false);
+        alert('Resume creation failed. Please check your connection and try again.');
+      }
+    }
+  };
+
+  // ===== HANDLE CHECK ATS - Show popup, fetch data, run analysis, then navigate =====
+  const handleCheckATS = async () => {
+    if (atsPopupState !== 'none') return;
+    setShowCreated(false); // Close the Created! modal
+    setAtsPopupState('progress');
+    setAtsProgress(0);
+    setAtsProgressMessage('Fetching resume from database...');
+
+    // Dynamic progress animation
+    let targetProgress = 10;
+    const progressInterval = setInterval(() => {
+      setAtsProgress(prev => {
+        if (prev < targetProgress) {
+          const diff = targetProgress - prev;
+          const increment = Math.min(diff * 0.1, 2); // Smooth acceleration
+          return Math.min(prev + increment, targetProgress);
+        }
+        return prev;
+      });
+    }, 100);
+
+    try {
+      const studentId = studentData?._id || studentData?.id;
+      const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+      let fetchedResumeData = null;
+      let analysisResult = null;
+
+      // Step 1: Fetch resume data from MongoDB
+      targetProgress = 15;
+      if (studentId) {
+        setAtsProgressMessage('Loading resume data...');
+        targetProgress = 20;
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+        try {
+          const response = await fetch(joinApiUrl(`/resume-builder/ats-data/${studentId}`), {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            },
+            signal: controller.signal,
+          });
+          clearTimeout(timeoutId);
+
+          if (response.ok) {
+            const data = await response.json();
+            if (data.success && data.resumeData) {
+              fetchedResumeData = data.resumeData;
+              targetProgress = 30;
+            }
+          }
+        } catch (fetchErr) {
+          console.warn('ATS data fetch failed:', fetchErr.message);
+        }
+
+        // Fallback: try localStorage
+        if (!fetchedResumeData) {
+          try {
+            const storageKey = getStorageKey();
+            const stored = localStorage.getItem(storageKey) || localStorage.getItem('resumeBuilderData');
+            if (stored) {
+              fetchedResumeData = JSON.parse(stored);
+              targetProgress = 30;
+            }
+          } catch { /* ignore */ }
+        }
+      }
+
+      // Step 2: Try to load existing analysis from MongoDB
+      if (studentId && fetchedResumeData) {
+        targetProgress = 35;
+        setAtsProgressMessage('Checking for existing analysis...');
+        try {
+          const controller2 = new AbortController();
+          const timeoutId2 = setTimeout(() => controller2.abort(), 8000);
+          targetProgress = 40;
+          const atsResponse = await fetch(joinApiUrl(`/resume-builder/ats-result/${studentId}`), {
+            headers: {
+              'Content-Type': 'application/json',
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            },
+            signal: controller2.signal,
+          });
+          clearTimeout(timeoutId2);
+          targetProgress = 50;
+
+          if (atsResponse.ok) {
+            const atsData = await atsResponse.json();
+            if (atsData.success && atsData.analysis) {
+              analysisResult = atsData.analysis;
+              targetProgress = 85;
+              setAtsProgressMessage('Analysis loaded!');
+            }
+          }
+        } catch (err) {
+          console.warn('Existing analysis fetch failed:', err.message);
+        }
+      }
+
+      // Step 3: If no existing analysis, run fresh ATS check
+      if (!analysisResult && fetchedResumeData) {
+        targetProgress = 55;
+        setAtsProgressMessage('AI analyzing content quality...');
+        try {
+          targetProgress = 60;
+          const atsCheckResponse = await fetch(joinApiUrl('/resume-builder/ats-check'), {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            },
+            body: JSON.stringify({ resumeData: fetchedResumeData, studentId }),
+          });
+          targetProgress = 75;
+
+          if (atsCheckResponse.ok) {
+            const checkResult = await atsCheckResponse.json();
+            if (checkResult.analysis) {
+              analysisResult = checkResult.analysis;
+              targetProgress = 85;
+              setAtsProgressMessage('Analysis complete!');
+
+              // Save analysis to MongoDB in background
+              fetch(joinApiUrl('/resume-builder/save-ats-analysis'), {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                },
+                body: JSON.stringify({ studentId, atsAnalysis: analysisResult }),
+              }).catch(() => {});
+            }
+          }
+        } catch (err) {
+          console.warn('ATS check failed:', err.message);
+        }
+      }
+
+      // Step 4: Store everything for ATSChecker page
+      targetProgress = 90;
+      if (fetchedResumeData) {
+        sessionStorage.setItem('atsCheckerPrefetchedData', JSON.stringify(fetchedResumeData));
+      }
+      if (analysisResult) {
+        sessionStorage.setItem('atsCheckerPrefetchedAnalysis', JSON.stringify(analysisResult));
+      }
+
+      // Finish progress and navigate
+      targetProgress = 95;
+      setAtsProgressMessage('Opening ATS Checker...');
+      await new Promise(resolve => setTimeout(resolve, 300));
+      targetProgress = 100;
+      await new Promise(resolve => setTimeout(resolve, 400));
+
+      clearInterval(progressInterval);
+      setAtsPopupState('none');
+      setAtsProgress(0);
+      setShowCreated(false);
+      onViewChange('ats-checker');
+    } catch (err) {
+      console.error('ATS check error:', err);
+      clearInterval(progressInterval);
+      setAtsPopupState('none');
+      setAtsProgress(0);
+      onViewChange('ats-checker');
+    }
+  };
+
+  // ===== LOAD SAVED DATA =====
+  useEffect(() => {
+    const fetchResumeData = async () => {
+      try {
+        const studentId = studentData?._id || studentData?.id;
+        const token = localStorage.getItem('token');
+        const API_BASE = process.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:5000';
+
+        let saved = null;
+
+        // 1. Check if data was pre-fetched from the Resume page (within last 30 seconds)
+        const preFetchedAt = parseInt(localStorage.getItem('resumeDataPreFetched') || '0', 10);
+        const isPreFetched = (Date.now() - preFetchedAt) < 30000;
+
+        if (isPreFetched) {
+          // Data was just pre-fetched and cached in localStorage — skip MongoDB call
+          localStorage.removeItem('resumeDataPreFetched');
+          const storageKey = getStorageKey();
+          saved = JSON.parse(localStorage.getItem(storageKey) || 'null');
+          if (saved) {
+            console.log('⚡ Resume data loaded instantly from pre-fetch cache');
+          }
+        }
+
+        // 2. If not pre-fetched, fetch from MongoDB
+        if (!saved && studentId) {
+          try {
+            const response = await fetch(joinApiUrl(`/resume-builder/load/${studentId}`), {
+              method: 'GET',
+              headers: {
+                'Content-Type': 'application/json',
+                ...(token ? { Authorization: `Bearer ${token}` } : {}),
+              },
+            });
+            if (response.ok) {
+              const data = await response.json();
+              if (data && data.resumeData) {
+                saved = data.resumeData;
+                // Update localStorage with MongoDB data
+                localStorage.setItem(getStorageKey(), JSON.stringify(saved));
+                console.log('✅ Resume data loaded from MongoDB');
+              }
+            }
+          } catch (fetchErr) {
+            console.warn('⚠️ MongoDB fetch failed, falling back to localStorage:', fetchErr);
+          }
+        }
+
+        // 2. Fallback to localStorage if MongoDB fetch failed or returned nothing
+        if (!saved) {
+          const storageKey = getStorageKey();
+          saved = JSON.parse(localStorage.getItem(storageKey) || 'null');
+          
+          // Migration: if no user-specific data exists, check legacy key and migrate
+          if (!saved && storageKey !== 'resumeBuilderData') {
+            const legacyData = JSON.parse(localStorage.getItem('resumeBuilderData') || 'null');
+            if (legacyData) {
+              // Only migrate if the legacy data matches this student's info
+              const currentName = `${studentData?.firstName || ''} ${studentData?.lastName || ''}`.trim();
+              const legacyName = legacyData.personalInfo?.name?.trim();
+              if (legacyName && currentName && legacyName === currentName) {
+                saved = legacyData;
+                localStorage.setItem(storageKey, JSON.stringify(legacyData));
+              }
+              // Remove legacy key to prevent data leaks to other users
+              localStorage.removeItem('resumeBuilderData');
+            }
+          }
+          
+          if (saved) {
+            console.log('✅ Resume data loaded from localStorage');
+          }
+        }
+        
+        // 3. Populate form fields with loaded data
+        if (saved) {
+          if (saved.personalInfo) setPersonalInfo(prev => ({ ...prev, ...saved.personalInfo }));
+          if (saved.summary) setSummary(saved.summary);
+          if (saved.versions) setVersions(saved.versions);
+          if (saved.education) setEducation(prev => ({ ...prev, ...saved.education }));
+          if (saved.platforms?.length) setPlatforms(saved.platforms);
+          // Important: saved.skills can be [] (empty array) which means user wants no skills
+          if (saved.skills !== undefined) {
+            // Backward compatibility: convert flat array to categorized format
+            if (Array.isArray(saved.skills) && saved.skills.length > 0 && typeof saved.skills[0] === 'string') {
+              setSkills(prev => prev.map(cat =>
+                cat.category === 'Other'
+                  ? { ...cat, items: saved.skills }
+                  : cat
+              ));
+            } else if (Array.isArray(saved.skills)) {
+              setSkills(saved.skills.length > 0 ? saved.skills : DEFAULT_SKILL_CATEGORIES.map(c => ({ ...c, items: [...c.items] })));
+            }
+          }
+          if (saved.experiences?.length) setExperiences(saved.experiences.map(e => ({
+            ...e,
+            description: typeof e.description === 'object' && e.description !== null
+              ? (e.description.input || e.description.description || e.description.text || '')
+              : (e.description || ''),
+          })));
+          if (saved.projects?.length) setProjects(saved.projects.map(p => ({
+            ...p,
+            description: typeof p.description === 'object' && p.description !== null
+              ? (p.description.input || p.description.description || p.description.text || '')
+              : (p.description || ''),
+          })));
+          if (saved.certifications?.length) setCertifications(saved.certifications);
+          if (saved.achievements?.length) setAchievements(saved.achievements);
+          if (saved.additionalInfo?.length) setAdditionalInfo(saved.additionalInfo);
+          if (saved.resumeSettings) setResumeSettings(prev => ({ ...prev, ...saved.resumeSettings, profilePhoto: false }));
+          
+          // After loading saved data, fill in any missing fields from student profile
+          // Skip skills auto-populate because skills were explicitly saved (even if empty)
+          setTimeout(() => autoPopulateFromProfile(true), 100);
+        } else {
+          // No saved data at all, populate everything from student profile (including skills)
+          autoPopulateFromProfile(false);
+        }
+
+        // Load existing PDF GridFS url on mount to enable preview/download on refresh
+        if (studentId) {
+          try {
+            const pdfResponse = await fetch(joinApiUrl(`/resume-builder/pdf/${studentId}`), {
+              headers: {
+                'Content-Type': 'application/json',
+                ...(token ? { Authorization: `Bearer ${token}` } : {}),
+              }
+            });
+            if (pdfResponse.ok) {
+              const pdfData = await pdfResponse.json();
+              if (pdfData.success && pdfData.resume && pdfData.resume.gridfsFileUrl) {
+                const fullUrl = joinApiUrl(pdfData.resume.gridfsFileUrl);
+                setResumePdfUrl(fullUrl);
+                console.log('✅ Loaded existing resume PDF from GridFS:', fullUrl);
+              }
+            }
+          } catch (pdfErr) {
+            console.warn('⚠️ Existing resume PDF fetch failed:', pdfErr.message);
+          }
+        }
+      } catch (e) {
+        console.error('Error loading resume data:', e);
+        // On error, try to populate from student profile (including skills since no saved data)
+        autoPopulateFromProfile(false);
+      }
+    };
+
+    if (studentData) {
+      fetchResumeData();
+    }
+  }, [studentData, getStorageKey, autoPopulateFromProfile]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Job role change is tracked but no longer auto-adds keywords to skills
+
+  // ===== RENDER =====
+  return (
+    <div>
+      {validationError && (
+        <div style={{
+          background: '#fee2e2',
+          border: '1px solid #fca5a5',
+          color: '#991b1b',
+          padding: '12px 16px',
+          borderRadius: '8px',
+          marginBottom: '20px',
+          fontSize: '14px',
+          fontWeight: '500',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
+          <span>⚠️ {validationError}</span>
+          <button
+            onClick={() => setValidationError('')}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: '#991b1b',
+              cursor: 'pointer',
+              fontSize: '18px',
+              marginLeft: 'auto'
+            }}
+          >
+            ×
+          </button>
+        </div>
+      )}
+      {/* ===== RESUME SETTINGS ===== */}
+      <div className={styles.formSection}>
+        <h3 className={styles.sectionTitle}>Resume Settings</h3>
+        <div className={styles.settingsGrid}>
+          {/* Job Role */}
+          <div className={styles.settingsField}>
+            <label className={styles.settingsLabel}>Job Role</label>
+            <FormDropdown
+              options={JOB_ROLE_OPTIONS}
+              selectedOption={resumeSettings.jobRole}
+              onSelect={val => setResumeSettings(prev => ({ ...prev, jobRole: val, customJobRole: '' }))}
+              placeholder="Select Job Role"
+              role="stu"
+              className={styles.settingsDropdown}
+            />
+            {resumeSettings.jobRole === 'Others' && (
+              <input
+                className={styles.formInput}
+                style={{ marginTop: '0.75rem' }}
+                placeholder="Enter your job role"
+                value={resumeSettings.customJobRole}
+                onChange={e => setResumeSettings(prev => ({ ...prev, customJobRole: e.target.value }))}
+              />
+            )}
+          </div>
+
+          {/* Font Style */}
+          <div className={styles.settingsField}>
+            <label className={styles.settingsLabel}>Font Style</label>
+            <FormDropdown
+              options={FONT_STYLE_OPTIONS}
+              selectedOption={resumeSettings.fontStyle}
+              onSelect={val => setResumeSettings(prev => ({ ...prev, fontStyle: val }))}
+              placeholder="Select Font Style"
+              role="stu"
+              className={styles.settingsDropdown}
+            />
+          </div>
+
+          {/* AI Integration (swapped with Pages) */}
+          <div className={styles.settingsField}>
+            <label className={styles.settingsLabel}>AI Integration</label>
+            <div className={styles.aiToggleButtons}>
+              <input
+                type="radio"
+                id="enableAI-yes"
+                name="enableAI"
+                checked={resumeSettings.enableAI === true}
+                onChange={() => setResumeSettings(prev => ({ ...prev, enableAI: true }))}
+              />
+              <label htmlFor="enableAI-yes">Enable</label>
+              <input
+                type="radio"
+                id="enableAI-no"
+                name="enableAI"
+                checked={resumeSettings.enableAI === false}
+                onChange={() => setResumeSettings(prev => ({ ...prev, enableAI: false }))}
+              />
+              <label htmlFor="enableAI-no">Disable</label>
+            </div>
+          </div>
+
+          {/* Link Type */}
+          <div className={styles.settingsField}>
+            <label className={styles.settingsLabel}>Link Type</label>
+            <div className={styles.aiToggleButtons}>
+              <input
+                type="radio"
+                id="linkType-hyperlink"
+                name="linkType"
+                checked={resumeSettings.linkType === 'HyperLink'}
+                onChange={() => setResumeSettings(prev => ({ ...prev, linkType: 'HyperLink' }))}
+              />
+              <label htmlFor="linkType-hyperlink">HyperLink</label>
+              <input
+                type="radio"
+                id="linkType-url"
+                name="linkType"
+                checked={resumeSettings.linkType === 'URL'}
+                onChange={() => setResumeSettings(prev => ({ ...prev, linkType: 'URL' }))}
+              />
+              <label htmlFor="linkType-url">URL</label>
+            </div>
+          </div>
+
+          {/* Pages (only enabled when AI is on) */}
+          <div className={styles.settingsField}>
+            <label className={styles.settingsLabel} style={!resumeSettings.enableAI ? { color: '#999' } : {}}>Pages</label>
+            <FormDropdown
+              options={PAGES_OPTIONS}
+              selectedOption={resumeSettings.pages}
+              onSelect={val => setResumeSettings(prev => ({ ...prev, pages: val }))}
+              placeholder="Select Pages"
+              disabled={!resumeSettings.enableAI}
+              role="stu"
+              className={styles.settingsDropdown}
+            />
+          </div>
+
+          {/* Profile Photo */}
+          <div className={styles.settingsField}>
+            <label className={styles.settingsLabel}>Profile Photo</label>
+            <div className={styles.aiToggleButtons}>
+              <input
+                type="radio"
+                id="profilePhoto-yes"
+                name="profilePhoto"
+                checked={resumeSettings.profilePhoto === true}
+                onChange={() => setResumeSettings(prev => ({ ...prev, profilePhoto: true }))}
+              />
+              <label htmlFor="profilePhoto-yes">On</label>
+              <input
+                type="radio"
+                id="profilePhoto-no"
+                name="profilePhoto"
+                checked={resumeSettings.profilePhoto === false}
+                onChange={() => setResumeSettings(prev => ({ ...prev, profilePhoto: false }))}
+              />
+              <label htmlFor="profilePhoto-no">Off</label>
+            </div>
+          </div>
+
+          {/* Photo Position (only enabled when Profile Photo is On) */}
+          {resumeSettings.profilePhoto && (
+            <div className={styles.settingsField}>
+              <label className={styles.settingsLabel}>Photo Placing</label>
+              <div className={styles.aiToggleButtons}>
+                <input
+                  type="radio"
+                  id="photoPosition-left"
+                  name="photoPosition"
+                  checked={resumeSettings.photoPosition === 'Left'}
+                  onChange={() => setResumeSettings(prev => ({ ...prev, photoPosition: 'Left' }))}
+                />
+                <label htmlFor="photoPosition-left">Left</label>
+                <input
+                  type="radio"
+                  id="photoPosition-right"
+                  name="photoPosition"
+                  checked={resumeSettings.photoPosition === 'Right'}
+                  onChange={() => setResumeSettings(prev => ({ ...prev, photoPosition: 'Right' }))}
+                />
+                <label htmlFor="photoPosition-right">Right</label>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ===== PERSONAL INFORMATION ===== */}
+      <div className={styles.formSection}>
+        <h3 className={styles.sectionTitle}>Personal Information</h3>
+        <div className={styles.formGrid}>
+          <div className={styles.formField}>
+            <label className={styles.fieldLabel}>
+              Name <span className={styles.requiredStar}>*</span>
+            </label>
+            <input
+              className={styles.formInput}
+              placeholder="Enter Full Name"
+              value={personalInfo.name}
+              onChange={e => setPersonalInfo(p => ({ ...p, name: e.target.value }))}
+            />
+          </div>
+
+          <div className={styles.formField}>
+            <label className={styles.fieldLabel}>
+              Mobile Number <span className={styles.requiredStar}>*</span>
+            </label>
+            <div className={styles.mobileInputWrapper}>
+              <div className={styles.mobilePrefix}>+91</div>
+              <input
+                className={styles.mobileInput}
+                placeholder="Enter Mobile Number"
+                value={personalInfo.mobile ? personalInfo.mobile.replace(/^\+91/, '') : ''}
+                onChange={e => {
+                  let val = e.target.value.replace(/\D/g, '').slice(0, 10);
+                  setPersonalInfo(p => ({ ...p, mobile: val ? `+91${val}` : '' }));
+                }}
+              />
+            </div>
+          </div>
+
+          <div className={styles.formField}>
+            <label className={styles.fieldLabel}>
+              Mail <span className={styles.requiredStar}>*</span>
+            </label>
+            <input
+              className={styles.formInput}
+              placeholder="Enter Mail Address"
+              value={personalInfo.email}
+              onChange={e => setPersonalInfo(p => ({ ...p, email: e.target.value }))}
+            />
+          </div>
+
+          <div className={styles.formField}>
+            <label className={styles.fieldLabel}>LinkedIn Profile</label>
+            <input
+              className={styles.formInput}
+              placeholder="https://linkedin.com/in/username"
+              value={personalInfo.linkedin}
+              onChange={e => setPersonalInfo(p => ({ ...p, linkedin: e.target.value }))}
+            />
+          </div>
+
+          <div className={styles.formField}>
+            <label className={styles.fieldLabel}>GitHub Profile</label>
+            <input
+              className={styles.formInput}
+              placeholder="https://github.com/username"
+              value={personalInfo.github}
+              onChange={e => setPersonalInfo(p => ({ ...p, github: e.target.value }))}
+            />
+          </div>
+
+          <div className={styles.formField}>
+            <label className={styles.fieldLabel}>Portfolio Link</label>
+            <input
+              className={styles.formInput}
+              placeholder="https://yourportfolio.com"
+              value={personalInfo.portfolio}
+              onChange={e => setPersonalInfo(p => ({ ...p, portfolio: e.target.value }))}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* ===== PROFESSIONAL SUMMARY ===== */}
+      <div className={styles.formSection}>
+        <h3 className={styles.sectionTitle}>Professional Summary</h3>
+        <textarea
+          ref={summaryTextareaRef}
+          className={styles.formTextarea}
+          placeholder={resumeSettings.enableAI
+            ? 'Write something about yourself — AI will polish it into a professional summary when you create the resume'
+            : 'Write your professional summary here. This text will appear directly in your resume.'
+          }
+          value={summary}
+          onChange={e => setSummary(e.target.value)}
+        />
+        <div className={styles.textareaActions}>
+          {resumeSettings.enableAI && (
+            <span style={{ fontSize: '12px', color: '#2085f6', fontStyle: 'italic' }}>✨ AI will auto-generate during Create</span>
+          )}
+          {versions.length > 0 && (
+            <button
+              className={styles.clearBtn}
+              onClick={() => {
+                setSelectedVersionIndex(versions.length - 1);
+                setShowVersionModal(true);
+              }}
+              style={{ marginRight: '10px', color: '#2085f6', borderColor: '#2085f6' }}
+            >
+              Compare AI Versions ({versions.length})
+            </button>
+          )}
+          <button className={styles.clearBtn} onClick={() => setSummary('')}>Clear</button>
+        </div>
+      </div>
+
+      {/* ===== EDUCATION ===== */}
+      <div className={styles.formSection}>
+        <h3 className={styles.sectionTitle}>Education</h3>
+        {/* College / University */}
+        <div className={styles.subSectionHeader}>College / University</div>
+        <div className={styles.formGrid}>
+          <div className={styles.formField}>
+            <label className={styles.fieldLabel}>
+              College / University Name <span className={styles.requiredStar}>*</span>
+            </label>
+            <input
+              className={styles.formInput}
+              placeholder="Enter College or University Name"
+              value={education.college}
+              onChange={e => setEducation(p => ({ ...p, college: e.target.value }))}
+            />
+          </div>
+
+          <div className={styles.formField}>
+            <label className={styles.fieldLabel}>
+              Degree <span className={styles.requiredStar}>*</span>
+            </label>
+            <input
+              className={styles.formInput}
+              placeholder="e.g. B.E., B.Tech, M.Tech"
+              value={education.degree}
+              onChange={e => setEducation(p => ({ ...p, degree: e.target.value }))}
+            />
+          </div>
+
+          <div className={styles.formField}>
+            <label className={styles.fieldLabel}>
+              Branch <span className={styles.requiredStar}>*</span>
+            </label>
+            <input
+              className={styles.formInput}
+              placeholder="e.g. CSE, ECE, IT"
+              value={education.branch}
+              onChange={e => setEducation(p => ({ ...p, branch: e.target.value }))}
+            />
+          </div>
+
+          <div className={styles.formField}>
+            <label className={styles.fieldLabel}>
+              CGPA <span className={styles.requiredStar}>*</span>
+            </label>
+            <div className={styles.suffixInputWrapper}>
+              <input
+                className={styles.suffixInput}
+                placeholder="e.g. 8.5"
+                value={education.cgpa}
+                onChange={e => setEducation(p => ({ ...p, cgpa: e.target.value }))}
+              />
+              <div className={styles.inputSuffix}>CGPA</div>
+            </div>
+          </div>
+
+          <div className={styles.formField}>
+            <label className={styles.fieldLabel}>
+              Graduation Year <span className={styles.requiredStar}>*</span>
+            </label>
+            <input
+              className={styles.formInput}
+              placeholder="e.g. 2026"
+              value={education.graduationYear}
+              onChange={e => setEducation(p => ({ ...p, graduationYear: e.target.value }))}
+            />
+          </div>
+        </div>
+
+        {/* 12th Standard */}
+        <div className={styles.subSectionHeader} style={{ marginTop: '24px' }}>12th Standard</div>
+        <div className={styles.formGrid}>
+          <div className={styles.formField}>
+            <label className={styles.fieldLabel}>
+              12th School Name <span className={styles.requiredStar}>*</span>
+            </label>
+            <input
+              className={styles.formInput}
+              placeholder="Enter School Name"
+              value={education.school12}
+              onChange={e => setEducation(p => ({ ...p, school12: e.target.value }))}
+            />
+          </div>
+
+          <div className={styles.formField}>
+            <label className={styles.fieldLabel}>
+              Percentile / Marks <span className={styles.requiredStar}>*</span>
+            </label>
+            <div className={styles.suffixInputWrapper}>
+              <input
+                className={styles.suffixInput}
+                placeholder="e.g. 85.5"
+                value={education.percentile12}
+                onChange={e => setEducation(p => ({ ...p, percentile12: e.target.value }))}
+              />
+              <div className={styles.inputSuffix}>%</div>
+            </div>
+          </div>
+
+          <div className={styles.formField}>
+            <label className={styles.fieldLabel}>
+              Batch <span className={styles.requiredStar}>*</span>
+            </label>
+            <input
+              className={styles.formInput}
+              placeholder="e.g. 2020-2022"
+              value={education.batch12}
+              onChange={e => setEducation(p => ({ ...p, batch12: e.target.value }))}
+            />
+          </div>
+        </div>
+
+        {/* 10th Standard */}
+        <div className={styles.subSectionHeader} style={{ marginTop: '24px' }}>10th Standard</div>
+        <div className={styles.formGrid}>
+          <div className={styles.formField}>
+            <label className={styles.fieldLabel}>
+              10th School Name <span className={styles.requiredStar}>*</span>
+            </label>
+            <input
+              className={styles.formInput}
+              placeholder="Enter School Name"
+              value={education.school10}
+              onChange={e => setEducation(p => ({ ...p, school10: e.target.value }))}
+            />
+          </div>
+
+          <div className={styles.formField}>
+            <label className={styles.fieldLabel}>
+              Percentile / Marks <span className={styles.requiredStar}>*</span>
+            </label>
+            <div className={styles.suffixInputWrapper}>
+              <input
+                className={styles.suffixInput}
+                placeholder="e.g. 90.0"
+                value={education.percentile10}
+                onChange={e => setEducation(p => ({ ...p, percentile10: e.target.value }))}
+              />
+              <div className={styles.inputSuffix}>%</div>
+            </div>
+          </div>
+
+          <div className={styles.formField}>
+            <label className={styles.fieldLabel}>
+              Batch <span className={styles.requiredStar}>*</span>
+            </label>
+            <input
+              className={styles.formInput}
+              placeholder="e.g. 2019-2020"
+              value={education.batch10}
+              onChange={e => setEducation(p => ({ ...p, batch10: e.target.value }))}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* ===== CODING PLATFORM ===== */}
+      <div className={styles.formSection}>
+        <h3 className={styles.sectionTitle}>Coding Platform</h3>
+        {platforms.map((platform, index) => (
+          <div key={index} className={styles.platformRow}>
+            {editingPlatformIndex === index ? (
+              <input
+                ref={platformNameInputRef}
+                className={styles.platformNameInput}
+                placeholder="Platform Name (e.g., CodeChef)"
+                defaultValue={platform.name}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') { e.preventDefault(); commitPlatformName(index, e.target.value); }
+                  if (e.key === 'Escape') { commitPlatformName(index, ''); }
+                }}
+                onBlur={e => commitPlatformName(index, e.target.value)}
+              />
+            ) : (
+              <span className={styles.platformChip}>
+                {platform.name}
+                <button className={styles.chipRemove} onClick={() => removePlatform(index)}>×</button>
+              </span>
+            )}
+            <input
+              className={styles.platformUrlInput}
+              placeholder={platform.name ? `Enter ${platform.name} Profile Link` : 'Enter Platform Profile Link'}
+              value={platform.url}
+              onChange={e => updatePlatformUrl(index, e.target.value)}
+            />
+          </div>
+        ))}
+        <button className={styles.addChipBtn} onClick={addPlatformRow} style={{ marginTop: '14px' }}>
+          <span className={styles.addChipBtnIcon}>+</span>
+          Click to Add Platform
+        </button>
+      </div>
+
+      {/* ===== CORE SKILLS ===== */}
+      <div className={styles.formSection}>
+        <h3 className={styles.sectionTitle}>Core Skills</h3>
+        {skills.map((cat, catIndex) => (
+          <div key={catIndex} className={styles.skillCategoryRow}>
+            <div className={styles.skillCategoryField}>
+              <input
+                className={styles.skillCategoryInput}
+                value={cat.category}
+                onChange={e => {
+                  const val = e.target.value;
+                  setSkills(prev => prev.map((c, ci) =>
+                    ci === catIndex ? { ...c, category: val } : c
+                  ));
+                }}
+                placeholder="Category Name"
+              />
+              <button className={styles.categoryRemoveBtn} onClick={() => {
+                setSkills(prev => prev.filter((_, ci) => ci !== catIndex));
+              }} title="Remove category">×</button>
+            </div>
+            <div className={styles.chipsContainer} style={{ flex: 1 }}>
+              {cat.items.map((skill, i) => (
+                <span key={i} className={styles.chip}>
+                  {skill}
+                  <button className={styles.chipRemove} onClick={() => {
+                    setSkills(prev => prev.map((c, ci) =>
+                      ci === catIndex ? { ...c, items: c.items.filter((_, si) => si !== i) } : c
+                    ));
+                  }}>×</button>
+                </span>
+              ))}
+              {activeSkillCategory === catIndex && (
+                <input
+                  ref={skillInputRef}
+                  className={styles.skillNameInput}
+                  placeholder="Enter Skill"
+                  value={newSkillName}
+                  onChange={e => setNewSkillName(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      const val = newSkillName.trim();
+                      if (val && !cat.items.includes(val)) {
+                        setSkills(prev => prev.map((c, ci) =>
+                          ci === catIndex ? { ...c, items: [...c.items, val] } : c
+                        ));
+                      }
+                      setNewSkillName('');
+                    }
+                    if (e.key === 'Escape') { setActiveSkillCategory(null); setNewSkillName(''); }
+                  }}
+                  onBlur={() => {
+                    const val = newSkillName.trim();
+                    if (val && !cat.items.includes(val)) {
+                      setSkills(prev => prev.map((c, ci) =>
+                        ci === catIndex ? { ...c, items: [...c.items, val] } : c
+                      ));
+                    }
+                    setNewSkillName('');
+                    setActiveSkillCategory(null);
+                  }}
+                />
+              )}
+              <button className={styles.addChipBtn} onClick={() => { setActiveSkillCategory(catIndex); setNewSkillName(''); }}>
+                <span className={styles.addChipBtnIcon}>+</span>
+                Add Skill
+              </button>
+            </div>
+          </div>
+        ))}
+        {/* Add custom category */}
+        <div style={{ marginTop: '12px' }}>
+          {showAddCategory ? (
+            <div className={styles.chipsContainer}>
+              <input
+                className={styles.skillNameInput}
+                placeholder="Category Name"
+                value={newCategoryName}
+                onChange={e => setNewCategoryName(e.target.value)}
+                autoFocus
+                onKeyDown={e => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const val = newCategoryName.trim();
+                    if (val && !skills.some(c => c.category === val)) {
+                      setSkills(prev => [...prev, { category: val, items: [] }]);
+                    }
+                    setNewCategoryName('');
+                    setShowAddCategory(false);
+                  }
+                  if (e.key === 'Escape') { setShowAddCategory(false); setNewCategoryName(''); }
+                }}
+                onBlur={() => {
+                  const val = newCategoryName.trim();
+                  if (val && !skills.some(c => c.category === val)) {
+                    setSkills(prev => [...prev, { category: val, items: [] }]);
+                  }
+                  setNewCategoryName('');
+                  setShowAddCategory(false);
+                }}
+              />
+            </div>
+          ) : (
+            <button className={styles.addChipBtn} onClick={() => setShowAddCategory(true)}>
+              <span className={styles.addChipBtnIcon}>+</span>
+              Add Category
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* ===== INTERNSHIP ===== */}
+      <div className={styles.formSection}>
+        <h3 className={styles.sectionTitle}>Internship</h3>
+        <div className={styles.chipsContainer}>
+          {experiences.map((exp, i) => (
+            <span key={i} className={styles.chip} onClick={() => openExperiencePopup(i)} style={{ cursor: 'pointer' }}>
+              {exp.label || exp.title || 'Experience'}
+              <button className={styles.chipRemove} onClick={e => { e.stopPropagation(); removeChip(experiences, setExperiences, i); }}>×</button>
+            </span>
+          ))}
+          <button className={styles.addChipBtn} onClick={() => openExperiencePopup(null)}>
+            <span className={styles.addChipBtnIcon}>+</span>
+            Click to Add Experience
+          </button>
+        </div>
+      </div>
+
+      {/* ===== PROJECTS ===== */}
+      <div className={styles.formSection}>
+        <h3 className={styles.sectionTitle}>Projects</h3>
+        <div className={styles.chipsContainer}>
+          {projects.map((proj, i) => (
+            <span key={i} className={styles.chip} onClick={() => openProjectPopup(i)} style={{ cursor: 'pointer' }}>
+              {proj.label || proj.name || proj}
+              <button className={styles.chipRemove} onClick={e => { e.stopPropagation(); removeChip(projects, setProjects, i); }}>×</button>
+            </span>
+          ))}
+          <button className={styles.addChipBtn} onClick={() => openProjectPopup(null)}>
+            <span className={styles.addChipBtnIcon}>+</span>
+            Click to Add Project
+          </button>
+        </div>
+      </div>
+
+      {/* ===== CERTIFICATIONS ===== */}
+      <div className={styles.formSection}>
+        <h3 className={styles.sectionTitle}>Certifications</h3>
+        <div className={styles.chipsContainer}>
+          {certifications.map((cert, i) => (
+            <span key={i} className={styles.chip} onClick={() => openCertificationPopup(i)} style={{ cursor: 'pointer' }}>
+              {cert.label || cert.certificateName || cert}
+              <button className={styles.chipRemove} onClick={e => { e.stopPropagation(); removeChip(certifications, setCertifications, i); }}>×</button>
+            </span>
+          ))}
+          <button className={styles.addChipBtn} onClick={() => openCertificationPopup(null)}>
+            <span className={styles.addChipBtnIcon}>+</span>
+            Click to Add Certificate
+          </button>
+        </div>
+      </div>
+
+      {/* ===== ACHIEVEMENTS ===== */}
+      <div className={styles.formSection}>
+        <h3 className={styles.sectionTitle}>Achievements</h3>
+        <div className={styles.chipsContainer}>
+          {achievements.map((ach, i) => (
+            <span key={i} className={styles.chip} onClick={() => openAchievementPopup(i)} style={{ cursor: 'pointer' }}>
+              {ach.label || ach.details || ach}
+              <button className={styles.chipRemove} onClick={e => { e.stopPropagation(); removeChip(achievements, setAchievements, i); }}>×</button>
+            </span>
+          ))}
+          <button className={styles.addChipBtn} onClick={() => openAchievementPopup(null)}>
+            <span className={styles.addChipBtnIcon}>+</span>
+            Click to Add Achievement
+          </button>
+        </div>
+      </div>
+
+      {/* ===== ADDITIONAL INFORMATION ===== */}
+      <div className={styles.formSection}>
+        <h3 className={styles.sectionTitle}>Additional Information</h3>
+        <div className={styles.chipsContainer}>
+          {additionalInfo.map((info, i) => (
+            <span key={i} className={styles.chip} onClick={() => openAdditionalInfoPopup(i)} style={{ cursor: 'pointer' }}>
+              {info.label || info.info || info}
+              <button className={styles.chipRemove} onClick={e => { e.stopPropagation(); removeChip(additionalInfo, setAdditionalInfo, i); }}>×</button>
+            </span>
+          ))}
+          <button className={styles.addChipBtn} onClick={() => openAdditionalInfoPopup(null)}>
+            <span className={styles.addChipBtnIcon}>+</span>
+            Click to Add Info
+          </button>
+        </div>
+      </div>
+
+
+
+      {/* ===== GLOBAL SAVE / DISCARD ===== */}
+      <div className={styles.globalActionBar}>
+        <button className={styles.globalDiscardBtn} onClick={handleDiscard}>Discard</button>
+        <button 
+          className={styles.globalCreateBtn} 
+          onClick={handleCreate}
+          disabled={hasCreatedOnce || isCreating}
+          style={{ 
+            opacity: (hasCreatedOnce || isCreating) ? 0.6 : 1, 
+            cursor: (hasCreatedOnce || isCreating) ? 'not-allowed' : 'pointer' 
+          }}
+        >
+          {hasCreatedOnce ? 'Create' : isCreating ? 'Creating...' : 'Create'}
+        </button>
+      </div>
+
+      {/* ===== POPUPS ===== */}
+      <Suspense fallback={null}>
+        {activePopup === 'experience' && (
+          <PopupExperience
+            key={editIndex !== null ? `edit-${editIndex}` : 'new'}
+            title={editIndex !== null ? experiences[editIndex]?.title : ''}
+            data={editIndex !== null ? experiences[editIndex] : null}
+            onSave={saveExperience}
+            onDiscard={closePopup}
+            enableAI={resumeSettings.enableAI}
+          />
+        )}
+        {activePopup === 'project' && (
+          <PopupProject
+            key={editIndex !== null ? `edit-${editIndex}` : 'new'}
+            title={editIndex !== null ? (projects[editIndex]?.name || projects[editIndex]?.label) : ''}
+            data={editIndex !== null ? projects[editIndex] : null}
+            onSave={saveProject}
+            onDiscard={closePopup}
+            enableAI={resumeSettings.enableAI}
+          />
+        )}
+        {activePopup === 'certification' && (
+          <PopupCertification
+            key={editIndex !== null ? `edit-${editIndex}` : 'new'}
+            data={editIndex !== null ? certifications[editIndex] : null}
+            onSave={saveCertification}
+            onDiscard={closePopup}
+            enableAI={resumeSettings.enableAI}
+          />
+        )}
+        {activePopup === 'achievement' && (
+          <PopupAchievementBuilder
+            key={editIndex !== null ? `edit-${editIndex}` : 'new'}
+            data={editIndex !== null ? achievements[editIndex] : null}
+            onSave={saveAchievement}
+            onDiscard={closePopup}
+            enableAI={resumeSettings.enableAI}
+          />
+        )}
+        {activePopup === 'additionalInfo' && (
+          <PopupAdditionalInfo
+            key={editIndex !== null ? `edit-${editIndex}` : 'new'}
+            data={editIndex !== null ? additionalInfo[editIndex] : null}
+            onSave={saveAdditionalInfoItem}
+            onDiscard={closePopup}
+          />
+        )}
+      </Suspense>
+
+      {/* ===== CREATING POPUP ===== */}
+      {isCreating && (
+        <div className="alert-overlay">
+          <div className="achievement-popup-container">
+            <div className="achievement-popup-header" style={{ backgroundColor: '#2085f6' }}>
+              Resume Creating
+            </div>
+            <div className="achievement-popup-body">
+              <div className="download-progress-icon-container">
+                <svg className="download-progress-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                  <circle className="download-progress-icon--bg" cx="26" cy="26" r="20" fill="none" stroke="#BEBFC6" strokeWidth="4"/>
+                  <circle
+                    className="download-progress-icon--progress"
+                    cx="26"
+                    cy="26"
+                    r="20"
+                    fill="none"
+                    stroke="#2085f6"
+                    strokeWidth="4"
+                    strokeLinecap="round"
+                    strokeDasharray={`${createProgress * 1.256} 125.6`}
+                    transform="rotate(-90 26 26)"
+                    style={{ transition: 'stroke-dasharray 0.4s ease, stroke 0.3s ease' }}
+                  />
+                </svg>
+              </div>
+              <h2 style={{ margin: '1rem 0 0.5rem 0', fontSize: '24px', color: '#000', fontWeight: '700' }}>
+                Creating... {Math.round(createProgress)}%
+              </h2>
+              <p style={{ margin: 0, color: '#555', fontSize: '15px', fontWeight: '500', minHeight: '22px', transition: 'opacity 0.3s ease' }}>
+                {createStatus}
+              </p>
+              {createProgress > 0 && createProgress < 100 && (
+                <p style={{ margin: '8px 0 0 0', color: '#2085f6', fontSize: '12px', fontWeight: '400' }}>
+                  This may take 20–30 seconds
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ===== CREATED SUCCESS POPUP ===== */}
+      {showCreated && (
+        <div className="alert-overlay">
+          <div className="achievement-popup-container">
+            <div className="achievement-popup-header" style={{ backgroundColor: '#2085f6' }}>Created!</div>
+            <div className="achievement-popup-body">
+              <svg className="download-success-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                <circle className="download-success-icon--circle" cx="26" cy="26" r="25" fill="none"/>
+                <path className="download-success-icon--check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+              </svg>
+              <h2 style={{ margin: '1rem 0 0.5rem 0', fontSize: '24px', color: '#000', fontWeight: '700' }}>Resume Created ✓</h2>
+              <p style={{ margin: 0, color: '#888', fontSize: '16px' }}>
+                Your resume has been successfully created.
+              </p>
+            </div>
+            <div className="achievement-popup-footer" style={{ display: 'flex', gap: '24px', justifyContent: 'center', padding: '1.5rem' }}>
+              <button
+                onClick={() => {
+                  if (!resumePdfUrl || isPreviewing) return;
+                  setIsPreviewing(true);
+                  try {
+                    sessionStorage.setItem('resumePreviewUrl', resumePdfUrl);
+                    window.open('/resume-preview', '_blank');
+                  } finally {
+                    // Reset after a delay
+                    setTimeout(() => {
+                      setIsPreviewing(false);
+                    }, 2000);
+                  }
+                }}
+                className="achievement-popup-close-btn"
+                disabled={isPreviewing || !resumePdfUrl}
+                style={{
+                  background: '#e9f1fc',
+                  color: '#2085f6',
+                  border: 'none',
+                  padding: '0.8rem 2rem',
+                  borderRadius: '8px',
+                  fontSize: '1rem',
+                  fontWeight: '500',
+                  cursor: (isPreviewing || !resumePdfUrl) ? 'not-allowed' : 'pointer',
+                  opacity: (isPreviewing || !resumePdfUrl) ? 0.6 : 1,
+                  transition: 'background 0.2s ease',
+                  boxShadow: 'none',
+                  transform: 'none'
+                }}
+                onMouseEnter={(e) => {
+                  if (!isPreviewing && resumePdfUrl) {
+                    e.target.style.background = '#d5e5f9';
+                    e.target.style.boxShadow = 'none';
+                    e.target.style.transform = 'none';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.background = '#e9f1fc';
+                  e.target.style.boxShadow = 'none';
+                  e.target.style.transform = 'none';
+                }}
+              >
+                {isPreviewing ? 'Previewing...' : 'Preview'}
+              </button>
+              <button
+                onClick={() => {
+                  handleCheckATS();
+                }}
+                className="achievement-popup-close-btn"
+                style={{
+                  backgroundColor: '#2085f6',
+                  color: 'white',
+                  border: 'none',
+                  padding: '0.8rem 2rem',
+                  borderRadius: '8px',
+                  fontSize: '1rem',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  transition: 'background-color 0.2s ease',
+                  boxShadow: 'none',
+                  transform: 'none'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.backgroundColor = '#1976d2';
+                  e.target.style.boxShadow = 'none';
+                  e.target.style.transform = 'none';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.backgroundColor = '#2085f6';
+                  e.target.style.boxShadow = 'none';
+                  e.target.style.transform = 'none';
+                }}
+              >
+                ATS check
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ===== ATS CHECK LOADING POPUP ===== */}
+      <PreviewProgressAlert
+        isOpen={atsPopupState === 'progress'}
+        progress={atsProgress}
+        title="Checking ATS Score..."
+        color="#2085f6"
+        progressColor="#2085f6"
+        fileLabel="resume"
+        messages={{
+          initial: atsProgressMessage || 'Fetching resume from database...',
+          mid: atsProgressMessage || 'AI analyzing content quality...',
+          final: 'Opening ATS Checker...'
+        }}
+      />
+      {/* ===== VERSION COMPARISON POPUP ===== */}
+      {showVersionModal && versions.length > 0 && (
+        <div className={styles.overlay} onClick={() => setShowVersionModal(false)}>
+          <div className={styles.popupContainer} style={{ maxWidth: '800px', width: '90%' }} onClick={e => e.stopPropagation()}>
+            <div className={styles.popupHeader}>Compare AI Polish Versions</div>
+            <div className={styles.popupBody} style={{ padding: '20px' }}>
+              <div style={{ display: 'flex', gap: '10px', marginBottom: '15px', overflowX: 'auto', paddingBottom: '8px' }}>
+                {versions.map((ver, idx) => (
+                  <button
+                    key={idx}
+                    className={selectedVersionIndex === idx ? styles.activeTabBtn : styles.tabBtn}
+                    onClick={() => setSelectedVersionIndex(idx)}
+                    style={{
+                      padding: '8px 16px',
+                      borderRadius: '20px',
+                      border: '1px solid #ddd',
+                      background: selectedVersionIndex === idx ? '#2085f6' : '#fff',
+                      color: selectedVersionIndex === idx ? '#fff' : '#333',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      whiteSpace: 'nowrap',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    Version {ver.version} ({new Date(ver.timestamp).toLocaleDateString()})
+                  </button>
+                ))}
+              </div>
+              
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginTop: '15px' }}>
+                <div>
+                  <h4 style={{ marginBottom: '8px', color: '#666' }}>Original Draft:</h4>
+                  <div style={{
+                    background: '#f9fafb',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '8px',
+                    padding: '15px',
+                    fontSize: '14px',
+                    lineHeight: '1.5',
+                    minHeight: '150px',
+                    color: '#374151'
+                  }}>
+                    {versions[selectedVersionIndex]?.originalSummary}
+                  </div>
+                </div>
+                <div>
+                  <h4 style={{ marginBottom: '8px', color: '#2085f6' }}>✨ AI Polished:</h4>
+                  <div style={{
+                    background: '#eff6ff',
+                    border: '1px solid #bfdbfe',
+                    borderRadius: '8px',
+                    padding: '15px',
+                    fontSize: '14px',
+                    lineHeight: '1.5',
+                    minHeight: '150px',
+                    color: '#1e3a8a'
+                  }}>
+                    {versions[selectedVersionIndex]?.enhancedSummary}
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className={styles.popupFooter}>
+              <button className={styles.popupDiscardBtn} onClick={() => setShowVersionModal(false)}>Close</button>
+              <button
+                className={styles.popupSaveBtn}
+                style={{ background: '#10b981', color: '#fff' }}
+                onClick={() => {
+                  const ver = versions[selectedVersionIndex];
+                  if (ver) {
+                    setSummary(ver.originalSummary);
+                    alert("Draft summary restored! (Click Create to re-generate if desired)");
+                    setShowVersionModal(false);
+                  }
+                }}
+              >
+                Restore Draft
+              </button>
+              <button
+                className={styles.popupSaveBtn}
+                onClick={() => {
+                  const ver = versions[selectedVersionIndex];
+                  if (ver) {
+                    setSummary(ver.enhancedSummary);
+                    alert("AI Polished summary restored!");
+                    setShowVersionModal(false);
+                  }
+                }}
+              >
+                Restore AI Polish
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ===== MAIN PAGE WRAPPER =====
+export default function ResumeBuilder({ onLogout, onViewChange }) {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [studentData, setStudentData] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('studentData') || 'null'); } catch { return null; }
+  });
+
+  useEffect(() => {
+    const loadStudentData = () => {
+      try {
+        const stored = JSON.parse(localStorage.getItem('studentData') || 'null');
+        if (stored) setStudentData(stored);
+      } catch { /* ignore */ }
+    };
+
+    // Load immediately on mount
+    loadStudentData();
+
+    window.addEventListener('storage', loadStudentData);
+    window.addEventListener('profileUpdated', loadStudentData);
+    return () => {
+      window.removeEventListener('storage', loadStudentData);
+      window.removeEventListener('profileUpdated', loadStudentData);
+    };
+  }, []);
+
+  const handleViewChange = (view) => {
+    onViewChange(view);
+    setIsSidebarOpen(false);
+  };
+
+  return (
+    <div className={styles.resumeBuilderWrapper}>
+      <Navbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
+      <div className={styles.main}>
+        <Sidebar
+          isOpen={isSidebarOpen}
+          onLogout={onLogout}
+          currentView="resume"
+          onViewChange={handleViewChange}
+          studentData={studentData}
+        />
+        <div className={styles.dashboardArea}>
+          <BuilderContent onViewChange={onViewChange} studentData={studentData} />
+        </div>
+      </div>
+    </div>
+  );
+}

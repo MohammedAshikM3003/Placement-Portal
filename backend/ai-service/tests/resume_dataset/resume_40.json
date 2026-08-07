@@ -1,0 +1,77 @@
+{
+  "personalInfo": {
+    "name": "Sneha Joshi",
+    "mobile": "12345",
+    "email": "sneha@@gmail",
+    "linkedin": "linkedin.com/in/snehajoshi",
+    "github": "",
+    "portfolio": ""
+  },
+  "summary": "super motivated college student looking for cool web development job.",
+  "education": {
+    "college": "",
+    "degree": "",
+    "branch": "",
+    "cgpa": "",
+    "graduationYear": ""
+  },
+  "skills": [
+    {
+      "category": "Technical",
+      "items": [
+        "Python",
+        "Pandas",
+        "numpy",
+        "ML",
+        "SQL"
+      ]
+    }
+  ],
+  "experiences": [
+    {
+      "title": "Software Developer Intern",
+      "companyName": "ABC Corp",
+      "location": "Remote",
+      "mode": "remote",
+      "fromDate": "2024-01-01",
+      "toDate": "2024-04-01",
+      "description": "fixed bugs in website and worked on the database stuff.",
+      "technologies": [
+        "React",
+        "JavaScript"
+      ]
+    }
+  ],
+  "projects": [
+    {
+      "name": "E-Commerce System",
+      "description": "made attendance tracker. did write code in react and node.",
+      "technologies": [
+        "Node.js",
+        "Express",
+        "MongoDB"
+      ]
+    }
+  ],
+  "certifications": [],
+  "achievements": [
+    {
+      "details": "got first prize in coding compition."
+    }
+  ],
+  "platforms": [
+    {
+      "name": "Leetcode",
+      "url": "leetcode.com/sneha"
+    }
+  ],
+  "additionalInfo": [],
+  "resumeSettings": {
+    "jobRole": "Data Scientist",
+    "customJobRole": "",
+    "fontStyle": "Arial",
+    "pages": "1",
+    "enableAI": true,
+    "linkType": "HyperLink"
+  }
+}

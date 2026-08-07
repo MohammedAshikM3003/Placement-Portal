@@ -1,0 +1,76 @@
+{
+  "personalInfo": {
+    "name": "Amit Sharma",
+    "mobile": "7023744601",
+    "email": "amit.sharma@email.com",
+    "linkedin": "linkedin.com/in/amitsharma",
+    "github": "github.com/amitsharma",
+    "portfolio": ""
+  },
+  "summary": "honest boy like coding and gaming. fast learner and team player.",
+  "education": {
+    "college": "",
+    "degree": "",
+    "branch": "",
+    "cgpa": "",
+    "graduationYear": ""
+  },
+  "skills": [
+    {
+      "category": "Technical",
+      "items": [
+        "Java",
+        "Python",
+        "SQL",
+        "Git"
+      ]
+    }
+  ],
+  "experiences": [
+    {
+      "title": "Software Developer Intern",
+      "companyName": "ABC Corp",
+      "location": "Remote",
+      "mode": "remote",
+      "fromDate": "2024-01-01",
+      "toDate": "2024-04-01",
+      "description": "done web developer intern at startupp. made database schemas.",
+      "technologies": [
+        "React",
+        "JavaScript"
+      ]
+    }
+  ],
+  "projects": [
+    {
+      "name": "E-Commerce System",
+      "description": "made attendance tracker. did write code in react and node.",
+      "technologies": [
+        "Node.js",
+        "Express",
+        "MongoDB"
+      ]
+    }
+  ],
+  "certifications": [],
+  "achievements": [
+    {
+      "details": "participted in coding contest."
+    }
+  ],
+  "platforms": [
+    {
+      "name": "Leetcode",
+      "url": "leetcode.com/amit"
+    }
+  ],
+  "additionalInfo": [],
+  "resumeSettings": {
+    "jobRole": "Database Administrator",
+    "customJobRole": "",
+    "fontStyle": "Arial",
+    "pages": "1",
+    "enableAI": true,
+    "linkType": "HyperLink"
+  }
+}

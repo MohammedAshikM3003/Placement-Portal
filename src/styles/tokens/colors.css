@@ -1,0 +1,47 @@
+﻿/*
+ * tokens/colors.css
+ * All colour values for the Placement Portal design system.
+ * Never use raw hex values in component CSS — always use these tokens.
+ */
+:root {
+  /* Role brand */
+  --color-admin:         #4EA24E;
+  --color-admin-hover:   #3d8a3d;
+  --color-admin-light:   rgba(78, 162, 78, 0.12);
+  --color-admin-border:  #def4dd;
+  --color-admin-bg:      #f9fff9;
+
+  --color-coo:           #d23b42;
+  --color-coo-hover:     #b52e34;
+  --color-coo-light:     rgba(210, 59, 66, 0.10);
+  --color-coo-border:    #f5d0d1;
+  --color-coo-bg:        #fff9f9;
+
+  --color-stu:           #2085f6;
+  --color-stu-hover:     #1a6fd4;
+  --color-stu-light:     rgba(32, 133, 246, 0.10);
+  --color-stu-border:    #d0e6ff;
+  --color-stu-bg:        #f5f9ff;
+
+  /* Neutral */
+  --color-white:         #ffffff;
+  --color-black:         #000000;
+  --color-bg:            #f8f8f8;
+  --color-surface:       #ffffff;
+  --color-border:        #e0e0e0;
+  --color-border-light:  #f0f0f0;
+  --color-text:          #333333;
+  --color-text-muted:    #666666;
+  --color-text-subtle:   #999999;
+  --color-overlay:       rgba(0, 0, 0, 0.2);
+
+  /* Semantic */
+  --color-success:       #22C55E;
+  --color-success-bg:    rgba(34, 197, 94, 0.10);
+  --color-error:         #d32f2f;
+  --color-error-bg:      rgba(211, 47, 47, 0.10);
+  --color-warning:       #f59e0b;
+  --color-warning-bg:    rgba(245, 158, 11, 0.10);
+  --color-info:          #197AFF;
+  --color-info-bg:       rgba(25, 122, 255, 0.10);
+}

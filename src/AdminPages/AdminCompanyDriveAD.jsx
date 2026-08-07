@@ -1,0 +1,1164 @@
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import useAdminAuth from '../utils/useAdminAuth';
+import Ad_Calendar from '../components/Calendar/Ad_Calendar';
+import FormDropdown from '../components/common/FormDropdown/FormDropdown';
+
+import Navbar from "../components/Navbar/Adnavbar.js";
+import Sidebar from "../components/Sidebar/Adsidebar.js";
+import styles from './AdminCompanyDriveAD.module.css';
+import mongoDBService from '../services/mongoDBService';
+import { clearCompanyDrivesCache } from '../services/landingPageCacheService';
+import Adminicon from "../assets/Adminicon.png";
+
+// Define the initial state for the form
+const initialFormData = {
+    companyName: '',
+    mode: '',
+    jobRole: '',
+    branch: '',
+    eligibleBranches: [],
+    rounds: 0,
+    package: '',
+    companyType: '',
+    bondPeriod: '',
+    startingDate: '',
+    endingDate: '',
+    domain: '',
+    hrName: '',
+    hrContact: '',
+    status: '',
+    visitDate: '',
+    location: '',
+    roundDetails: [],
+    roundDates: []
+};
+
+// --- Success Popup Component ---
+const DriveAddedPopup = ({ onClose, mode = 'create' }) => {
+    const isUpdate = mode === 'update';
+    return (
+        <div className={styles['Admin-Drive-AD-Success-overlay']} onClick={onClose}>
+            <div className={styles['Admin-Drive-AD-Success-container']} onClick={(e) => e.stopPropagation()}>
+                <div className={styles['Admin-Drive-AD-Success-header']}>
+                    {isUpdate ? 'Updated !' : 'Added !'}
+                </div>
+                <div className={styles['Admin-Drive-AD-Success-content']}>
+                    <div className={styles['Admin-Drive-AD-Success-icon-wrapper']}>
+                        <svg className={styles['Admin-Drive-AD-Success-icon']} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                            <circle className={styles['Admin-Drive-AD-Success-icon-circle']} cx="26" cy="26" r="25" fill="none" />
+                            <path className={styles['Admin-Drive-AD-Success-icon-check']} fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8" />
+                        </svg>
+                    </div>
+                    <h3 className={styles['Admin-Drive-AD-Success-title']}>
+                        {isUpdate ? 'Drive Updated ✓' : 'Drive Added ✓'}
+                    </h3>
+                    <p className={styles['Admin-Drive-AD-Success-text']}>
+                        {isUpdate
+                            ? 'Drive details have been successfully updated in the portal'
+                            : 'New drive has been successfully added in the portal'}
+                    </p>
+                </div>
+                <div className={styles['Admin-Drive-AD-Success-footer']}>
+                    <button className={styles['Admin-Drive-AD-Success-close-btn']} onClick={onClose}>
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const RequiredStar = () => <span className={styles['Admin-Drive-AD-required-star']}>*</span>;
+
+function Adcompanydrivead({ onLogout }) {
+    useAdminAuth(); // JWT authentication verification
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [formData, setFormData] = useState(initialFormData);
+    const [highlightedField, setHighlightedField] = useState(null);
+    const [errorTooltip, setErrorTooltip] = useState({ visible: false, x: 0, y: 0 });
+    const highlightResetTimerRef = useRef(null);
+    const highlightClearTimerRef = useRef(null);
+
+    const fieldRefs = useRef({});
+    const registerFieldRef = useCallback((field) => (node) => {
+        fieldRefs.current[field] = node;
+    }, []);
+
+    const clearFieldHighlight = useCallback(() => {
+        if (highlightResetTimerRef.current) { clearTimeout(highlightResetTimerRef.current); highlightResetTimerRef.current = null; }
+        if (highlightClearTimerRef.current) { clearTimeout(highlightClearTimerRef.current); highlightClearTimerRef.current = null; }
+        setHighlightedField(null);
+    }, []);
+
+    const focusField = useCallback((field) => {
+        let target;
+        if (field.startsWith('round-')) {
+            const index = parseInt(field.split('-')[1], 10);
+            target = fieldRefs.current[`round-${index}`];
+        } else {
+            target = fieldRefs.current[field];
+        }
+
+        if (!target) return;
+
+        if (highlightResetTimerRef.current) { clearTimeout(highlightResetTimerRef.current); highlightResetTimerRef.current = null; }
+        if (highlightClearTimerRef.current) { clearTimeout(highlightClearTimerRef.current); highlightClearTimerRef.current = null; }
+
+        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        setTimeout(() => {
+            try { target.focus({ preventScroll: true }); } catch { target.focus(); }
+        }, 100);
+
+        clearFieldHighlight();
+        window.requestAnimationFrame(() => {
+            window.requestAnimationFrame(() => { setHighlightedField(field); });
+        });
+
+        highlightClearTimerRef.current = window.setTimeout(() => {
+            setHighlightedField((cur) => (cur === field ? null : cur));
+        }, 3000);
+    }, [clearFieldHighlight]);
+
+    const handleTooltipMove = useCallback((event) => {
+        setErrorTooltip({ visible: true, x: event.clientX + 14, y: event.clientY + 18 });
+    }, []);
+
+    const handleTooltipLeave = useCallback(() => {
+        setErrorTooltip((prev) => (prev.visible ? { ...prev, visible: false } : prev));
+    }, []);
+
+    useEffect(() => () => {
+        if (highlightResetTimerRef.current) clearTimeout(highlightResetTimerRef.current);
+        if (highlightClearTimerRef.current) clearTimeout(highlightClearTimerRef.current);
+    }, []);
+
+    const missingFields = useMemo(() => {
+        const missing = [];
+        if (!formData.companyName) missing.push({ field: 'companyName', label: 'Company Name' });
+        if (!formData.mode) missing.push({ field: 'mode', label: 'Mode' });
+        if (!formData.jobRole) missing.push({ field: 'jobRole', label: 'Job Role' });
+        if (!formData.eligibleBranches || formData.eligibleBranches.length === 0) {
+            missing.push({ field: 'eligibleBranches', label: 'Branches' });
+        }
+        if (!formData.rounds || formData.rounds <= 0) {
+            missing.push({ field: 'rounds', label: formData.rounds > 1 ? 'Rounds' : 'Round' });
+        }
+        if (!formData.package) missing.push({ field: 'package', label: 'Package' });
+        if (!formData.companyType) missing.push({ field: 'companyType', label: 'Company Type' });
+        if (!formData.bondPeriod) missing.push({ field: 'bondPeriod', label: 'Bond Period' });
+        if (!formData.startingDate) missing.push({ field: 'startingDate', label: 'Start Date' });
+
+        if (formData.rounds > 0) {
+            formData.roundDetails.forEach((roundValue, index) => {
+                if (!roundValue || !roundValue.trim()) {
+                    missing.push({ field: `round-${index}`, label: `Round ${index + 1} Name` });
+                }
+            });
+        }
+        return missing;
+    }, [formData]);
+    const [companies, setCompanies] = useState([]);
+    const [branches, setBranches] = useState([]);
+    const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+    const [successMode, setSuccessMode] = useState('create');
+    const [isLoading, setIsLoading] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
+    const [viewMode, setViewMode] = useState(false);
+    const [editingDriveId, setEditingDriveId] = useState(null);
+    const [editingDrive, setEditingDrive] = useState(null);
+    const [showDepartmentPopup, setShowDepartmentPopup] = useState(false);
+    const [selectedDepartments, setSelectedDepartments] = useState([]);
+    const [validationWarnings, setValidationWarnings] = useState({});
+    const navigate = useNavigate();
+    const location = useLocation();
+
+    const formatDateForCalendar = (dateValue) => {
+        if (!dateValue) return '';
+        const dateObj = dateValue instanceof Date ? dateValue : new Date(dateValue);
+        if (Number.isNaN(dateObj.getTime())) {
+            return '';
+        }
+        const year = dateObj.getFullYear();
+        const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const day = String(dateObj.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    };
+
+    const formatDateForInput = (dateValue) => {
+        if (!dateValue) return null;
+        const dateObj = new Date(dateValue);
+        if (Number.isNaN(dateObj.getTime())) {
+            return null;
+        }
+        return dateObj;
+    };
+
+    const parseLocalDate = (dateStr) => {
+        if (!dateStr) return null;
+        if (typeof dateStr !== 'string') return dateStr;
+        const parts = dateStr.split('-');
+        if (parts.length !== 3) return new Date(dateStr);
+        const year = parseInt(parts[0], 10);
+        const month = parseInt(parts[1], 10) - 1;
+        const day = parseInt(parts[2], 10);
+        return new Date(year, month, day);
+    };
+
+    const calculateDuration = () => {
+        if (!formData.startingDate || !formData.endingDate) return '—';
+        const start = parseLocalDate(formData.startingDate);
+        const end = parseLocalDate(formData.endingDate);
+        if (!start || !end || Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return '—';
+        
+        start.setHours(0, 0, 0, 0);
+        end.setHours(0, 0, 0, 0);
+        
+        const dayMs = 24 * 60 * 60 * 1000;
+        const diffDays = Math.floor((end.getTime() - start.getTime()) / dayMs) + 1;
+        return diffDays >= 1 ? `${diffDays} ${diffDays > 1 ? 'Days' : 'Day'}` : '—';
+    };
+
+    const calculateDaysLeft = () => {
+        if (!formData.startingDate) return '—';
+        const start = parseLocalDate(formData.startingDate);
+        const end = formData.endingDate ? parseLocalDate(formData.endingDate) : null;
+        if (!start || Number.isNaN(start.getTime())) return '—';
+        
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        start.setHours(0, 0, 0, 0);
+        if (end) end.setHours(0, 0, 0, 0);
+        
+        const dayMs = 24 * 60 * 60 * 1000;
+        const diffDays = Math.floor((start.getTime() - today.getTime()) / dayMs);
+        
+        if (diffDays < 0) {
+            if (end && today.getTime() <= end.getTime()) {
+                return 'Active';
+            }
+            return 'Ended';
+        } else if (diffDays === 0) {
+            return 'Starts Today';
+        } else {
+            return `${diffDays} ${diffDays > 1 ? 'Days' : 'Day'}`;
+        }
+    };
+
+    const mapDriveToForm = (drive = {}) => {
+        const roundsFromData = typeof drive.rounds === 'number'
+            ? drive.rounds
+            : typeof drive.round === 'number'
+                ? drive.round
+                : Array.isArray(drive.roundDetails)
+                    ? drive.roundDetails.length
+                    : 0;
+
+        const roundDetails = Array.isArray(drive.roundDetails)
+            ? drive.roundDetails
+            : new Array(roundsFromData).fill('');
+
+        const roundDates = Array.isArray(drive.roundDates)
+            ? drive.roundDates
+            : new Array(roundsFromData).fill('');
+
+        return {
+            ...initialFormData,
+            companyName: drive.companyName || '',
+            mode: drive.mode || '',
+            jobRole: drive.jobRole || '',
+            branch: drive.branch || drive.department || '',
+            eligibleBranches: Array.isArray(drive.eligibleBranches) && drive.eligibleBranches.length
+                ? drive.eligibleBranches
+                : drive.branch
+                    ? [drive.branch]
+                    : drive.department
+                        ? [drive.department]
+                        : [],
+            rounds: roundsFromData,
+            package: drive.package || '',
+            companyType: drive.companyType || '',
+            bondPeriod: drive.bondPeriod || '',
+            startingDate: formatDateForCalendar(drive.startingDate),
+            endingDate: formatDateForCalendar(drive.endingDate),
+            domain: drive.domain || '',
+            hrName: drive.hrName || '',
+            hrContact: drive.hrContact || '',
+            status: drive.status || '',
+            visitDate: formatDateForInput(drive.visitDate),
+            location: drive.location || '',
+            roundDetails,
+            roundDates
+        };
+    };
+
+    useEffect(() => {
+        const fetchInitialData = async () => {
+            try {
+                const data = await mongoDBService.getCompanies();
+                setCompanies(data || []);
+            } catch (error) {
+                console.error('Error fetching companies:', error);
+            }
+
+            try {
+                const branchList = await mongoDBService.getBranches();
+                const activeBranches = Array.isArray(branchList)
+                    ? branchList.filter(branch => branch?.isActive !== false)
+                    : [];
+                setBranches(activeBranches);
+            } catch (error) {
+                console.error('Error fetching branches:', error);
+            }
+        };
+
+        fetchInitialData();
+    }, []);
+
+    useEffect(() => {
+        if (location.state?.viewMode && location.state?.editingDrive) {
+            // View-only mode
+            setViewMode(true);
+            setIsEditing(false);
+            const formState = mapDriveToForm(location.state.editingDrive);
+            setFormData(formState);
+            setSelectedDepartments(formState.eligibleBranches || []);
+        } else if (location.state?.editingDrive && location.state?.editingDriveId) {
+            // Edit mode
+            setViewMode(false);
+            setIsEditing(true);
+            setEditingDriveId(location.state.editingDriveId);
+            setEditingDrive(location.state.editingDrive);
+            const formState = mapDriveToForm(location.state.editingDrive);
+            setFormData(formState);
+            setSelectedDepartments(formState.eligibleBranches || []);
+        } else {
+            // Create new mode
+            setViewMode(false);
+            setIsEditing(false);
+            setEditingDriveId(null);
+            setEditingDrive(null);
+            setFormData(initialFormData);
+            setSelectedDepartments([]);
+        }
+    }, [location.state]);
+
+    const toggleSidebar = () => {
+        setIsSidebarOpen(prev => !prev);
+    };
+
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+
+        // Clear validation warning for this field when user starts typing
+        if (validationWarnings[name]) {
+            setValidationWarnings(prev => {
+                const updated = { ...prev };
+                delete updated[name];
+                return updated;
+            });
+        }
+
+        if (name === 'companyName') {
+            const selectedCompany = companies.find(company => company.companyName === value);
+            if (selectedCompany) {
+                const numRounds = selectedCompany.round || selectedCompany.rounds || 0;
+                const roundDetailsArray = new Array(numRounds).fill('');
+                const roundDatesArray = new Array(numRounds).fill('');
+
+                setFormData(prev => ({
+                    ...initialFormData, // Reset form to clear old data
+                    companyName: selectedCompany.companyName || '',
+                    domain: selectedCompany.domain || '',
+                    jobRole: selectedCompany.jobRole || '',
+                    mode: selectedCompany.mode || '',
+                    hrName: selectedCompany.hrName || '',
+                    hrContact: selectedCompany.hrContact || '',
+                    bondPeriod: selectedCompany.bondPeriod || '',
+                    companyType: selectedCompany.companyType || '',
+                    rounds: numRounds,
+                    roundDetails: roundDetailsArray,
+                    roundDates: roundDatesArray,
+                    eligibleBranches: selectedCompany.eligibleBranches || [],
+                    package: selectedCompany.package || '',
+                    status: selectedCompany.status || '',
+                    visitDate: selectedCompany.visitDate ? (() => {
+                        const date = new Date(selectedCompany.visitDate);
+                        const day = String(date.getDate()).padStart(2, '0');
+                        const month = String(date.getMonth() + 1).padStart(2, '0');
+                        const year = date.getFullYear();
+                        return `${day}-${month}-${year}`;
+                    })() : '',
+                    location: selectedCompany.location || '',
+                    companyId: selectedCompany._id || selectedCompany.id // Store ID for reference
+                }));
+            } else {
+                // If 'Select Company' is chosen, reset the form
+                setFormData(prev => ({
+                    ...initialFormData,
+                    companyName: '',
+                    branch: '',
+                    companyId: undefined
+                }));
+            }
+        } else if (name === 'rounds') {
+            const numRounds = Math.max(0, parseInt(value) || 0);
+            setFormData(prev => {
+                const existingDetails = prev.roundDetails || [];
+                const existingDates = prev.roundDates || [];
+                const newDetails = new Array(numRounds).fill('');
+                const newDates = new Array(numRounds).fill('');
+                for (let i = 0; i < Math.min(existingDetails.length, numRounds); i++) {
+                    newDetails[i] = existingDetails[i];
+                }
+                for (let i = 0; i < Math.min(existingDates.length, numRounds); i++) {
+                    newDates[i] = existingDates[i];
+                }
+                return { ...prev, rounds: numRounds, roundDetails: newDetails, roundDates: newDates };
+            });
+        } else if (name === 'branch') {
+            setFormData(prev => {
+                const cleanedEligible = prev.eligibleBranches.filter(branchValue => branchValue && branchValue !== '');
+                const nextEligible = value
+                    ? Array.from(new Set([...cleanedEligible, value]))
+                    : cleanedEligible.filter(branchValue => branchValue !== prev.branch);
+                return {
+                    ...prev,
+                    branch: value,
+                    eligibleBranches: nextEligible
+                };
+            });
+        } else {
+            setFormData(prev => ({ ...prev, [name]: value }));
+        }
+    };
+
+    const handleEligibleBranchesChange = (event) => {
+        const { options } = event.target;
+        const selectedValues = [];
+        for (let i = 0; i < options.length; i += 1) {
+            if (options[i].selected) {
+                selectedValues.push(options[i].value);
+            }
+        }
+        const uniqueSelected = Array.from(new Set(selectedValues.filter(Boolean)));
+        setFormData(prev => ({ ...prev, eligibleBranches: uniqueSelected }));
+    };
+
+    const handleRoundInputChange = (index, value) => {
+        setFormData(prev => {
+            const newRoundDetails = [...prev.roundDetails];
+            newRoundDetails[index] = value;
+            return { ...prev, roundDetails: newRoundDetails };
+        });
+    };
+
+    const handleRoundDateChange = (index, dateValue) => {
+        setFormData(prev => {
+            const newRoundDates = [...(prev.roundDates || [])];
+            const formattedDate = formatDateForCalendar(dateValue);
+            newRoundDates[index] = formattedDate;
+
+            // If changing Round 1 date (index 0), auto-sync with startingDate
+            let updatedStartingDate = prev.startingDate;
+            if (index === 0) {
+                updatedStartingDate = formattedDate;
+            }
+
+            return {
+                ...prev,
+                roundDates: newRoundDates,
+                startingDate: updatedStartingDate
+            };
+        });
+    };
+
+    const handleCalendarDateChange = (fieldName, dateValue) => {
+        const formattedDate = formatDateForCalendar(dateValue);
+        setFormData(prev => {
+            const newRoundDates = [...(prev.roundDates || [])];
+            if (fieldName === 'startingDate' && newRoundDates.length > 0) {
+                newRoundDates[0] = formattedDate;
+            }
+            return {
+                ...prev,
+                [fieldName]: formattedDate,
+                ...(fieldName === 'startingDate' ? { roundDates: newRoundDates } : {})
+            };
+        });
+        if (validationWarnings[fieldName]) {
+            setValidationWarnings(prev => {
+                const updated = { ...prev };
+                delete updated[fieldName];
+                return updated;
+            });
+        }
+    };
+
+    const handleDiscard = () => {
+        navigate('/admin-company-drive');
+    };
+
+    const handleDepartmentToggle = (deptValue) => {
+        setSelectedDepartments(prev => {
+            if (prev.includes(deptValue)) {
+                return prev.filter(d => d !== deptValue);
+            } else {
+                return [...prev, deptValue];
+            }
+        });
+    };
+
+    const handleDepartmentSelect = () => {
+        setFormData(prev => ({
+            ...prev,
+            eligibleBranches: selectedDepartments
+        }));
+        setShowDepartmentPopup(false);
+    };
+
+    const handleDepartmentClose = () => {
+        setSelectedDepartments(formData.eligibleBranches || []);
+        setShowDepartmentPopup(false);
+    };
+
+    const handleAddDrive = async () => {
+        // Reset validation warnings
+        const warnings = {};
+
+        // Validate required fields and collect warnings
+        if (!formData.companyName) {
+            warnings.companyName = 'Please fill out this field.';
+        }
+        if (!formData.mode) {
+            warnings.mode = 'Please fill out this field.';
+        }
+        if (!formData.jobRole) {
+            warnings.jobRole = 'Please fill out this field.';
+        }
+        if (!formData.eligibleBranches || formData.eligibleBranches.length === 0) {
+            warnings.eligibleBranches = 'Please fill out this field.';
+        }
+        if (!formData.rounds || formData.rounds === 0) {
+            warnings.rounds = 'Please fill out this field.';
+        }
+        if (!formData.package) {
+            warnings.package = 'Please fill out this field.';
+        }
+        if (!formData.companyType) {
+            warnings.companyType = 'Please fill out this field.';
+        }
+        if (!formData.bondPeriod) {
+            warnings.bondPeriod = 'Please fill out this field.';
+        }
+        if (!formData.startingDate) {
+            warnings.startingDate = 'Please fill out this field.';
+        }
+
+        // Validate all round details are filled
+        const emptyRounds = formData.roundDetails.filter((round, index) => !round || round.trim() === '');
+        if (emptyRounds.length > 0) {
+            warnings.roundDetails = 'Please fill all round details';
+        }
+
+        // If there are any warnings, show them and return
+        if (Object.keys(warnings).length > 0) {
+            setValidationWarnings(warnings);
+            return;
+        }
+
+        // Clear warnings if validation passes
+        setValidationWarnings({});
+
+        setIsLoading(true);
+        try {
+            const normalizedEligible = formData.eligibleBranches && formData.eligibleBranches.length
+                ? Array.from(new Set(formData.eligibleBranches.filter(Boolean)))
+                : formData.branch
+                    ? [formData.branch]
+                    : [];
+
+            // Format dates to simple YYYY-MM-DD string
+            const formatDateForSubmit = (date) => {
+                if (!date) return '';
+                if (typeof date === 'string') {
+                    return date;
+                }
+                if (date instanceof Date && !isNaN(date.getTime())) {
+                    // Format as YYYY-MM-DD using local timezone to avoid UTC conversion
+                    const year = date.getFullYear();
+                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                    const day = String(date.getDate()).padStart(2, '0');
+                    const formatted = `${year}-${month}-${day}`;
+                    console.log('formatDateForSubmit - Input date:', date, 'Formatted:', formatted);
+                    return formatted;
+                }
+                return '';
+            };
+
+            const payload = {
+                ...formData,
+                department: formData.branch,
+                eligibleBranches: normalizedEligible,
+                startingDate: formatDateForSubmit(formData.startingDate),
+                endingDate: formatDateForSubmit(formData.endingDate),
+            };
+
+            console.log('Payload to be sent:', JSON.stringify(payload, null, 2));
+            console.log('Starting Date payload:', payload.startingDate);
+            console.log('Ending Date payload:', payload.endingDate);
+
+            if (isEditing && editingDriveId) {
+                await mongoDBService.updateCompanyDrive(editingDriveId, payload);
+                setSuccessMode('update');
+            } else {
+                await mongoDBService.createCompanyDrive(payload);
+                setSuccessMode('create');
+            }
+
+            clearCompanyDrivesCache();
+            window.dispatchEvent(new Event('companyDrivesUpdated'));
+            if (typeof BroadcastChannel !== 'undefined') {
+                const companyDrivesChannel = new BroadcastChannel('company-drives-channel');
+                companyDrivesChannel.postMessage({ type: 'companyDrivesUpdated', timestamp: Date.now() });
+                companyDrivesChannel.close();
+            }
+            try {
+                localStorage.setItem('companyDrivesUpdatedSignal', Date.now().toString());
+            } catch (storageError) {
+                console.warn('Unable to write company drives update signal:', storageError.message);
+            }
+
+            setShowSuccessPopup(true);
+        } catch (error) {
+            console.error('Error adding drive:', error);
+            // Optionally, show an error popup to the user
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleSuccessClose = () => {
+        setShowSuccessPopup(false);
+        navigate('/admin-company-drive');
+    };
+
+    return (
+        <>
+            <Navbar onToggleSidebar={toggleSidebar} Adminicon={Adminicon} onLogout={onLogout} />
+            <div className={styles['Admin-Drive-AD-layout']}>
+                <Sidebar isOpen={isSidebarOpen} onLogout={onLogout} />
+                <div className={styles['Admin-Drive-AD-main-content']}>
+                    <div className={styles['Admin-Drive-AD-container']}>
+
+                        {/* Left Section - Add Company Drive */}
+                        <div className={styles['Admin-Drive-AD-left-section']}>
+                            <div className={styles['Admin-Drive-AD-header-section']}>
+                                <h2 className={styles['Admin-Drive-AD-section-title']}>
+                                    {isEditing ? (
+                                        <>Edit Company <br className={styles['Admin-Drive-AD-mobile-br']} /> Drive</>
+                                    ) : (
+                                        <>Schedule <br className={styles['Admin-Drive-AD-mobile-br']} /> Drive</>
+                                    )}
+                                </h2>
+                                <button
+                                    className={styles['Admin-Drive-AD-back-button']}
+                                    onClick={() => navigate('/admin-company-drive')}
+                                    type="button"
+                                    disabled={isLoading}
+                                    style={isLoading ? { cursor: 'not-allowed', opacity: '0.6' } : {}}
+                                >
+                                    Back
+                                </button>
+                            </div>
+                            <div className={styles['Admin-Drive-AD-form-grid']} style={isLoading ? { pointerEvents: 'none', opacity: '0.6' } : {}}>
+                                <div className={styles['Admin-Drive-AD-form-group']}>
+                                    <label className={styles['Admin-Drive-AD-label']}>Company Name <RequiredStar /></label>
+                                    <FormDropdown
+                                        id="companyName-dropdown"
+                                        options={companies.map((company) => ({
+                                            label: company.companyName,
+                                            value: company.companyName
+                                        }))}
+                                        selectedOption={formData.companyName}
+                                        onSelect={(val) => handleInputChange({ target: { name: 'companyName', value: val } })}
+                                        placeholder="Select Company"
+                                        disabled={viewMode || isLoading}
+                                        role="admin"
+                                        className={`${styles['Admin-Drive-AD-dropdown-wrapper']} ${highlightedField === 'companyName' ? styles['Admin-Drive-AD-field-highlight'] : ''}`}
+                                        headerClassName={styles['Admin-Drive-AD-dropdown-header']}
+                                        ref={registerFieldRef('companyName')}
+                                    />
+                                </div>
+
+                                <div className={styles['Admin-Drive-AD-form-group']}>
+                                    <label className={styles['Admin-Drive-AD-label']}>Mode <RequiredStar /></label>
+                                    <FormDropdown
+                                        id="mode-dropdown"
+                                        options={['Online', 'Offline', 'Hybrid']}
+                                        selectedOption={formData.mode}
+                                        onSelect={(val) => handleInputChange({ target: { name: 'mode', value: val } })}
+                                        placeholder="Select Mode"
+                                        disabled={viewMode}
+                                        role="admin"
+                                        className={`${styles['Admin-Drive-AD-dropdown-wrapper']} ${highlightedField === 'mode' ? styles['Admin-Drive-AD-field-highlight'] : ''}`}
+                                        headerClassName={styles['Admin-Drive-AD-dropdown-header']}
+                                        ref={registerFieldRef('mode')}
+                                    />
+                                </div>
+
+                                <div className={styles['Admin-Drive-AD-form-group']}>
+                                    <label className={styles['Admin-Drive-AD-label']}>Job Role <RequiredStar /></label>
+                                    <input
+                                        ref={registerFieldRef('jobRole')}
+                                        type="text"
+                                        name="jobRole"
+                                        value={formData.jobRole}
+                                        onChange={handleInputChange}
+                                        placeholder="Enter Job Role"
+                                        className={`${styles['Admin-Drive-AD-input']} ${highlightedField === 'jobRole' ? styles['Admin-Drive-AD-field-highlight'] : ''}`}
+                                        required
+                                        readOnly={viewMode}
+                                        disabled={viewMode}
+                                    />
+                                </div>
+
+                                <div className={styles['Admin-Drive-AD-form-group']} style={{ position: 'relative' }}>
+                                    <label className={styles['Admin-Drive-AD-label']}>Branches <RequiredStar /></label>
+                                    <button
+                                        ref={registerFieldRef('eligibleBranches')}
+                                        type="button"
+                                        onClick={() => setShowDepartmentPopup(true)}
+                                        className={`${styles['Admin-Drive-AD-input']} ${highlightedField === 'eligibleBranches' ? styles['Admin-Drive-AD-field-highlight'] : ''}`}
+                                        style={{ textAlign: 'left', cursor: viewMode ? 'default' : 'pointer', paddingRight: '45px' }}
+                                        disabled={viewMode}
+                                    >
+                                        {formData.eligibleBranches && formData.eligibleBranches.length > 0
+                                            ? `${formData.eligibleBranches.length} Branch${formData.eligibleBranches.length > 1 ? 'es' : ''} Selected`
+                                            : 'Select Branches'}
+                                    </button>
+                                    <div style={{
+                                        position: 'absolute',
+                                        right: '10px',
+                                        top: 'calc(50% + 10px)',
+                                        transform: 'translateY(-50%)',
+                                        width: '28px',
+                                        height: '28px',
+                                        backgroundColor: '#4EA24E',
+                                        borderRadius: '50%',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        pointerEvents: 'none'
+                                    }}>
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M12 5v14M5 12h14" stroke="white" strokeWidth="2.5" strokeLinecap="round" />
+                                        </svg>
+                                    </div>
+                                </div>
+
+                                <div className={styles['Admin-Drive-AD-form-group']}>
+                                    <label className={styles['Admin-Drive-AD-label']}>
+                                        {formData.rounds > 1 ? 'Rounds' : 'Round'} <RequiredStar />
+                                    </label>
+                                    <input
+                                        ref={registerFieldRef('rounds')}
+                                        type="number"
+                                        name="rounds"
+                                        value={formData.rounds === 0 ? '' : formData.rounds}
+                                        onChange={handleInputChange}
+                                        placeholder="Enter number of rounds"
+                                        className={`${styles['Admin-Drive-AD-input']} ${highlightedField === 'rounds' ? styles['Admin-Drive-AD-field-highlight'] : ''}`}
+                                        min="0"
+                                        required
+                                    />
+                                </div>
+
+                                <div className={styles['Admin-Drive-AD-form-group']}>
+                                    <label className={styles['Admin-Drive-AD-label']}>Package <RequiredStar /></label>
+                                    <div className={`${styles['Admin-Drive-AD-input-with-chip']} ${highlightedField === 'package' ? styles['Admin-Drive-AD-field-highlight'] : ''}`}>
+                                        <input
+                                            ref={registerFieldRef('package')}
+                                            type="number"
+                                            name="package"
+                                            value={formData.package}
+                                            onChange={handleInputChange}
+                                            placeholder="e.g. 6"
+                                            className={styles['Admin-Drive-AD-input']}
+                                            required
+                                            readOnly={viewMode}
+                                            disabled={viewMode}
+                                        />
+                                        <span className={styles['Admin-Drive-AD-chip']}>LPA</span>
+                                    </div>
+                                </div>
+
+                                <div className={styles['Admin-Drive-AD-form-group']}>
+                                    <label className={styles['Admin-Drive-AD-label']}>Company Type <RequiredStar /></label>
+                                    <FormDropdown
+                                        id="companyType-dropdown"
+                                        options={['CORE', 'IT', 'ITES(BPO/KPO)', 'Marketing & Sales', 'HR / Business analyst']}
+                                        selectedOption={formData.companyType}
+                                        onSelect={(val) => handleInputChange({ target: { name: 'companyType', value: val } })}
+                                        placeholder="Select Company Type"
+                                        disabled={viewMode}
+                                        role="admin"
+                                        className={`${styles['Admin-Drive-AD-dropdown-wrapper']} ${highlightedField === 'companyType' ? styles['Admin-Drive-AD-field-highlight'] : ''}`}
+                                        headerClassName={styles['Admin-Drive-AD-dropdown-header']}
+                                        ref={registerFieldRef('companyType')}
+                                    />
+                                </div>
+
+                                <div className={styles['Admin-Drive-AD-form-group']}>
+                                    <label className={styles['Admin-Drive-AD-label']}>Bond Period <RequiredStar /></label>
+                                    <div className={`${styles['Admin-Drive-AD-input-with-chip']} ${highlightedField === 'bondPeriod' ? styles['Admin-Drive-AD-field-highlight'] : ''}`}>
+                                        <input
+                                            ref={registerFieldRef('bondPeriod')}
+                                            type="number"
+                                            name="bondPeriod"
+                                            value={formData.bondPeriod}
+                                            onChange={handleInputChange}
+                                            placeholder="e.g. 1"
+                                            className={styles['Admin-Drive-AD-input']}
+                                            min="0"
+                                            required
+                                            readOnly={viewMode}
+                                            disabled={viewMode}
+                                        />
+                                        <span className={styles['Admin-Drive-AD-chip']}>
+                                            {formData.bondPeriod > 1 ? 'Years' : 'Year'}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div className={styles['Admin-Drive-AD-form-group']}>
+                                    <label className={styles['Admin-Drive-AD-label']}>Start Date <RequiredStar /></label>
+                                    <div
+                                        className={styles['Admin-Drive-AD-datepicker-wrapper']}
+                                        style={viewMode ? { pointerEvents: 'none', opacity: '0.6' } : {}}
+                                    >
+                                        <Ad_Calendar
+                                            ref={registerFieldRef('startingDate')}
+                                            value={formData.startingDate}
+                                            onChange={(dateValue) => handleCalendarDateChange('startingDate', dateValue)}
+                                            triggerClassName={highlightedField === 'startingDate' ? styles['Admin-Drive-AD-field-highlight'] : ''}
+                                            style={{ backgroundColor: '#f9fff9', height: '53.6px', padding: '0 0.9rem' }}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className={styles['Admin-Drive-AD-form-group']}>
+                                    <label className={styles['Admin-Drive-AD-label']}>End Date</label>
+                                    <div
+                                        className={styles['Admin-Drive-AD-datepicker-wrapper']}
+                                        style={viewMode ? { pointerEvents: 'none', opacity: '0.6' } : {}}
+                                    >
+                                        <Ad_Calendar
+                                            ref={registerFieldRef('endingDate')}
+                                            value={formData.endingDate}
+                                            onChange={(dateValue) => handleCalendarDateChange('endingDate', dateValue)}
+                                            triggerClassName={highlightedField === 'endingDate' ? styles['Admin-Drive-AD-field-highlight'] : ''}
+                                            style={{ backgroundColor: '#f9fff9', height: '53.6px', padding: '0 0.9rem' }}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className={styles['Admin-Drive-AD-form-group']}>
+                                    <label className={styles['Admin-Drive-AD-label']}>Days Left</label>
+                                    <input
+                                        type="text"
+                                        value={calculateDaysLeft()}
+                                        className={styles['Admin-Drive-AD-input']}
+                                        readOnly
+                                        disabled
+                                        style={{ cursor: 'not-allowed', color: '#666666' }}
+                                    />
+                                </div>
+
+                                <div className={styles['Admin-Drive-AD-form-group']}>
+                                    <label className={styles['Admin-Drive-AD-label']}>Duration of Drive</label>
+                                    <input
+                                        type="text"
+                                        value={calculateDuration()}
+                                        className={styles['Admin-Drive-AD-input']}
+                                        readOnly
+                                        disabled
+                                        style={{ cursor: 'not-allowed', color: '#666666' }}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className={styles['Admin-Drive-AD-round-section']}>
+                                <h3 className={styles['Admin-Drive-AD-round-title']}>Round Details</h3>
+
+                                <div className={styles['Admin-Drive-AD-round-grid']}>
+                                    {formData.roundDetails.length === 0 && (
+                                        <div className={styles['Admin-Drive-AD-round-placeholder']}>
+                                            Enter a number in the "Rounds" field to add round details.
+                                        </div>
+                                    )}
+
+                                    {formData.roundDetails.map((roundValue, index) => (
+                                        <div className={styles['Admin-Drive-AD-round-item']} key={index}>
+                                            <label style={{ minWidth: '85px' }}>Round {index + 1} <RequiredStar /> :</label>
+                                            <input
+                                                ref={registerFieldRef(`round-${index}`)}
+                                                type="text"
+                                                value={roundValue}
+                                                onChange={(e) => handleRoundInputChange(index, e.target.value)}
+                                                placeholder="Enter Round Name"
+                                                className={`${styles['Admin-Drive-AD-round-input']} ${highlightedField === `round-${index}` ? styles['Admin-Drive-AD-field-highlight'] : ''}`}
+                                                required
+                                                readOnly={viewMode}
+                                                disabled={viewMode}
+                                                style={{ flex: '3' }}
+                                            />
+                                            <div style={{ flex: '2', height: '100%', minWidth: '120px' }}>
+                                                <Ad_Calendar
+                                                    value={formData.roundDates ? formData.roundDates[index] : ''}
+                                                    onChange={(dateValue) => handleRoundDateChange(index, dateValue)}
+                                                    disabled={viewMode}
+                                                    style={{ height: '48px', padding: '0 0.8rem', backgroundColor: '#f9fff9' }}
+                                                    triggerClassName={highlightedField === `round-${index}` ? styles['Admin-Drive-AD-field-highlight'] : ''}
+                                                />
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+
+
+                            {!viewMode && (
+                                <div className={styles['Admin-Drive-AD-action-buttons']}>
+                                    <button
+                                        className={styles['Admin-Drive-AD-add-btn']}
+                                        onClick={handleAddDrive}
+                                        disabled={isLoading || missingFields.length > 0}
+                                        style={(isLoading || missingFields.length > 0) ? { cursor: 'not-allowed', opacity: '0.6' } : {}}
+                                    >
+                                        <svg className={styles['Admin-Drive-AD-btn-icon']} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
+                                            <path d="M12 8v8M8 12h8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                                        </svg>
+                                        <div className={styles['Admin-Drive-AD-btn-text']}>
+                                            <span>{isLoading ? (isEditing ? 'Updating...' : 'Scheduling...') : isEditing ? 'Update Drive' : 'Schedule Drive'}</span>
+                                        </div>
+                                    </button>
+
+                                    {!viewMode && (
+                                        <>
+                                            <button
+                                                className={styles['Admin-Drive-AD-discard-btn']}
+                                                onClick={handleDiscard}
+                                                disabled={isLoading}
+                                                style={isLoading ? { cursor: 'not-allowed', opacity: '0.6' } : {}}
+                                            >
+                                                <svg className={styles['Admin-Drive-AD-btn-icon']} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
+                                                    <path d="M15 9l-6 6M9 9l6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                                                </svg>
+                                                <div className={styles['Admin-Drive-AD-btn-text']}>
+                                                    <span>{isEditing ? 'Reset' : 'Discard'}</span>
+                                                </div>
+                                            </button>
+                                        </>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Right Section - Company Details */}
+                        {formData.companyName && (
+                            <div className={styles['Admin-Drive-AD-right-section']}>
+                                <h2 className={styles['Admin-Drive-AD-section-title']}>Company Details</h2>
+
+                                <div className={styles['Admin-Drive-AD-details-container']}>
+                                    <div className={styles['Admin-Drive-AD-detail-row']}>
+                                        <label>Company Name</label>
+                                        <div className={styles['Admin-Drive-AD-detail-value']}>{formData.companyName || ''}</div>
+                                    </div>
+
+                                    <div className={styles['Admin-Drive-AD-detail-row']}>
+                                        <label>Domain</label>
+                                        <div className={styles['Admin-Drive-AD-detail-value']}>{formData.domain || ''}</div>
+                                    </div>
+
+                                    <div className={styles['Admin-Drive-AD-detail-row']}>
+                                        <label>Job Role</label>
+                                        <div className={styles['Admin-Drive-AD-detail-value']}>{formData.jobRole || ''}</div>
+                                    </div>
+
+                                    <div className={styles['Admin-Drive-AD-detail-row']}>
+                                        <label>Mode</label>
+                                        <div className={styles['Admin-Drive-AD-detail-value']}>{formData.mode || ''}</div>
+                                    </div>
+
+                                    <div className={styles['Admin-Drive-AD-detail-row']}>
+                                        <label>HR Name</label>
+                                        <div className={styles['Admin-Drive-AD-detail-value']}>{formData.hrName || ''}</div>
+                                    </div>
+
+                                    <div className={styles['Admin-Drive-AD-detail-row']}>
+                                        <label>HR Contact</label>
+                                        <div className={styles['Admin-Drive-AD-detail-value']}>{formData.hrContact || ''}</div>
+                                    </div>
+
+                                    <div className={styles['Admin-Drive-AD-detail-row']}>
+                                        <label>{formData.rounds > 1 ? 'Rounds' : 'Round'}</label>
+                                        <div className={styles['Admin-Drive-AD-detail-value']}>{formData.rounds === 0 ? '' : formData.rounds}</div>
+                                    </div>
+
+                                    <div className={styles['Admin-Drive-AD-detail-row']}>
+                                        <label>Eligible Branches</label>
+                                        <div className={styles['Admin-Drive-AD-detail-value']}>
+                                            {formData.eligibleBranches && formData.eligibleBranches.length
+                                                ? formData.eligibleBranches.join(', ')
+                                                : formData.branch || '—'}
+                                        </div>
+                                    </div>
+
+                                    <div className={styles['Admin-Drive-AD-detail-row']}>
+                                        <label>Status</label>
+                                        <div className={styles['Admin-Drive-AD-detail-value']}>{formData.status || ''}</div>
+                                    </div>
+
+                                    <div className={styles['Admin-Drive-AD-detail-row']}>
+                                        <label>Visit Date</label>
+                                        <div className={styles['Admin-Drive-AD-detail-value']}>
+                                            {formData.visitDate
+                                                ? (formData.visitDate instanceof Date
+                                                    ? formData.visitDate.toLocaleDateString('en-GB')
+                                                    : formData.visitDate)
+                                                : ''}
+                                        </div>
+                                    </div>
+
+                                    <div className={styles['Admin-Drive-AD-detail-row']}>
+                                        <label>Package</label>
+                                        <div className={styles['Admin-Drive-AD-detail-value-with-chip']}>
+                                            <span style={{ flex: 1, padding: '0 0.9rem', display: 'flex', alignItems: 'center', fontSize: '0.95rem', fontWeight: '600', color: '#333333', minWidth: 0 }}>{formData.package || ''}</span>
+                                            <span className={styles['Admin-Drive-AD-detail-chip']}>LPA</span>
+                                        </div>
+                                    </div>
+
+                                    <div className={styles['Admin-Drive-AD-detail-row']}>
+                                        <label>Location</label>
+                                        <div className={styles['Admin-Drive-AD-detail-value']}>{formData.location || ''}</div>
+                                    </div>
+
+                                    <div className={styles['Admin-Drive-AD-detail-row']}>
+                                        <label>Bond Period</label>
+                                        <div className={styles['Admin-Drive-AD-detail-value-with-chip']}>
+                                            <span style={{ flex: 1, padding: '0 0.9rem', display: 'flex', alignItems: 'center', fontSize: '0.95rem', fontWeight: '600', color: '#333333', minWidth: 0 }}>{formData.bondPeriod || ''}</span>
+                                            <span className={styles['Admin-Drive-AD-detail-chip']}>
+                                                {formData.bondPeriod > 1 ? 'Years' : 'Year'}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                    </div>
+
+                    {!viewMode && missingFields.length > 0 && (
+                        <div className={styles['Admin-Drive-AD-validation-box']}>
+                            <h4 className={styles['Admin-Drive-AD-validation-heading']}>
+                                <span className={styles['Admin-Drive-AD-validation-icon']} aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" width="18" height="18" role="img" focusable="false">
+                                        <path fill="currentColor" d="M1 21h22L12 2L1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z" />
+                                    </svg>
+                                </span>
+                                Required Fields Missing:
+                            </h4>
+                            <ul className={styles['Admin-Drive-AD-validation-list']}>
+                                {missingFields.map((error, index) => (
+                                    <li
+                                        key={`${error.field}-${index}`}
+                                        className={styles['Admin-Drive-AD-validation-item']}
+                                        role="button"
+                                        tabIndex={0}
+                                        onClick={() => focusField(error.field)}
+                                        onMouseEnter={handleTooltipMove}
+                                        onMouseMove={handleTooltipMove}
+                                        onMouseLeave={handleTooltipLeave}
+                                        style={{ cursor: 'pointer' }}
+                                    >
+                                        {error.label} is required
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
+
+                    {errorTooltip.visible && (
+                        <div
+                            className={styles['Admin-Drive-AD-validation-pointer-tooltip']}
+                            style={{ left: `${errorTooltip.x}px`, top: `${errorTooltip.y}px` }}
+                        >
+                            Click to navigate
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {showSuccessPopup && <DriveAddedPopup onClose={handleSuccessClose} mode={successMode} />}
+
+            {/* Department Selection Popup */}
+            {showDepartmentPopup && (
+                <div className={styles['Admin-Drive-AD-dept-popup-overlay']} onClick={handleDepartmentClose}>
+                    <div className={styles['Admin-Drive-AD-dept-popup-container']} onClick={(e) => e.stopPropagation()}>
+                        <div className={styles['Admin-Drive-AD-dept-popup-header']}>
+                            Branches : {selectedDepartments.length}
+                        </div>
+                        <div className={styles['Admin-Drive-AD-dept-popup-content']}>
+                            {branches.map(branch => {
+                                const deptValue = branch.branchAbbreviation || branch.branchCode || branch.branchFullName;
+                                const deptLabel = branch.branchFullName
+                                    ? branch.branchAbbreviation
+                                        ? `${branch.branchFullName} (${branch.branchAbbreviation})`
+                                        : branch.branchFullName
+                                    : deptValue;
+                                const isSelected = selectedDepartments.includes(deptValue);
+
+                                return (
+                                    <div
+                                        key={branch.id || deptValue}
+                                        className={`${styles['Admin-Drive-AD-dept-item']} ${isSelected ? styles['Admin-Drive-AD-dept-item-selected'] : ''}`}
+                                        onClick={() => handleDepartmentToggle(deptValue)}
+                                    >
+                                        <div className={styles['Admin-Drive-AD-dept-checkbox']}>
+                                            {isSelected && (
+                                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                                    <path d="M3 8L6.5 11.5L13 5" stroke="#4EA24E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                                </svg>
+                                            )}
+                                        </div>
+                                        <span className={styles['Admin-Drive-AD-dept-label']}>{deptLabel}</span>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                        <div className={styles['Admin-Drive-AD-dept-popup-actions']}>
+                            <button
+                                className={styles['Admin-Drive-AD-dept-btn-close']}
+                                onClick={handleDepartmentClose}
+                            >
+                                Close
+                            </button>
+                            <button
+                                className={styles['Admin-Drive-AD-dept-btn-select']}
+                                onClick={handleDepartmentSelect}
+                            >
+                                Select
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </>
+    );
+}
+
+export default Adcompanydrivead;

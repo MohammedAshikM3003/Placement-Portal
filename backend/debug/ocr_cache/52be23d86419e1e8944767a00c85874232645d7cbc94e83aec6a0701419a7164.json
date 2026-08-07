@@ -1,0 +1,763 @@
+{
+  "success": true,
+  "total_pages": 1,
+  "pages": [
+    {
+      "success": true,
+      "document_type": "result_sheet",
+      "document_language": "English",
+      "student_info": {
+        "name": "",
+        "programme": "Course Code",
+        "register_number": "73152513074",
+        "reg_conf": 0.6973766640563821,
+        "semester": 4,
+        "semesterConfidence": 0.26666666666666666,
+        "sequence_warnings": [],
+        "entities": {
+          "student_name": {
+            "value": "",
+            "confidence": 0.0,
+            "source": "OCR",
+            "validation": "NEEDS_REVIEW",
+            "corrections": [],
+            "reasoning": [
+              "Extracted via name heading regex matches"
+            ]
+          },
+          "register_number": {
+            "value": "73152513074",
+            "confidence": 69.74,
+            "source": "OCR",
+            "validation": "NEEDS_REVIEW",
+            "corrections": [],
+            "reasoning": [
+              "Extracted via register pattern coordinate scanner"
+            ]
+          },
+          "semester": {
+            "value": 4,
+            "confidence": 26.67,
+            "source": "INFERRED",
+            "validation": "NEEDS_REVIEW",
+            "corrections": [],
+            "reasoning": [
+              "Inferred from course prefixes and heading signals"
+            ]
+          },
+          "programme": {
+            "value": "Course Code",
+            "confidence": 85.0,
+            "source": "OCR",
+            "validation": "VALID",
+            "corrections": [],
+            "reasoning": [
+              "Matched layout department/programme keywords"
+            ]
+          }
+        }
+      },
+      "subjects": [
+        {
+          "sno": 1,
+          "semester": 4,
+          "courseCode": "24CST21",
+          "courseName": "Design Thinkinge",
+          "credits": "",
+          "grade": "A",
+          "result": "P",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_img_l18",
+            "p0_img_l19",
+            "p0_img_l20",
+            "p0_img_l21",
+            "p0_img_l22",
+            "p0_img_l23"
+          ],
+          "originalCourseName": "Design Thinkinge",
+          "normalizedCourseName": "Design Thinkinge",
+          "gradeConfidence": 0.9982911944389343,
+          "confidence": 90,
+          "errors": [],
+          "warnings": [
+            "Credits value is missing"
+          ],
+          "entities": {
+            "courseCode": {
+              "value": "24CST21",
+              "confidence": 90.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Design Thinkinge",
+              "confidence": 90.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "A",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "",
+              "confidence": 50.0,
+              "source": "OCR",
+              "validation": "NEEDS_REVIEW",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "P",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 2,
+          "semester": 4,
+          "courseCode": "24GET29",
+          "courseName": "Tamils and Technology.",
+          "credits": "",
+          "grade": "A+",
+          "result": "P",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_img_l24",
+            "p0_img_l25",
+            "p0_img_l26",
+            "p0_img_l27",
+            "p0_img_l28",
+            "p0_img_l29"
+          ],
+          "originalCourseName": "Tamils and Technology.",
+          "normalizedCourseName": "Tamils and Technology.",
+          "gradeConfidence": 0.9940201044082642,
+          "confidence": 92,
+          "errors": [],
+          "warnings": [
+            "Credits value is missing"
+          ],
+          "entities": {
+            "courseCode": {
+              "value": "24GET29",
+              "confidence": 92.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Tamils and Technology.",
+              "confidence": 92.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "A+",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "",
+              "confidence": 50.0,
+              "source": "OCR",
+              "validation": "NEEDS_REVIEW",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "P",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 3,
+          "semester": 4,
+          "courseCode": "24MA129",
+          "courseName": "Probability and Statistics",
+          "credits": "",
+          "grade": "",
+          "result": "P",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_img_l30",
+            "p0_img_l31",
+            "p0_img_l32",
+            "p0_img_l33",
+            "p0_img_l34"
+          ],
+          "originalCourseName": "Probability and Statistics",
+          "normalizedCourseName": "Probability and Statistics",
+          "gradeConfidence": 1.0,
+          "confidence": 85,
+          "errors": [],
+          "warnings": [
+            "Credits value is missing",
+            "Grade value is missing"
+          ],
+          "entities": {
+            "courseCode": {
+              "value": "24MA129",
+              "confidence": 85.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Probability and Statistics",
+              "confidence": 85.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "NEEDS_REVIEW",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "",
+              "confidence": 50.0,
+              "source": "OCR",
+              "validation": "NEEDS_REVIEW",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "P",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 4,
+          "semester": 4,
+          "courseCode": "24PH107",
+          "courseName": "Engineering Physics.",
+          "credits": "",
+          "grade": "A+",
+          "result": "P",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_img_l35",
+            "p0_img_l36",
+            "p0_img_l37",
+            "p0_img_l38",
+            "p0_img_l39",
+            "p0_img_l40"
+          ],
+          "originalCourseName": "Engineering Physics.",
+          "normalizedCourseName": "Engineering Physics.",
+          "gradeConfidence": 0.9958907961845398,
+          "confidence": 92,
+          "errors": [],
+          "warnings": [
+            "Credits value is missing"
+          ],
+          "entities": {
+            "courseCode": {
+              "value": "24PH107",
+              "confidence": 92.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Engineering Physics.",
+              "confidence": 92.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "A+",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "",
+              "confidence": 50.0,
+              "source": "OCR",
+              "validation": "NEEDS_REVIEW",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "P",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 5,
+          "semester": 4,
+          "courseCode": "24EC126",
+          "courseName": "Digital Principles and System Design.",
+          "credits": "",
+          "grade": "A+",
+          "result": "P",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_img_l41",
+            "p0_img_l42",
+            "p0_img_l43",
+            "p0_img_l44",
+            "p0_img_l45",
+            "p0_img_l46"
+          ],
+          "originalCourseName": "Digital Principles and System Design.",
+          "normalizedCourseName": "Digital Principles and System Design.",
+          "gradeConfidence": 0.9971832633018494,
+          "confidence": 93,
+          "errors": [],
+          "warnings": [
+            "Credits value is missing"
+          ],
+          "entities": {
+            "courseCode": {
+              "value": "24EC126",
+              "confidence": 93.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Digital Principles and System Design.",
+              "confidence": 93.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "A+",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "",
+              "confidence": 50.0,
+              "source": "OCR",
+              "validation": "NEEDS_REVIEW",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "P",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 6,
+          "semester": 4,
+          "courseCode": "24ENP29",
+          "courseName": "Professional Communication Laboratory",
+          "credits": "",
+          "grade": "A+",
+          "result": "P",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_img_l47",
+            "p0_img_l48",
+            "p0_img_l49",
+            "p0_img_l50",
+            "p0_img_l51",
+            "p0_img_l52"
+          ],
+          "originalCourseName": "Professional Communication Laboratory",
+          "normalizedCourseName": "Professional Communication Laboratory",
+          "gradeConfidence": 0.9972984790802002,
+          "confidence": 94,
+          "errors": [],
+          "warnings": [
+            "Credits value is missing"
+          ],
+          "entities": {
+            "courseCode": {
+              "value": "24ENP29",
+              "confidence": 94.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Professional Communication Laboratory",
+              "confidence": 94.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "A+",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "",
+              "confidence": 50.0,
+              "source": "OCR",
+              "validation": "NEEDS_REVIEW",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "P",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 7,
+          "semester": 4,
+          "courseCode": "24SDP29",
+          "courseName": "Soft Skills Development - II.",
+          "credits": "",
+          "grade": "A",
+          "result": "P",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_img_l53",
+            "p0_img_l54",
+            "p0_img_l55",
+            "p0_img_l56",
+            "p0_img_l57",
+            "p0_img_l58"
+          ],
+          "originalCourseName": "Soft Skills Development - II.",
+          "normalizedCourseName": "Soft Skills Development - II.",
+          "gradeConfidence": 0.9956945180892944,
+          "confidence": 93,
+          "errors": [],
+          "warnings": [
+            "Credits value is missing"
+          ],
+          "entities": {
+            "courseCode": {
+              "value": "24SDP29",
+              "confidence": 93.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "Soft Skills Development - II.",
+              "confidence": 93.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "A",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "",
+              "confidence": 50.0,
+              "source": "OCR",
+              "validation": "NEEDS_REVIEW",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "P",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        },
+        {
+          "sno": 8,
+          "semester": 4,
+          "courseCode": "24CS126",
+          "courseName": "JAVA Programming",
+          "credits": "",
+          "grade": "A+",
+          "result": "P",
+          "code_pattern_score": 1.0,
+          "tr_ids": [
+            "p0_img_l59",
+            "p0_img_l60",
+            "p0_img_l61",
+            "p0_img_l62",
+            "p0_img_l63",
+            "p0_img_l64"
+          ],
+          "originalCourseName": "JAVA Programming",
+          "normalizedCourseName": "JAVA Programming",
+          "gradeConfidence": 0.992917537689209,
+          "confidence": 93,
+          "errors": [],
+          "warnings": [
+            "Credits value is missing"
+          ],
+          "entities": {
+            "courseCode": {
+              "value": "24CS126",
+              "confidence": 93.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Extracted via layout coordinate row clustering"
+              ]
+            },
+            "courseName": {
+              "value": "JAVA Programming",
+              "confidence": 93.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Clustered from text bounding box metrics"
+              ]
+            },
+            "grade": {
+              "value": "A+",
+              "confidence": 100.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Matched against academic grade scale"
+              ]
+            },
+            "credits": {
+              "value": "",
+              "confidence": 50.0,
+              "source": "OCR",
+              "validation": "NEEDS_REVIEW",
+              "corrections": [],
+              "reasoning": [
+                "Extracted from numeric credit columns"
+              ]
+            },
+            "result": {
+              "value": "P",
+              "confidence": 95.0,
+              "source": "OCR",
+              "validation": "VALID",
+              "corrections": [],
+              "reasoning": [
+                "Derived from course grade mapping"
+              ]
+            }
+          }
+        }
+      ],
+      "candidate_metadata": {
+        "source_pages": [
+          1
+        ],
+        "pageIndexes": [
+          1
+        ],
+        "pageStart": 1,
+        "pageEnd": 1,
+        "groupConfidence": 0.5658,
+        "confidence": {
+          "register_confidence": 0.6973766640563821,
+          "name_confidence": 0.0,
+          "boundary_confidence": 1.0,
+          "overall_confidence": 0.5658
+        }
+      },
+      "ocr_meta": {
+        "avg_conf": 0.9665,
+        "line_count": 67,
+        "attempts": [
+          "preprocess"
+        ],
+        "selected": "preprocess",
+        "page_indices": [
+          0
+        ],
+        "integrity_telemetry": {
+          "ocr_lines": 67,
+          "detected_course_codes": 8,
+          "logical_rows": 19,
+          "subject_objects": 8,
+          "validated_subjects": 8
+        }
+      },
+      "raw_text": "K.S.R COLLEGE OF ENGINEERING,\nT|RUCHENGODE - 637 215\n(Autonomous)\nBEGI\nFUTURE\nUG & PG END SEMESTER EXAMINATIONS - June 2026\n: 73152513074\nRegister Number\nName of the Candidate.\n: KAVYA SHREE P\n: B.E - Computer Science and Engineering\nProgramme\nCOURSE CODE\nCOURSE NAME\nSEMESTER\nGRADE OBTAINED\nS.NO\nRESULT\n24CST21\n1\nDesign Thinkinge\nA\nP\n2\n24GET29\nTamils and Technology.\n2\n2\nA+\nP\nProbability and Statistics\n24MAI29\n3\n2\nP\n24PHI07\nEngineering Physics.\n4\n2\nA+\nP\n24ECI26\n5\n2\nDigital Principles and System Design.\nA+\nP\n24ENP29\n6\nProfessional Communication Laboratory\n2\nA+\nP\n24SDP29\nSoft Skills Development - II.\n7\nA\n2\nP\n24CSI26\n8\nA+\nP\n2\nJAVA Programming\nRevaluation Schedule.\nLast date for Applying & Remitting fees for Photocopy is :22-07-2026.",
+      "logs": [
+        "[INFO] === Starting Document-Centric Processing for 1 pages ===",
+        "[INFO] Grouped 1 pages into 1 student record documents.",
+        "[INFO] Processing Student Group 1/1 (Register: 73152513074, Pages: 1)",
+        "[INFO] Processing Page 1 for document merge. Est Height: 1277.00",
+        "[INFO] Page 1: Stripped 0 header lines, 1 footer lines.",
+        "[INFO] Successfully merged 1 pages into 67 continuous document lines.",
+        "[INFO] Detected document type: result_sheet",
+        "[INFO] Matched University Profile: Generic Academic Institution",
+        "[INFO] Anchor label matched in text: 'Register Number'",
+        "[INFO] Selected Register Number: '73152513074' with confidence 69.73766640563821% (Reason: Global pattern match)",
+        "[WARNING] No semester headings found. Using fallback semester: 4",
+        "[INFO] Grouping lines into horizontal rows using dynamic table alignment",
+        "[INFO] Clustered lines into 19 coordinate rows",
+        "[DEBUG] Skipping blocked layout row: 'Register Number : 73152513074'",
+        "[DEBUG] Skipping blocked layout row: 'Name of the Candidate. : KAVYA SHREE P'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A'",
+        "[INFO] Right Result detected: 'P'",
+        "[INFO] Right Grade detected: 'A+'",
+        "[DEBUG] Skipping blocked layout row: 'Revaluation Schedule.'",
+        "[DEBUG] Skipping blocked layout row: 'Last date for Applying & Remitting fees for Photocopy is :22'",
+        "[INFO] Reconstructed 8 subject records",
+        "[INFO] [Semester Inference] Course code signal: Sem 2 (fraction=0.50)",
+        "[INFO] [Semester Inference] Fallback dropdown signal: Sem 4",
+        "[INFO] [Semester Inference] Resolved Semester=4 with confidence=0.27",
+        "[INFO] Completed student group extraction: 8 subjects parsed, 8 warning/review flags."
+      ]
+    }
+  ]
+}

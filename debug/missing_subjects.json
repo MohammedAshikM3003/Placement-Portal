@@ -1,0 +1,12 @@
+[
+  {
+    "registerNumber": "73152311001",
+    "studentName": "Ahish V",
+    "courseCode": "N/A",
+    "courseName": "N/A",
+    "pipelineStage": "Database / Curriculum Validation",
+    "reason": "Database Coverage Unknown (No expected subjects found in the database curriculum for semester 4)",
+    "confidence": 0,
+    "tr_id": null
+  }
+]

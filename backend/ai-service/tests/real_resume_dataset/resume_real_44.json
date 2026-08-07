@@ -1,0 +1,85 @@
+{
+  "personalInfo": {
+    "name": "Aditya Shetty",
+    "mobile": "8144485271",
+    "email": "aditya.shetty44@anonymized.in",
+    "linkedin": "linkedin.com/in/adityashetty",
+    "github": "github.com/adityashetty",
+    "portfolio": ""
+  },
+  "summary": "Creative frontend web developer. Know HTML CSS and React. Looking for junior developer role.",
+  "education": {
+    "college": "PSG College of Technology",
+    "degree": "B.Tech",
+    "branch": "Information Technology",
+    "cgpa": "9.11",
+    "graduationYear": "2026"
+  },
+  "skills": [
+    {
+      "category": "Technical Skills",
+      "items": [
+        "HTML",
+        "CSS",
+        "JavaScript",
+        "React",
+        "Tailwind CSS",
+        "Bootstrap",
+        "Git"
+      ]
+    }
+  ],
+  "experiences": [
+    {
+      "title": "Frontend Developer Intern",
+      "companyName": "Cognizant",
+      "location": "Chennai, India",
+      "mode": "in-person",
+      "fromDate": "2024-05-01",
+      "toDate": "2024-07-01",
+      "description": "worked in Freshworks. did make responsive ui pages and fixed css errors.",
+      "technologies": [
+        "HTML",
+        "CSS"
+      ]
+    }
+  ],
+  "projects": [
+    {
+      "name": "Personal Portfolio",
+      "description": "made personal portfolio webiste with responsive pages and animations. fixed css bugs.",
+      "technologies": [
+        "HTML",
+        "CSS",
+        "JavaScript",
+        "React"
+      ]
+    }
+  ],
+  "certifications": [
+    {
+      "certificateName": "AWS Academy Cloud Foundations",
+      "description": "Professional IT Certification"
+    }
+  ],
+  "achievements": [
+    {
+      "details": "won college level coding compition."
+    }
+  ],
+  "platforms": [
+    {
+      "name": "Leetcode",
+      "url": "leetcode.com/aditya"
+    }
+  ],
+  "additionalInfo": [],
+  "resumeSettings": {
+    "jobRole": "Frontend Developer",
+    "customJobRole": "",
+    "fontStyle": "Arial",
+    "pages": "1",
+    "enableAI": true,
+    "linkType": "HyperLink"
+  }
+}

@@ -1,0 +1,945 @@
+:root {
+  --rasw-page-padding: 10px 10px 10px 20px;
+  --rasw-card-padding: 20px;
+  --rasw-grid-gap: 20px;
+  --rasw-card-radius: 18px;
+  --rasw-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.Admin-rasw-layout {
+  display: flex;
+  min-height: 100vh;
+  background-color: #f6f8fb;
+  position: relative;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.Admin-rasw-main-content {
+  flex-grow: 1;
+  padding: var(--rasw-page-padding);
+  margin: 65px 0px 0px 280px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--rasw-grid-gap);
+  overflow: hidden;
+  position: relative;
+  height: calc(100vh - 65px);
+  background-color: #f6f8fb;
+}
+
+.Admin-rasw-filter-box {
+  background-color: #e8e8e8;
+  padding: var(--rasw-card-padding);
+  border-radius: var(--rasw-card-radius);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--rasw-grid-gap);
+  margin: 0;
+  box-shadow: var(--rasw-shadow);
+  width: 100%;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+.Admin-rasw-tab-container {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--rasw-grid-gap);
+  margin-bottom: 0px;
+  text-align: center;
+  width: 100%;
+}
+
+/* === ALIGNMENT FIX: 1. Set a fixed width for ALL tab items === */
+.Admin-rasw-tab-inactive, .Admin-rasw-tab-active-green {
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-weight: 600;
+  font-size: 1.05rem;
+  cursor: pointer;
+  border: 2px solid #808080;
+  box-shadow: 0 6px 8px -4px #333; 
+  transition: background 0.2s, color 0.2s;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 50px;
+}
+
+/* Ensure specific active/inactive styles apply without changing the critical width */
+.Admin-rasw-tab-inactive{
+  background: #D3D1D1;
+  color: #222;
+  box-shadow: 0 6px 8px -4px #333; 
+}
+
+.Admin-rasw-tab-active-green { 
+  background: #4ea24e;
+  color: #fff;
+  font-weight: 800;
+  letter-spacing: 1px;
+  box-shadow: 0 4px 6px -6px #333; 
+}
+
+.Admin-rasw-tab-inactive:hover {
+  background: #4EA24E; 
+  color: #fff; 
+}
+
+/* This container is now used for filter inputs */
+.Admin-rasw-filter-inputs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--rasw-grid-gap);
+  margin-bottom: 0px; 
+  width: 100%;
+}
+
+/* === Filter Input Styles === */
+.Admin-rasw-filter-select, .Admin-rasw-filter-date-input {
+  width: 100%;
+  background: #f6f8fb;
+  border: 2px solid #808080;
+  height: 51px;
+  border-radius: 7px;
+  font-size: 1rem;
+  color: #282828;
+  font-weight: 600;
+  box-sizing: border-box;
+  padding: 10px 15px; 
+  line-height: normal;
+  text-align: center; 
+  transition: border-color 0.2s; 
+}
+
+/* Styles for dropdowns to show arrow */
+.Admin-rasw-filter-select {
+  /* Reintroduce the dropdown arrow using a background image and appearance: none */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="%23808080" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-down"><polyline points="6 9 12 15 18 9"></polyline></svg>');
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 20px;
+  padding-right: 35px; /* Add extra padding to the right for the icon */
+}
+
+.Admin-rasw-select-label {
+  font-weight: 600;
+  color: #282828;
+  font-size: 1rem;
+  padding: 0 5px;
+  flex-shrink: 0; 
+}
+
+/* Styles for dropdowns to show arrow */
+.Admin-rasw-filter-select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="%23808080" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-down"><polyline points="6 9 12 15 18 9"></polyline></svg>');
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 20px;
+  padding-right: 35px;
+}
+
+/* Styles for datepicker input to show calendar icon */
+.Admin-rasw-filter-date-input {
+  background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="%23808080" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-calendar"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>');
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 20px;
+  padding-right: 35px;
+}
+
+/* === Hover and Focus states === */
+.Admin-rasw-filter-select:hover, .Admin-rasw-filter-date-input:hover {
+  border-color: #4EA24E; 
+}
+
+.Admin-rasw-filter-select:focus, .Admin-rasw-filter-date-input:focus {
+  border-color: #4EA24E; 
+  outline: none;
+}
+
+/* --- NEW: Search Row Styles --- */
+
+.Admin-rasw-search-row { 
+  display: flex;
+  gap: 8px;
+  align-items: center; 
+  margin-bottom: 8px;
+}
+
+.Admin-rasw-name-register-input {
+  background: #f6f8fb;
+  border: 2px solid #808080;
+  height: 39px;
+  width: 320px;
+  border-radius: 7px;
+  font-size: 1rem;
+  color: #282828;
+  font-weight: 600;
+  box-sizing: border-box;
+  padding: 10px 15px;
+  line-height: normal;
+  text-align: left;
+  transition: border-color 0.2s;
+}
+
+.Admin-rasw-name-register-input:focus {
+  outline: none;
+  border-color: #4EA24E;
+}
+
+.Admin-rasw-branch-dropdown {
+  background: #f6f8fb;
+  border: 2px solid #808080;
+  height: 39px;
+  width: 165px;
+  border-radius: 7px;
+  font-size: 1rem;
+  color: #282828;
+  font-weight: 600;
+  box-sizing: border-box;
+  padding: 10px 15px;
+  line-height: normal;
+  text-align: left;
+  transition: border-color 0.2s;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="%23808080" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-down"><polyline points="6 9 12 15 18 9"></polyline></svg>');
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 20px;
+  padding-right: 35px;
+}
+
+.Admin-rasw-branch-dropdown:focus {
+  outline: none;
+  border-color: #4EA24E;
+}
+
+.Admin-rasw-select-type-dropdown {
+    width: 170px; 
+    background: #f6f8fb;
+    border: 2px solid #808080;
+    height: 51px;
+    border-radius: 7px;
+    font-size: 1rem;
+    color: #282828;
+    font-weight: 600;
+    box-sizing: border-box;
+    padding: 10px 15px; 
+    line-height: normal;
+    text-align:left;
+    transition: border-color 0.2s; 
+    /* Add dropdown arrow styling */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="%23808080" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-down"><polyline points="6 9 12 15 18 9"></polyline></svg>');
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 20px;
+    padding-right: 35px;
+}
+
+.Admin-rasw-search-input-field {
+  background: #f6f8fb;
+  border: 2px solid #808080;
+  height: 39px;
+  width: 400px;
+  border-radius: 7px;
+  font-size: 1rem;
+  color: #282828;
+  font-weight: 600;
+  box-sizing: border-box;
+  padding: 10px 15px; 
+  line-height: normal;
+  text-align:left; 
+  transition: border-color 0.2s;
+}
+
+.Admin-rasw-search-input-field:focus {
+  outline: none;
+  border-color: #4EA24E;
+}
+
+.Admin-rasw-rounds-container {
+  margin-bottom: 8px;
+  background: #f8f8f8;
+  padding: 10px 0;
+  max-width: 1180px; 
+  margin: 10px auto 10px 15px;
+  border-radius: 16px;
+}
+
+.Admin-rasw-rounds-scroll {
+  display: flex;
+  gap: 12px;
+  padding: 0 26px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-behavior: smooth;
+}
+
+.Admin-rasw-rounds-scroll::-webkit-scrollbar {
+  height: 6px;
+  margin-top: 2px;
+}
+
+.Admin-rasw-rounds-scroll::-webkit-scrollbar-track {
+  background: #f8f8f8;
+}
+
+.Admin-rasw-rounds-scroll::-webkit-scrollbar-thumb {
+  background: #808080;
+  border-radius: 4px;
+}
+
+.Admin-rasw-rounds-scroll::-webkit-scrollbar-thumb:hover {
+  background: #606060;
+}
+
+.Admin-rasw-round-btn {
+  padding: 8px 24px;
+  border-radius: 8px;
+  border: 2px solid #808080;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s, color 0.2s;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+.Admin-rasw-round-btn-inactive {
+  background: #f8f8f8;
+  color: #222;
+  box-shadow: 0 6px 8px -4px #333;
+}
+
+.Admin-rasw-round-btn-inactive:hover {
+  background: #4EA24E;
+  color: #fff;
+}
+
+.Admin-rasw-round-btn-active {
+  background: #4EA24E;
+  color: #fff;
+  font-weight: bold;
+  box-shadow: 0 4px 6px -6px #333;
+}
+
+.Admin-rasw-rounds-container {
+  background-color: transparent;
+  padding: 5px 0;
+  margin: 0;
+  border-radius: 0;
+  width: 100%;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+.Admin-rasw-rounds-scroll {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-behavior: smooth;
+  margin-left: 0px;
+  padding: 0;
+}
+
+.Admin-rasw-rounds-scroll::-webkit-scrollbar {
+  height: 6px;
+  margin-top: 2px;
+}
+
+.Admin-rasw-rounds-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.Admin-rasw-rounds-scroll::-webkit-scrollbar-thumb {
+  background: #808080;
+  border-radius: 4px;
+}
+
+.Admin-rasw-rounds-scroll::-webkit-scrollbar-thumb:hover {
+  background: #606060;
+}
+
+.Admin-rasw-round-btn {
+  padding: 8px 24px;
+  border-radius: 8px;
+  border: 2px solid #808080;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s, color 0.2s;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+.Admin-rasw-round-btn-inactive {
+  background: #f8f8f8;
+  color: #222;
+  box-shadow: 0 6px 8px -4px #333;
+}
+
+.Admin-rasw-round-btn-inactive:hover {
+  background: #4EA24E;
+  color: #fff;
+}
+
+.Admin-rasw-round-btn-active {
+  background: #4EA24E;
+  color: #fff;
+  font-weight: bold;
+  box-shadow: 0 4px 6px -6px #333;
+}
+
+/* --- Table Styles --- */
+
+.Admin-rasw-table-section {
+  background-color: #ffffff;
+  border-radius: 15px;
+  padding: 12px 20px;
+  margin: 0;
+  box-shadow: var(--rasw-shadow);
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  width: 100%;
+  box-sizing: border-box;
+  height: auto;
+  border: none;
+}
+
+.Admin-rasw-table-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  left: 0px;
+  z-index: 10;
+  flex-shrink: 0;
+  margin-bottom: 12px;
+}
+
+.Admin-rasw-table-title {
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: #191c2f;
+  margin: 0;
+}
+
+.Admin-rasw-table-actions {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  margin: 0;
+}
+
+.Admin-rasw-view-status-btn-all, .Admin-rasw-view-status-btn-filtered {
+  color: #ffffff;
+  border-radius: 11px;
+  height:36px;
+  border: none;
+  padding: 9px 22px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.Admin-rasw-view-status-btn-all { background: #197AFF; }
+.Admin-rasw-view-status-btn-filtered { background: #1564d3; }
+.Admin-rasw-view-status-btn-all:hover, .Admin-rasw-view-status-btn-filtered:hover { background:#104a9c; }
+
+.Admin-rasw-print-btn-green { 
+  background: #4EA24E;
+  color: #ffffff;
+  padding: 8px 30px;
+  border-radius: 8px;
+  border: none;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.Admin-rasw-print-btn-green:hover { 
+  background: #3d8a3d; 
+}
+
+.Admin-rasw-print-button-container { 
+  position: relative;
+  display: inline-block;
+  z-index: 15;
+}
+
+.Admin-rasw-export-menu {
+  position: absolute; 
+  top: 40px;
+  right: 0;
+  z-index: 2000;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  min-width: 180px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.Admin-rasw-export-menu button {
+  padding: 10px 15px;
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  font-size: 0.95rem;
+  color: #333;
+  transition: background-color 0.2s;
+}
+
+.Admin-rasw-export-menu button:hover { 
+  background: #f0f0f0; 
+}
+
+.Admin-rasw-data-table {
+  width: 100%;
+  min-width: 900px;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.Admin-rasw-data-table thead {
+  position: sticky;
+  top: 0;
+  background-color: #ffffff;
+  z-index: 11;
+}
+
+.Admin-rasw-data-table th {
+  padding: 8px 10px;
+  text-align: center;
+  font-weight: 600;
+  color: #999;
+  white-space: nowrap;
+  background-color: white;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.Admin-rasw-table-body-scroll {
+  flex-grow: 1;
+  width: 100%;
+  overflow: auto;
+  border: none;
+  border-radius: 8px;
+  max-height: 100%;
+  padding-bottom: 10px;
+}
+
+/* --- GREEN SCROLLBARS --- */
+.Admin-rasw-table-body-scroll::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.Admin-rasw-table-body-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.Admin-rasw-table-body-scroll::-webkit-scrollbar-thumb {
+  background: #4EA24E;
+  border-radius: 8px;
+}
+
+.Admin-rasw-table-body-scroll::-webkit-scrollbar-thumb:hover {
+  background: #3d8a3d;
+}
+
+.Admin-rasw-data-table tbody {
+  width: 100%;
+}
+
+.Admin-rasw-data-table tr {
+  border-bottom: 1px solid #f5f5f5;
+  transition: background-color 0.2s;
+  cursor: pointer;
+}
+
+.Admin-rasw-data-table tr:hover {
+  background-color: #fafafa;
+}
+
+.Admin-rasw-data-table td {
+  padding: 10px 10px;
+  text-align: center;
+  color: #333;
+  vertical-align: middle;
+  font-size: 0.9rem;
+  font-weight: 500;
+  border-bottom: 1px solid #f5f5f5;
+}
+
+/* === Percentage-based column widths (9 columns, total = 100%) === */
+.Admin-rasw-data-table th:nth-child(1), .Admin-rasw-data-table td:nth-child(1) { width: 4%; }  /* S.No */
+.Admin-rasw-data-table th:nth-child(2), .Admin-rasw-data-table td:nth-child(2) { width: 15%; } /* Name */
+.Admin-rasw-data-table th:nth-child(3), .Admin-rasw-data-table td:nth-child(3) { width: 13%; } /* Register Number */
+.Admin-rasw-data-table th:nth-child(4), .Admin-rasw-data-table td:nth-child(4) { width: 9%; }  /* Branch */
+.Admin-rasw-data-table th:nth-child(5), .Admin-rasw-data-table td:nth-child(5) { width: 10%; } /* Year-Sec */
+.Admin-rasw-data-table th:nth-child(6), .Admin-rasw-data-table td:nth-child(6) { width: 11%; } /* Reached */
+.Admin-rasw-data-table th:nth-child(7), .Admin-rasw-data-table td:nth-child(7) { width: 13%; } /* Mobile */
+.Admin-rasw-data-table th:nth-child(8), .Admin-rasw-data-table td:nth-child(8) { width: 19%; } /* Email */
+.Admin-rasw-data-table th:nth-child(9), .Admin-rasw-data-table td:nth-child(9) { width: 6%; }  /* View */
+
+/* Enable text wrapping specifically for the email column */
+.Admin-rasw-data-table td:nth-child(8) {
+  word-break: break-all;
+  overflow-wrap: anywhere;
+  line-height: 1.2;
+  padding: 8px 4px;
+  text-align: left;
+}
+
+.Admin-rasw-status-cell-placed-green, .Admin-rasw-status-cell-rejected {
+  padding: 6px 22px;
+  border-radius: 32px;
+  font-weight: 600;
+  display: inline-block; 
+}
+
+.Admin-rasw-status-cell-placed-green { background: #c2f6ea; color: #16c098; padding: 6px 28px; }
+.Admin-rasw-status-cell-rejected { background:rgb(250, 213, 215); color: #d23b42; }
+
+/* Responsive styles (Mobile/Tablet) */
+@media (max-width: 1024px) {
+  .Admin-rasw-layout {
+    height: 100vh !important;
+    overflow: hidden !important;
+    flex-direction: column !important;
+  }
+
+  .Admin-rasw-main-content {
+    margin: 65px 0 0 0 !important;
+    padding: 10px 10px 30px 10px !important;
+    height: calc(100vh - 65px) !important;
+    max-height: calc(100vh - 65px) !important;
+    overflow-y: scroll !important;
+    overflow-x: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+  }
+
+  .Admin-rasw-main-content::-webkit-scrollbar {
+    width: 10px !important;
+  }
+
+  .Admin-rasw-main-content::-webkit-scrollbar-track {
+    background: #f0f2f5 !important;
+    border-radius: 12px !important;
+  }
+
+  .Admin-rasw-main-content::-webkit-scrollbar-thumb {
+    background-color: #4EA24E !important;
+    border-radius: 20px !important;
+    border: 3px solid #f0f2f5 !important;
+  }
+
+  .Admin-rasw-main-content::-webkit-scrollbar-thumb:hover {
+    background-color: #3d8a3d !important;
+  }
+
+  .Admin-rasw-filter-box {
+    margin: 0;
+    max-width: 100% !important;
+    width: 100% !important;
+    flex-shrink: 0 !important;
+  }
+
+  .Admin-rasw-tab-container,
+  .Admin-rasw-filter-inputs {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+  }
+
+  .Admin-rasw-tab-inactive,
+  .Admin-rasw-tab-active-green,
+  .Admin-rasw-filter-select,
+  .Admin-rasw-filter-date-input {
+    min-width: 0 !important;
+    max-width: none !important;
+  }
+
+  .Admin-rasw-rounds-container {
+    margin: 0 !important;
+    padding: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    flex-shrink: 0 !important;
+  }
+
+  .Admin-rasw-table-section {
+    margin: 0 0 25px 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    padding: 15px !important;
+    flex-grow: 1 !important;
+    min-height: 280px !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .Admin-rasw-tab-inactive,
+  .Admin-rasw-tab-active-green,
+  .Admin-rasw-filter-select,
+  .Admin-rasw-filter-date-input {
+    max-width: 100% !important;
+    font-size: 0.95rem !important;
+    padding: 8px 12px !important;
+    height: 45px !important;
+  }
+
+  .Admin-rasw-tab-container,
+  .Admin-rasw-filter-inputs {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+
+  .Admin-rasw-search-row {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+  }
+
+  .Admin-rasw-select-label {
+    align-self: flex-start !important;
+  }
+
+  .Admin-rasw-select-type-dropdown,
+  .Admin-rasw-search-input-field,
+  .Admin-rasw-name-register-input,
+  .Admin-rasw-branch-dropdown {
+    width: 100% !important;
+  }
+
+  .Admin-rasw-table-header-row {
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 10px !important;
+    margin-bottom: 8px !important;
+  }
+
+  .Admin-rasw-table-actions {
+    width: auto !important;
+    margin-left: auto !important;
+    justify-content: flex-end !important;
+    margin-bottom: 0 !important;
+  }
+
+  .Admin-rasw-table-body-scroll {
+    flex-grow: 1 !important;
+    overflow-y: auto !important;
+    overflow-x: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    padding-bottom: 10px !important;
+    width: 100% !important;
+    display: block !important;
+  }
+
+  .Admin-rasw-table-body-scroll::-webkit-scrollbar {
+    width: 10px !important;
+    height: 10px !important;
+    display: block !important;
+  }
+
+  .Admin-rasw-table-body-scroll::-webkit-scrollbar-track {
+    background: #f0f2f5 !important;
+    border-radius: 12px !important;
+  }
+
+  .Admin-rasw-table-body-scroll::-webkit-scrollbar-thumb {
+    background-color: #4EA24E !important;
+    border-radius: 20px !important;
+    border: 3px solid #f0f2f5 !important;
+  }
+
+  .Admin-rasw-table-body-scroll::-webkit-scrollbar-thumb:hover {
+    background-color: #3d8a3d !important;
+  }
+
+  .Admin-rasw-table-body-scroll::-webkit-scrollbar-thumb:horizontal {
+    background-color: #999999 !important;
+    border-radius: 20px !important;
+    border: 3px solid #f0f2f5 !important;
+  }
+
+  .Admin-rasw-table-body-scroll::-webkit-scrollbar-thumb:horizontal:hover {
+    background-color: #666666 !important;
+  }
+}
+
+/* Loading spinner styles */
+.Admin-rasw-loading-cell {
+  text-align: center;
+  height: 200px;
+  vertical-align: middle;
+  width: 100%;
+}
+
+.Admin-rasw-loading-row {
+  height: 100%;
+}
+
+.Admin-rasw-loading-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  text-align: center;
+  width: 100%;
+}
+
+.Admin-rasw-spinner {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 4px solid rgba(78, 162, 78, 0.25);
+  border-top-color: #4EA24E;
+  animation: adminRaswSpin 0.7s linear infinite;
+  margin: 0 auto;
+}
+
+@keyframes adminRaswSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.Admin-rasw-loading-text {
+  color: #1f2937;
+  font-weight: 600;
+  font-size: 0.95rem;
+  white-space: nowrap;
+}
+
+/* Dropdown styles */
+.Admin-rasw-dropdown-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.Admin-rasw-dropdown-header {
+    background: #f6f8fb;
+    border: 2px solid #808080;
+    height: 51px;
+    border-radius: 7px;
+    font-size: 1rem;
+    color: #282828;
+    font-weight: 600;
+    padding: 0 15px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: all 0.2s ease;
+}
+
+.Admin-rasw-dropdown-header:hover {
+    border-color: #4EA24E;
+}
+
+.Admin-rasw-dropdown-disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.Admin-rasw-dropdown-disabled:hover {
+    border-color: #808080;
+}
+
+.Admin-rasw-dropdown-arrow {
+    width: 10px;
+    height: 10px;
+    fill: #808080;
+    transition: transform 0.2s ease;
+}
+
+.Admin-rasw-dropdown-arrow-open {
+    transform: rotate(180deg);
+}
+
+.Admin-rasw-dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 2px solid #808080;
+    border-radius: 7px;
+    margin-top: 4px;
+    max-height: 250px;
+    overflow-y: auto;
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.Admin-rasw-dropdown-menu::-webkit-scrollbar {
+    width: 6px;
+}
+
+.Admin-rasw-dropdown-menu::-webkit-scrollbar-track {
+    background: transparent !important;
+}
+
+.Admin-rasw-dropdown-menu::-webkit-scrollbar-thumb {
+    background-color: #4EA24E;
+    border-radius: 3px;
+    border: 1px solid transparent;
+    background-clip: content-box;
+}
+
+.Admin-rasw-dropdown-menu::-webkit-scrollbar-thumb:hover {
+    background-color: #3d8a3d;
+}
+
+.Admin-rasw-dropdown-item {
+    padding: 12px 15px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    color: #282828;
+    font-weight: 500;
+    transition: background 0.2s ease;
+}
+
+.Admin-rasw-dropdown-item:hover {
+    background: #f0f0f0;
+}
+
+.Admin-rasw-dropdown-item:not(:last-child) {
+    border-bottom: 1px solid #e5e5e5;
+}

@@ -1,0 +1,382 @@
+/**
+ * DOBDatePicker - Date of Birth Date Picker Component
+ *
+ * A custom date picker component with day, month, and year selection views.
+ * Features:
+ * - Three view modes: day, month, and year selection
+ * - Portal-based overlay for better positioning
+ * - Custom scrollbar for year selection
+ * - Keyboard and mouse interactions
+ * - Highlights today's date and selected date
+ * - Responsive design with hover states
+ */
+
+import React, { useState, useRef, useEffect, useMemo } from 'react';
+import ReactDOM from 'react-dom';
+import './DOBDatePicker.css';
+
+function DOBDatePicker({ value, onChange }) {
+  const [open, setOpen] = useState(false);
+  const [viewMode, setViewMode] = useState('day');
+  const today = useMemo(() => new Date(), []);
+  const [calMonth, setCalMonth] = useState(today.getMonth());
+  const [calYear, setCalYear] = useState(today.getFullYear());
+  const [hovered, setHovered] = useState(false);
+  const [hoveredDay, setHoveredDay] = useState(null);
+  const [hoveredMonth, setHoveredMonth] = useState(null);
+  const [hoveredYear, setHoveredYear] = useState(null);
+  const [hoveredMonthBtn, setHoveredMonthBtn] = useState(false);
+  const [hoveredYearBtn, setHoveredYearBtn] = useState(false);
+  const triggerRef  = useRef(null);
+  const calendarRef = useRef(null);
+
+  const MONTHS = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  const DAYS   = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+
+  const daysInMonth  = new Date(calYear, calMonth + 1, 0).getDate();
+  const firstWeekDay = new Date(calYear, calMonth, 1).getDay();
+
+  const parsedDate = useMemo(() => {
+    if (!value) return { day: null, month: null, year: null };
+    const parts = value.split('-');
+    if (parts.length !== 3) return { day: null, month: null, year: null };
+    if (parts[0].length === 4) {
+      // YYYY-MM-DD
+      return {
+        year: parseInt(parts[0]),
+        month: parseInt(parts[1]) - 1,
+        day: parseInt(parts[2])
+      };
+    } else {
+      // DD-MM-YYYY
+      return {
+        day: parseInt(parts[0]),
+        month: parseInt(parts[1]) - 1,
+        year: parseInt(parts[2])
+      };
+    }
+  }, [value]);
+
+  const selDay   = parsedDate.day;
+  const selMonth = parsedDate.month;
+  const selYear  = parsedDate.year;
+  const isSelected = (d) => d === selDay && calMonth === selMonth && calYear === selYear;
+  const isToday = (d) => d === today.getDate() && calMonth === today.getMonth() && calYear === today.getFullYear();
+
+  // Sync calendar view with selected date
+  useEffect(() => {
+    if (selYear && selMonth !== null) {
+      setCalYear(selYear);
+      setCalMonth(selMonth);
+    }
+  }, [selYear, selMonth]);
+
+  const displayVal = value
+    ? (() => {
+        const parts = value.split('-');
+        if (parts.length === 3) {
+          if (parts[0].length === 4) {
+            // YYYY-MM-DD -> DD-MM-YYYY
+            return `${parts[2]}-${parts[1]}-${parts[0]}`;
+          }
+          // Already DD-MM-YYYY
+          return value;
+        }
+        return value;
+      })()
+    : '';
+
+  const currentYearForPicker = today.getFullYear();
+  const startYear = currentYearForPicker - 100;
+  const endYear = currentYearForPicker;
+  const years = Array.from({ length: endYear - startYear + 1 }, (_, i) => startYear + i);
+  const yearListRef    = useRef(null);
+
+  useEffect(() => {
+    if (viewMode === 'year' && yearListRef.current) {
+      const el = yearListRef.current;
+      const selected = el.querySelector('[data-selected="true"]');
+      if (selected) {
+        el.scrollTop = selected.offsetTop - el.clientHeight / 2 + selected.clientHeight / 2;
+      }
+    }
+  }, [viewMode]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleToggle = () => setOpen(o => !o);
+  const handleClose  = () => setOpen(false);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e) => {
+      const inTrigger  = triggerRef.current  && triggerRef.current.contains(e.target);
+      const inCalendar = calendarRef.current && calendarRef.current.contains(e.target);
+      if (!inTrigger && !inCalendar) setOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [open]);
+
+  const calendarPortal = open ? ReactDOM.createPortal(
+    <div
+      style={{
+        position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+        zIndex: 1000000, display: 'flex', alignItems: 'center', justifyContent: 'center'
+      }}
+      onMouseDown={(e) => { if (e.target === e.currentTarget) setOpen(false); }}
+    >
+      <div
+        ref={calendarRef}
+        style={{
+          position: 'relative', zIndex: 1000001,
+          backgroundColor: '#fff', borderRadius: '14px',
+          boxShadow: '0 8px 30px rgba(0,0,0,0.22)',
+          overflow: 'hidden', width: 'min(320px, 90vw)',
+          fontFamily: "'Poppins', sans-serif"
+        }}
+      >
+        {/* Header */}
+        <div style={{
+          backgroundColor: '#197AFF',
+          padding: '12px 18px', display: 'flex',
+          alignItems: 'center', justifyContent: 'center', gap: '40px'
+        }}>
+          <button
+            onClick={() => setViewMode(v => v === 'month' ? 'day' : 'month')}
+            onMouseEnter={() => setHoveredMonthBtn(true)}
+            onMouseLeave={() => setHoveredMonthBtn(false)}
+            style={{
+              background: hoveredMonthBtn ? '#e8eef7' : '#fff', border: 'none', borderRadius: '8px',
+              color: '#1a1a1a', fontWeight: 700, fontSize: '1rem',
+              cursor: 'pointer', padding: '8px 14px',
+              display: 'flex', alignItems: 'center', gap: '6px',
+              fontFamily: "'Poppins', sans-serif", minWidth: '80px', justifyContent: 'center',
+              transition: 'background-color 0.15s'
+            }}
+          >
+            {viewMode === 'month' ? 'MON' : MONTHS[calMonth]}
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#555" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points={viewMode === 'month' ? '6 15 12 9 18 15' : '6 9 12 15 18 9'} />
+            </svg>
+          </button>
+          <button
+            onClick={() => setViewMode(v => v === 'year' ? 'day' : 'year')}
+            onMouseEnter={() => setHoveredYearBtn(true)}
+            onMouseLeave={() => setHoveredYearBtn(false)}
+            style={{
+              background: hoveredYearBtn ? '#e8eef7' : '#fff', border: 'none', borderRadius: '8px',
+              color: '#1a1a1a', fontWeight: 700, fontSize: '1rem',
+              cursor: 'pointer', padding: '8px 14px',
+              display: 'flex', alignItems: 'center', gap: '6px',
+              fontFamily: "'Poppins', sans-serif", minWidth: '90px', justifyContent: 'center',
+              transition: 'background-color 0.15s'
+            }}
+          >
+            {viewMode === 'year' ? 'YEAR' : calYear}
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#555" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points={viewMode === 'year' ? '6 15 12 9 18 15' : '6 9 12 15 18 9'} />
+            </svg>
+          </button>
+        </div>
+
+        {/* Body – fixed height so card never resizes */}
+        <div style={{ height: '288px', overflow: 'hidden', position: 'relative' }}>
+
+          {viewMode === 'month' ? (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px', padding: '18px 16px', height: '100%', boxSizing: 'border-box', alignContent: 'center' }}>
+              {MONTHS.map((m, i) => {
+                const isSel = i === calMonth;
+                const isHov = hoveredMonth === i;
+                return (
+                <button
+                  key={m}
+                  onClick={() => { setCalMonth(i); setViewMode('day'); }}
+                  onMouseEnter={() => setHoveredMonth(i)}
+                  onMouseLeave={() => setHoveredMonth(null)}
+                  style={{
+                    padding: '12px 6px', borderRadius: '8px', border: 'none',
+                    cursor: 'pointer', fontWeight: 700, fontSize: '0.95rem',
+                    backgroundColor: isSel ? '#197AFF' : isHov ? '#e8eef7' : 'transparent',
+                    color: isSel ? '#fff' : '#333',
+                    fontFamily: "'Poppins', sans-serif",
+                    transition: 'background-color 0.15s'
+                  }}
+                >{m}</button>
+                );
+              })}
+            </div>
+          ) : viewMode === 'year' ? (
+            <div style={{ position: 'relative', height: '100%', display: 'flex' }}>
+              <style>{`
+                .dob-year-scroll::-webkit-scrollbar {
+                  width: 6px !important;
+                  height: 6px !important;
+                  display: block !important;
+                }
+                .dob-year-scroll::-webkit-scrollbar-track {
+                  background: #e8eef7 !important;
+                  border-radius: 10px !important;
+                }
+                .dob-year-scroll::-webkit-scrollbar-thumb {
+                  background-color: #197AFF !important;
+                  border-radius: 10px !important;
+                }
+                .dob-year-scroll::-webkit-scrollbar-thumb:hover {
+                  background-color: #1263d4 !important;
+                }
+                .dob-year-scroll::-webkit-scrollbar-button,
+                .dob-year-scroll::-webkit-scrollbar-button:single-button,
+                .dob-year-scroll::-webkit-scrollbar-button:start:increment,
+                .dob-year-scroll::-webkit-scrollbar-button:start:decrement,
+                .dob-year-scroll::-webkit-scrollbar-button:end:increment,
+                .dob-year-scroll::-webkit-scrollbar-button:end:decrement,
+                .dob-year-scroll::-webkit-scrollbar-button:vertical:start:increment,
+                .dob-year-scroll::-webkit-scrollbar-button:vertical:start:decrement,
+                .dob-year-scroll::-webkit-scrollbar-button:vertical:end:increment,
+                .dob-year-scroll::-webkit-scrollbar-button:vertical:end:decrement,
+                .dob-year-scroll::-webkit-scrollbar-button:vertical:increment,
+                .dob-year-scroll::-webkit-scrollbar-button:vertical:decrement,
+                .dob-year-scroll::-webkit-scrollbar-button:horizontal:increment,
+                .dob-year-scroll::-webkit-scrollbar-button:horizontal:decrement,
+                .dob-year-scroll::-webkit-scrollbar-button:increment,
+                .dob-year-scroll::-webkit-scrollbar-button:decrement {
+                  display: none !important;
+                  width: 0 !important;
+                  height: 0 !important;
+                  background: transparent !important;
+                  border: none !important;
+                }
+                @supports (-moz-appearance: none) {
+                  .dob-year-scroll {
+                    scrollbar-width: thin;
+                    scrollbar-color: #197AFF #e8eef7;
+                  }
+                }
+              `}</style>
+              <div
+                ref={yearListRef}
+                className="dob-year-scroll"
+                style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}
+              >
+                <div className="dob-year-list">
+                  {years.map(y => {
+                    const isSel = y === calYear;
+                    const isHov = hoveredYear === y;
+                    return (
+                    <div
+                      key={y}
+                      data-selected={y === calYear}
+                      onClick={() => { setCalYear(y); setViewMode('day'); }}
+                      onMouseEnter={() => setHoveredYear(y)}
+                      onMouseLeave={() => setHoveredYear(null)}
+                      style={{
+                        padding: '12px 20px', cursor: 'pointer',
+                        fontWeight: 700, fontSize: '1rem', textAlign: 'center',
+                        fontFamily: "'Poppins', sans-serif",
+                        backgroundColor: isSel ? '#197AFF' : isHov ? '#e8eef7' : 'transparent',
+                        color: isSel ? '#fff' : '#333',
+                        transition: 'background-color 0.15s'
+                      }}
+                    >{y}</div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          ) : (
+            /* Day picker */
+            <div style={{ padding: '10px 14px 14px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', marginBottom: '6px' }}>
+                {DAYS.map(d => (
+                  <div key={d} style={{ textAlign: 'center', fontSize: '0.7rem', color: '#888', fontWeight: 700, padding: '4px 0' }}>{d}</div>
+                ))}
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '3px' }}>
+                {Array.from({ length: firstWeekDay }, (_, i) => <div key={`e${i}`} />)}
+                {Array.from({ length: daysInMonth }, (_, i) => {
+                  const day = i + 1;
+                  const sel = isSelected(day);
+                  const tod = isToday(day);
+                  const isHov = hoveredDay === day;
+                  return (
+                    <button
+                      key={day}
+                      onClick={() => {
+                        const mm = String(calMonth + 1).padStart(2, '0');
+                        const dd = String(day).padStart(2, '0');
+                        onChange(`${calYear}-${mm}-${dd}`);
+                        handleClose();
+                      }}
+                      onMouseEnter={() => setHoveredDay(day)}
+                      onMouseLeave={() => setHoveredDay(null)}
+                      style={{
+                        textAlign: 'center', padding: '7px 0', borderRadius: '50%',
+                        border: 'none',
+                        cursor: 'pointer', fontSize: '0.95rem',
+                        fontWeight: sel || tod ? 700 : 500,
+                        backgroundColor: sel ? '#197AFF' : isHov ? '#e8eef7' : tod ? '#e8f4ff' : 'transparent',
+                        color: sel ? '#fff' : tod ? '#197AFF' : '#333',
+                        fontFamily: "'Poppins', sans-serif",
+                        transition: 'background-color 0.15s',
+                        position: 'relative'
+                      }}
+                    >
+                      {day}
+                      {tod && !sel && (
+                        <span style={{
+                          position: 'absolute',
+                          bottom: '2px',
+                          left: '50%',
+                          transform: 'translateX(-50%)',
+                          width: '4px',
+                          height: '4px',
+                          borderRadius: '50%',
+                          backgroundColor: '#197AFF'
+                        }} />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+        </div>{/* end fixed-height body */}
+      </div>
+    </div>,
+    document.body
+  ) : null;
+
+  return (
+    <div style={{ position: 'relative' }}>
+      {/* Trigger field */}
+      <div
+        ref={triggerRef}
+        data-dob-field="true"
+        onClick={handleToggle}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        style={{
+          display: 'flex', alignItems: 'center', gap: '8px',
+          border: hovered ? '1px solid #2085f6' : '1px solid #dde6f4',
+          boxShadow: hovered ? '0 0 0 3px rgba(32,133,246,0.2)' : 'none',
+          borderRadius: '8px',
+          padding: '0.9rem', cursor: 'pointer', backgroundColor: '#f9fbff',
+          fontSize: '0.95rem', color: displayVal ? '#333' : '#9aa7c2',
+          userSelect: 'none', boxSizing: 'border-box', width: '100%',
+          transition: 'border-color 0.3s, box-shadow 0.3s'
+        }}
+      >
+        <span style={{ flex: 1 }}>{displayVal || 'DD-MM-YYYY'}</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="2" strokeLinecap="round">
+          <rect x="3" y="4" width="18" height="18" rx="2" />
+          <line x1="16" y1="2" x2="16" y2="6" />
+          <line x1="8"  y1="2" x2="8"  y2="6" />
+          <line x1="3"  y1="10" x2="21" y2="10" />
+        </svg>
+      </div>
+      {calendarPortal}
+    </div>
+  );
+}
+
+export default DOBDatePicker;

@@ -1,0 +1,72 @@
+{
+  "personalInfo": {
+    "name": "Vikram Gupta",
+    "mobile": "8492554128",
+    "email": "vikram.gupta@email.com",
+    "linkedin": "linkedin.com/in/vikramgupta",
+    "github": "github.com/vikramgupta",
+    "portfolio": ""
+  },
+  "summary": "basically worked on backend and did code. seeking awesome job.",
+  "education": {
+    "college": "XYZ Engineering College",
+    "degree": "B.E.",
+    "branch": "Computer Science",
+    "cgpa": "",
+    "graduationYear": "2026"
+  },
+  "skills": [
+    {
+      "category": "Technical",
+      "items": [
+        "Node",
+        "Express",
+        "Mongo",
+        "Python",
+        "SQL"
+      ]
+    }
+  ],
+  "experiences": [
+    {
+      "title": "Software Developer Intern",
+      "companyName": "ABC Corp",
+      "location": "Remote",
+      "mode": "remote",
+      "fromDate": "2024-01-01",
+      "toDate": "2024-04-01",
+      "description": "assisted team and did write code for backend. basically solved errors.",
+      "technologies": [
+        "React",
+        "JavaScript"
+      ]
+    }
+  ],
+  "projects": [],
+  "certifications": [
+    {
+      "certificateName": "AWS Certified Cloud Practitioner",
+      "description": "Certified in cloud fundamentals"
+    }
+  ],
+  "achievements": [
+    {
+      "details": "won hackthon at college level."
+    }
+  ],
+  "platforms": [
+    {
+      "name": "Leetcode",
+      "url": "leetcode.com/vikram"
+    }
+  ],
+  "additionalInfo": [],
+  "resumeSettings": {
+    "jobRole": "Backend Developer",
+    "customJobRole": "",
+    "fontStyle": "Arial",
+    "pages": "1",
+    "enableAI": true,
+    "linkType": "HyperLink"
+  }
+}

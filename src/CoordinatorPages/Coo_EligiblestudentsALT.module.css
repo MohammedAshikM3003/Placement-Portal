@@ -1,0 +1,197 @@
+/* Coo_EligibleStudents.module.css */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+/* --- MAIN CONTAINER --- */
+.container {
+  font-family: 'Poppins', Arial, sans-serif;
+  background: #f8f8fb;
+  min-height: 100vh;
+  overflow: hidden;
+  margin-top:-20px;
+  position: absolute;
+}
+
+/* Dashboard-area (Main scrolling content) */
+.dashboardArea {
+  flex: 1;
+  padding: 20px 34px 0 36px;
+  overflow-y: auto;
+  height: 100vh;
+  margin-top: 70px;
+  margin-left: 260px;
+}
+
+/* --- SCROLLBARS (Red Theme for Desktop) --- */
+.tableContainer::-webkit-scrollbar,
+.companyProfile::-webkit-scrollbar,
+.dashboardArea::-webkit-scrollbar { width: 15px; }
+
+.tableContainer::-webkit-scrollbar-track,
+.companyProfile::-webkit-scrollbar-track,
+.dashboardArea::-webkit-scrollbar-track { background: #f0f2f5; }
+
+.tableContainer::-webkit-scrollbar-thumb,
+.companyProfile::-webkit-scrollbar-thumb,
+.dashboardArea::-webkit-scrollbar-thumb {
+  background-color: #d23b42;
+  border-radius: 20px;
+  border: 3px solid #f0f2f5;
+}
+.tableContainer::-webkit-scrollbar-thumb:hover,
+.companyProfile::-webkit-scrollbar-thumb:hover,
+.dashboardArea::-webkit-scrollbar-thumb:hover { background-color: #b32d34; }
+
+.tableContainer::-webkit-scrollbar:horizontal,
+.companyProfile::-webkit-scrollbar:horizontal { height: 12px; }
+
+.tableContainer::-webkit-scrollbar-thumb:horizontal,
+.companyProfile::-webkit-scrollbar-thumb:horizontal { background-color: #c1bfbf; border-radius: 20px; border: 3px solid #f0f2f5; }
+
+
+/* --- Summary Cards --- */
+.summaryCards {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 15px;
+  margin-bottom: 15px;
+  margin-top:10px;
+  align-items: start;
+}
+
+.summaryCard {
+  background: #fff; border-radius: 12px; padding: 20px; height:258px; width:231px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1); text-align: center; border: 2px solid grey;
+}
+
+.summaryCard:hover { border: 2px solid red; }
+
+.companyDriveCard { margin-left: 50px; }
+.placedStudentsCard { margin-left: 45px; }
+
+.summaryCardIcon {
+  width: 90px; height: 50px; margin: 0 auto 15px auto; background: #f8f9fa;
+  border-radius: 10px; display: flex; align-items: center; justify-content: center;
+  margin-top: 50px;
+}
+
+.summaryCardIcon img { width: 60px; height: 60px; margin-top: 48px; }
+
+.summaryCardTitle1, .summaryCardTitle2 { color: #333; font-size: 1.9rem; font-weight: 600; line-height: 33px; margin-top: 45px; }
+.summaryCardDesc1, .summaryCardDesc2 { color: #888; font-size: 0.96rem; font-weight: 600; line-height: 21px; margin-top: 17px; }
+
+
+/* --- Search Filters --- */
+.searchFilters {
+  background: #d2d1d1; border-radius: 14px; padding: 50px 32px 40px 32px;
+  margin-bottom: 30px; width: 650px; height: 250px; box-sizing: border-box;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+
+.searchTab {
+  background: #d73d3d; color: white; padding-left: 20px; border-radius: 6px 6px 0 0;
+  font-size: 0.9em; font-weight: 600; display: inline-block; margin-top: 75px;
+  position: absolute; top: 19px; left: 305px; transform: translateX(-50%); height: 32px;
+  width: 187.14px; padding-top: 3px;
+}
+
+.searchInputs {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 16px 18px; width: 100%;
+  margin-bottom: 18px; margin-top: 44px;
+}
+
+.searchInput { position: relative; border-radius: 10px; border: 2px solid transparent; }
+.searchInput:hover { border: 2px solid #E80000; }
+.searchInput input {
+  width: 280px; height: 36px; padding: 10px 35px 10px 32px; border: 1.5px solid #d1d5db;
+  border-radius: 8px; font-size: 1em; background: #fff; outline: none; box-sizing: border-box;
+}
+
+.searchInput input:focus { border: 1.5px solid #d73d3d; box-shadow: 0 0 4px rgba(215, 61, 61, 0.4); }
+
+.searchInput label {
+   position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #888;
+   pointer-events: none; transition: 0.2s ease all; background: white; padding: 0 4px;
+}
+
+.searchInput input:focus + label,
+.searchInput.filled label {
+  top: -12px; font-size: 0.75em; color: #E80000; background: #E0E0E0;
+}
+
+.searchBtnFilter {
+  background: white; color: #E80000; border: 2px solid #E80000; border-radius: 8px;
+  font-weight: 600; font-size: 1.05em; box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+  width: 128.98px; height: 34px; align-self: center; cursor: pointer;
+}
+.searchBtnFilter:hover { background: #f8f8f8; box-shadow: 0 4px 12px rgba(215, 61, 61, 0.2); }
+
+.clearSearchBtn {
+  background: #E0E0E0; color: #787878; border: 2px solid #787878; border-radius: 8px;
+  font-weight: 600; font-size: 1.05em; box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+  width: 128.98px; height: 34px; align-self: center; cursor: pointer;
+}
+.clearSearchBtn:hover{ background: white; color: #E80000; border:2px solid #E80000; }
+
+
+/* --- Eligible Students Table --- */
+.companyProfile {
+  background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  margin-top: 15px; border: 2px solid #808080; height: 346px; width: 1192px; margin-left: 15px;
+}
+
+.profileHeader { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0; margin-top:-10px; }
+.profileTitle { margin-left: 6px; font-size: 1.22rem; font-weight: 700; letter-spacing: 0.03em; color: #232323; }
+.printBtnContainer { position: relative; display: inline-block; }
+.printBtn { background: #dc3545; color: white; border: none; padding: 10px 32px; border-radius: 8px; font-weight: 600; font-size: 1.05em; box-shadow: 0 2px 8px rgba(0,0,0,0.10); cursor: pointer; margin-bottom: 5px; position: relative; }
+
+.dropdownMenu { position: absolute; top: 100%; right: 0; background: white; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 4px 12px rgba(193, 185, 185, 0.15); z-index: 100; min-width: 180px; margin-top: 5px; }
+.dropdownItem { padding: 12px 16px; cursor: pointer; transition: background 0.2s; border-bottom: 1px solid #f0f0f0; }
+.dropdownItem:hover { background: #f8f9fa; }
+
+.tableContainer { overflow-x: auto; max-height: 284px; width: 100%; position: relative; }
+.profileTable { width: 100%; border-collapse: collapse; min-width: 1340px; table-layout: fixed; }
+
+.profileTable th {
+    background: #fff; padding: 8px 8px; text-align: center; font-weight: 600; font-size: 0.96rem; color: #808080; border-bottom: 2px solid #dee2e6; position: sticky; top: 0; z-index: 10; white-space: nowrap;
+}
+.profileTable td { padding: 10px 8px; border-bottom: 1px solid #f0f0f0; font-size: 1em; color: #000; font-weight: 500; text-align: center; white-space: nowrap; min-width: 80px; }
+
+/* Status Badges */
+.statusBadgeOne { background: #D0F2EA; color: #16C098; padding: 6px 20px; border-radius: 12px; font-size: 0.8em; font-weight: 600; display: inline-block; }
+.statusBadgeTwo { background: #D9D9D9; color: #787878; padding: 6px 12px; border-radius: 12px; font-size: 0.8em; font-weight: 600; display: inline-block; }
+
+
+/* --- MOBILE RESPONSIVE FIXES --- */
+@media (max-width: 768px) {
+  /* Layout and Scrolling */
+  .container { overflow-y: auto; margin-left: 0 !important; position: relative; }
+  .dashboardArea { 
+      padding: 20px 10px; margin-left: 0 !important; margin-top: 50px; height: auto; overflow-y: auto; 
+      box-sizing: border-box; position: static; /* Critical fix */
+      left: 0;
+  }
+  
+  /* Card Stacking */
+  .summaryCards { flex-direction: column; width: 100%; max-width: 450px; height: auto; margin: 0 auto; align-items: center; }
+  .summaryCard { margin: 0; width: 100%; max-width: 450px; }
+  .companyDriveCard { order: 1; }
+  .placedStudentsCard { order: 3; margin-top: 15px; }
+
+  /* Filter Card Adjustments */
+  .searchFilters { 
+    order: 2; width: 100%; max-width: 450px; height: auto; margin: 15px auto; padding: 20px;
+  }
+  .searchTab { position: static; transform: none; width: 100%; text-align: center; margin: 0 0 10px 0; padding: 8px 0; }
+  .searchInputs { grid-template-columns: 1fr; gap: 15px; width: 100%; margin-top: 20px; }
+  .searchInput input { width: 100%; }
+  .searchBtnFilter, .clearSearchBtn { width: 100%; }
+
+  /* Table Reset */
+  .companyProfile { width: 100%; margin: 15px auto; padding: 15px 10px; }
+  .tableContainer { width: 100%; overflow-x: auto; max-height: 300px; }
+  .profileTable { min-width: 750px; }
+  .profileTable th, .profileTable td { font-size: 0.8em; padding: 10px 5px; min-width: 80px; }
+  .profileTitle { margin-left: 0; }
+  .printBtnContainer { top: 15px; right: 10px; }
+}

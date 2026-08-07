@@ -1,0 +1,68 @@
+{
+  "personalInfo": {
+    "name": "Priya Nair",
+    "mobile": "9453192979",
+    "email": "priya.nair@email.com",
+    "linkedin": "linkedin.com/in/priyanair",
+    "github": "github.com/priyanair",
+    "portfolio": ""
+  },
+  "summary": "basically worked on backend and did code. seeking awesome job.",
+  "education": {
+    "college": "XYZ Engineering College",
+    "degree": "B.E.",
+    "branch": "Computer Science",
+    "cgpa": "8.2",
+    "graduationYear": "2026"
+  },
+  "skills": [
+    {
+      "category": "Technical",
+      "items": [
+        "Docker",
+        "AWS",
+        "Git",
+        "Linux",
+        "Jenkins"
+      ]
+    }
+  ],
+  "experiences": [],
+  "projects": [
+    {
+      "name": "E-Commerce System",
+      "description": "designed weather checker application showing forecasts.",
+      "technologies": [
+        "Node.js",
+        "Express",
+        "MongoDB"
+      ]
+    }
+  ],
+  "certifications": [
+    {
+      "certificateName": "AWS Certified Cloud Practitioner",
+      "description": "Certified in cloud fundamentals"
+    }
+  ],
+  "achievements": [
+    {
+      "details": "got first prize in coding compition."
+    }
+  ],
+  "platforms": [
+    {
+      "name": "Leetcode",
+      "url": "leetcode.com/priya"
+    }
+  ],
+  "additionalInfo": [],
+  "resumeSettings": {
+    "jobRole": "DevOps Engineer",
+    "customJobRole": "",
+    "fontStyle": "Arial",
+    "pages": "1",
+    "enableAI": true,
+    "linkType": "HyperLink"
+  }
+}

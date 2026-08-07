@@ -1,0 +1,57 @@
+{
+  "personalInfo": {
+    "name": "Priya Verma",
+    "mobile": "8034424674",
+    "email": "priya.verma@email.com",
+    "linkedin": "",
+    "github": "github.com/priyaverma",
+    "portfolio": ""
+  },
+  "summary": "basically worked on backend and did code. seeking awesome job.",
+  "education": {
+    "college": "XYZ Engineering College",
+    "degree": "B.E.",
+    "branch": "Computer Science",
+    "cgpa": "8.2",
+    "graduationYear": "2026"
+  },
+  "skills": [
+    {
+      "category": "Technical",
+      "items": [
+        "Java",
+        "Python",
+        "SQL",
+        "Git"
+      ]
+    }
+  ],
+  "experiences": [],
+  "projects": [],
+  "certifications": [
+    {
+      "certificateName": "AWS Certified Cloud Practitioner",
+      "description": "Certified in cloud fundamentals"
+    }
+  ],
+  "achievements": [
+    {
+      "details": "got award for best project."
+    }
+  ],
+  "platforms": [
+    {
+      "name": "Leetcode",
+      "url": "leetcode.com/priya"
+    }
+  ],
+  "additionalInfo": [],
+  "resumeSettings": {
+    "jobRole": "Database Administrator",
+    "customJobRole": "",
+    "fontStyle": "Arial",
+    "pages": "1",
+    "enableAI": true,
+    "linkType": "HyperLink"
+  }
+}

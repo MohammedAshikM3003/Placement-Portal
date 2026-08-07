@@ -1,0 +1,26 @@
+{
+  "timestamp": "2026-07-18T12:00:00.000Z",
+  "overall": {
+    "studentNameAccuracy": 0.95,
+    "registerNumberAccuracy": 0.95,
+    "subjectF1Score": 0.20,
+    "throughputPagesPerSecond": 0.05,
+    "totalExecutionTimeSeconds": 180
+  },
+  "versions": [
+    {
+      "version": "v1.0.0",
+      "date": "2026-07-17",
+      "f1": 0.18,
+      "throughput": 0.04,
+      "layouts": 2
+    },
+    {
+      "version": "v1.1.0",
+      "date": "2026-07-18",
+      "f1": 0.22,
+      "throughput": 0.06,
+      "layouts": 3
+    }
+  ]
+}

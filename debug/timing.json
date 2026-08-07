@@ -1,0 +1,9 @@
+{
+  "pdf_load": 0.0,
+  "ocr": 240.69156551361084,
+  "document_merge": 0.001089334487915039,
+  "coordinate_clustering": 0.0016033649444580078,
+  "parsing": 0.015604257583618164,
+  "validation": 0.0,
+  "total_processing_time": 176.14977836608887
+}

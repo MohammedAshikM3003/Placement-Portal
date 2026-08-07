@@ -1,0 +1,81 @@
+{
+  "personalInfo": {
+    "name": "Aditya Verma",
+    "mobile": "12345",
+    "email": "aditya.verma@email.com",
+    "linkedin": "linkedin.com/in/adityaverma",
+    "github": "github.com/adityaverma",
+    "portfolio": ""
+  },
+  "summary": "i am hard working persn. got good in coding. learn new things.",
+  "education": {
+    "college": "XYZ Engineering College",
+    "degree": "B.E.",
+    "branch": "Computer Science",
+    "cgpa": "8.2",
+    "graduationYear": "2026"
+  },
+  "skills": [
+    {
+      "category": "Technical",
+      "items": [
+        "Java",
+        "Python",
+        "SQL",
+        "Git"
+      ]
+    }
+  ],
+  "experiences": [
+    {
+      "title": "Software Developer Intern",
+      "companyName": "ABC Corp",
+      "location": "Remote",
+      "mode": "remote",
+      "fromDate": "2024-01-01",
+      "toDate": "2024-04-01",
+      "description": "fixed bugs in website and worked on the database stuff.",
+      "technologies": [
+        "React",
+        "JavaScript"
+      ]
+    }
+  ],
+  "projects": [
+    {
+      "name": "E-Commerce System",
+      "description": "built library management system. basically managed catalog.",
+      "technologies": [
+        "Node.js",
+        "Express",
+        "MongoDB"
+      ]
+    }
+  ],
+  "certifications": [
+    {
+      "certificateName": "AWS Certified Cloud Practitioner",
+      "description": "Certified in cloud fundamentals"
+    }
+  ],
+  "achievements": [
+    {
+      "details": "participted in coding contest."
+    }
+  ],
+  "platforms": [
+    {
+      "name": "Leetcode",
+      "url": "leetcode.com/aditya"
+    }
+  ],
+  "additionalInfo": [],
+  "resumeSettings": {
+    "jobRole": "Node Developer",
+    "customJobRole": "",
+    "fontStyle": "Arial",
+    "pages": "1",
+    "enableAI": true,
+    "linkType": "HyperLink"
+  }
+}

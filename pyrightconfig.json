@@ -1,0 +1,8 @@
+{
+  "venvPath": "d:/Placement-Portal",
+  "venv": ".venv310",
+  "extraPaths": [
+    "backend/ocr-service",
+    ".venv310/Lib/site-packages"
+  ]
+}

@@ -1,0 +1,40 @@
+[
+  {
+    "registerNumber": "73152311001",
+    "studentName": "Ahish V",
+    "status": "WARNING",
+    "failedStage": "OCR Subject Parser (subject_builder)",
+    "missingObjectsCount": 11,
+    "cause": "Clustered row did not contain valid grade/credits formatting or course code pattern",
+    "stages": [
+      {
+        "stage": "1. OCR Lines",
+        "count": 204
+      },
+      {
+        "stage": "2. Course Codes",
+        "count": 32
+      },
+      {
+        "stage": "3. Logical Rows",
+        "count": 43
+      },
+      {
+        "stage": "4. Subject Objects",
+        "count": 32
+      },
+      {
+        "stage": "5. Validation",
+        "count": 32
+      },
+      {
+        "stage": "6. Backend",
+        "count": 32
+      },
+      {
+        "stage": "7. API",
+        "count": 32
+      }
+    ]
+  }
+]

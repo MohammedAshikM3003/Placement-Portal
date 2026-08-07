@@ -1,0 +1,33 @@
+[
+  {
+    "student_index": 1,
+    "register_number": "73152311001",
+    "page_indices": [
+      0,
+      1
+    ],
+    "source_pages": [
+      1,
+      2
+    ],
+    "metadata": {
+      "source_pages": [
+        1,
+        2
+      ],
+      "pageIndexes": [
+        1,
+        2
+      ],
+      "pageStart": 1,
+      "pageEnd": 2,
+      "groupConfidence": 0.8735,
+      "confidence": {
+        "register_confidence": 0.7204424778761062,
+        "name_confidence": 1.0,
+        "boundary_confidence": 0.9,
+        "overall_confidence": 0.8735
+      }
+    }
+  }
+]

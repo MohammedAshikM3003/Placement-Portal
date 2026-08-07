@@ -1,0 +1,803 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+
+.co-sv-StuProfile-container, .StuViewProfile-container {
+    background: #f8f8fb;
+    min-height: 100vh;
+    overflow: hidden;
+}
+
+.co-sv-StuProfile-main, .StuViewProfile-main {
+    display: flex;
+    margin-top: 65px;
+    min-height: calc(100vh - 65px);
+    overflow: visible;
+}
+
+/* Sidebar container with fixed height and no horizontal overflow */
+.co-sv-StuProfile-sidebar, .StuViewProfile-sidebar {
+    position: fixed;
+    top: 65px;
+    left: 0;
+    width: 230px;
+    height: calc(100vh - 65px);
+    max-height: calc(100vh - 65px);
+    background: #fff;
+    box-sizing: border-box;
+    padding: 0 15px;
+    border-right: 1px solid #ddd;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* Desktop scrollbar - red styling to match theme */
+.co-sv-StuProfile-content::-webkit-scrollbar,
+.StuViewProfile-content::-webkit-scrollbar,
+.co-sv-StuProfile-sidebar::-webkit-scrollbar,
+.StuViewProfile-sidebar::-webkit-scrollbar {
+  width: 10px;
+}
+.co-sv-StuProfile-content::-webkit-scrollbar-track,
+.StuViewProfile-content::-webkit-scrollbar-track,
+.co-sv-StuProfile-sidebar::-webkit-scrollbar-track,
+.StuViewProfile-sidebar::-webkit-scrollbar-track {
+  background: #f0f2f5;
+}
+.co-sv-StuProfile-content::-webkit-scrollbar-thumb,
+.StuViewProfile-content::-webkit-scrollbar-thumb,
+.co-sv-StuProfile-sidebar::-webkit-scrollbar-thumb,
+.StuViewProfile-sidebar::-webkit-scrollbar-thumb {
+  background-color: #d23b42;
+  border-radius: 20px;
+  border: 3px solid #f0f2f5;
+}
+.co-sv-StuProfile-content::-webkit-scrollbar-thumb:hover,
+.StuViewProfile-content::-webkit-scrollbar-thumb:hover,
+.co-sv-StuProfile-sidebar::-webkit-scrollbar-thumb:hover,
+.StuViewProfile-sidebar::-webkit-scrollbar-thumb:hover {
+  background-color: #b32d34;
+}
+
+
+/* Prevent children inside sidebar from causing horizontal overflow */
+.co-sv-StuProfile-sidebar *, .StuViewProfile-sidebar * {
+    max-width: 100%;
+    box-sizing: border-box;
+    word-wrap: break-word;
+}
+
+.co-sv-StuProfile-dashboard-area, .StuViewProfile-dashboard-area {
+    flex: 1;
+    background: #f8f8fb;
+    padding: 25px;
+    overflow-y: auto; 
+    overflow-x: hidden;
+    position: relative;
+    min-height: calc(100vh - 65px);
+    max-height: calc(100vh - 65px);
+    box-sizing: border-box;
+    margin-top: 65px;
+        left: -228px;
+    width: 100%;
+}
+
+.co-sv-StuProfile-overlay, .StuViewProfile-overlay { 
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 998;
+}
+       .co-sv-StuProfile-dashboard-area::-webkit-scrollbar {
+      width: 10px;
+    }
+        .co-sv-StuProfile-dashboard-area::-webkit-scrollbar-track {
+      background: #f0f2f5;
+    }
+        .co-sv-StuProfile-dashboard-area::-webkit-scrollbar-thumb {
+      background-color: #d23b42;
+      border-radius: 20px;
+      border: 3px solid #f0f2f5;
+    }
+        .co-sv-StuProfile-dashboard-area::-webkit-scrollbar-thumb:hover {
+      background-color: #b32d34;
+    }
+.co-sv-profile-backbtn{
+    position:absolute;
+    left:1100px; top:40px;
+     width:100px;
+      height:40px;
+       background-color:#d23b42;
+        border-radius:25px;
+         font-size:1.03rem;
+         color:#fff;
+          border:none; 
+}
+
+/* Profile form section */
+.co-sv-StuProfile-profile-section-container, .StuViewProfile-profile-section-container {
+    background-color: #fff;
+    padding: 2.5rem;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    margin-bottom: 2rem;
+    margin-left: 25px;
+    margin-top: -10px;
+}
+
+.co-sv-StuProfile-profile-section-container:last-child, .StuViewProfile-profile-section-container:last-child {
+    margin-bottom: 0;
+}
+
+.co-sv-StuProfile-section-header, .StuViewProfile-section-header {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #333;
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    position: relative;
+    padding-bottom: 0.5rem;
+}
+
+.co-sv-StuProfile-section-header::after, .StuViewProfile-section-header::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 40px;
+    height: 3px;
+    background-color: #d73d3d;
+    border-radius: 2px;
+}
+
+.co-sv-StuProfile-form-grid, .StuViewProfile-form-grid {
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: repeat(3, 1fr);
+    align-items: start;
+}
+
+.co-sv-StuProfile-personal-info-fields, .StuViewProfile-personal-info-fields {
+    grid-column: 1 / span 2;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    align-content: start;
+}
+
+.co-sv-StuProfile-profile-photo-wrapper, .StuViewProfile-profile-photo-wrapper {
+    grid-column: 3 / 4;
+}
+
+.co-sv-StuProfile-form-grid input, .StuViewProfile-form-grid input,
+.co-sv-StuProfile-form-grid select, .StuViewProfile-form-grid select,
+.co-sv-StuProfile-datepicker-input, .StuViewProfile-datepicker-input {
+    width: 100%;
+    padding: 0.9rem;
+    border: 1px solid #f4dddd;
+    border-radius: 8px;
+    background-color: #fff9f9;
+    font-size: 0.95rem;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+.co-sv-StuProfile-form-grid input:focus, .StuViewProfile-form-grid input:focus,
+.co-sv-StuProfile-form-grid select:focus, .StuViewProfile-form-grid select:focus,
+.co-sv-StuProfile-datepicker-input:focus, .StuViewProfile-datepicker-input:focus {
+    outline: none;
+    border-color: #d73d3d;
+    box-shadow: 0 0 0 3px rgba(236, 98, 79, 0.2);
+}
+
+/* --- START: View-Only Profile Styles (New) --- */
+
+.co-sv-StuProfile-form-grid input:disabled, .StuViewProfile-form-grid input:disabled,
+.co-sv-StuProfile-form-grid select:disabled, .StuViewProfile-form-grid select:disabled,
+.co-sv-StuProfile-datepicker-input[disabled], .StuViewProfile-datepicker-input[disabled] {
+    /* Make it look flat and static, overriding interactive styles */
+    background-color: #fff9f9; 
+    border: 1px solid #f4dddd;
+    color: #333;
+    cursor: default !important;
+    box-shadow: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+}
+
+.co-sv-StuProfile-form-grid input:disabled:focus, .StuViewProfile-form-grid input:disabled:focus,
+.co-sv-StuProfile-form-grid select:disabled:focus, .StuViewProfile-form-grid select:disabled:focus,
+.co-sv-StuProfile-datepicker-input[disabled]:focus, .StuViewProfile-datepicker-input[disabled]:focus {
+    outline: none;
+    border-color: #e0e0e0; 
+    box-shadow: none;
+}
+
+.co-sv-StuProfile-form-grid select:disabled, .StuViewProfile-form-grid select:disabled {
+    /* Hide the dropdown arrow for disabled selects */
+    background-image: none; 
+}
+
+/* --- END: View-Only Profile Styles --- */
+
+
+/* --- Add this for Dropdown Option Hover --- */
+.co-sv-StuProfile-form-grid option:hover, 
+.StuViewProfile-form-grid option:hover {
+    background-color: #d73d3d !important; /* Your desired hover color */
+    color: white !important;
+}
+/* React-Datepicker Custom Styles */
+.co-sv-StuProfile-datepicker-wrapper, .StuViewProfile-datepicker-wrapper {
+    width: 100%;
+}
+
+/* Base style for the input field to match other form inputs */
+.co-sv-StuProfile-datepicker-input, .StuViewProfile-datepicker-input {
+    width: 100%;
+    padding: 0.9rem;
+    border: 1px solid #dde6f4;
+    border-radius: 8px;
+    background-color: #f9fbff;
+    font-size: 0.95rem;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+.co-sv-StuProfile-datepicker-input:focus, .StuViewProfile-datepicker-input:focus {
+    outline: none;
+    border-color: #d73d3d;
+    box-shadow: 0 0 0 3px rgba(32, 133, 246, 0.2);
+}
+
+/* Styling the calendar popover */
+.react-datepicker-wrapper {
+    width: 100%;
+}
+.react-datepicker__input-container {
+    display: block;
+}
+
+/* Calendar icon from React-Datepicker */
+.react-datepicker__input-container::after {
+    content: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 18px; height: 18px; color: %23555;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>');
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+}
+
+/* Hide the calendar icon for the disabled DatePicker */
+.react-datepicker__input-container:has(input[disabled])::after {
+    content: none !important;
+}
+
+
+.react-datepicker__day--selected,
+.react-datepicker__day--keyboard-selected,
+.react-datepicker__day--in-selecting-range,
+.react-datepicker__day--in-range {
+    background-color: #d73d3d !important;
+    color: white !important;
+}
+
+.react-datepicker__day--outside-month {
+    color: #ccc !important;
+}
+
+.react-datepicker__day:hover {
+    background-color: #e9f1fc;
+    color: #333;
+}
+
+.react-datepicker__header {
+    background-color: #f9fbff;
+    border-bottom: 1px solid #dde6f4;
+}
+
+.react-datepicker-popper[data-placement^="bottom"] .react-datepicker__triangle::after,
+.react-datepicker-popper[data-placement^="bottom"] .react-datepicker__triangle::before {
+    border-bottom-color: #f9fbff !important;
+}
+
+.co-sv-StuProfile-profile-photo-box, .StuViewProfile-profile-photo-box {
+    background-color: #fff;
+    border: 1px solid #dde6f4;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.co-sv-StuProfile-profile-photo-box .co-sv-StuProfile-section-header, .StuViewProfile-profile-photo-box .StuViewProfile-section-header {
+    margin-bottom: 1rem;
+    text-align: left;
+    border-bottom: none;
+}
+
+.co-sv-StuProfile-profile-icon-container, .StuViewProfile-profile-icon-container {
+    padding: 1rem 0;
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 150px;
+}
+
+.co-sv-StuProfile-profile-preview-img, .StuViewProfile-profile-preview-img {
+    width: 200px;
+    height: 250px;
+    object-fit: cover;
+    border-radius: 12px;
+    border: 4px solid #f4dddd;
+    cursor: default; /* Change cursor for view-only */
+}
+
+.co-sv-StuProfile-upload-action-area, .StuViewProfile-upload-action-area {
+    margin-top: auto;
+}
+
+.co-sv-StuProfile-upload-hint, .StuViewProfile-upload-hint {
+    font-size: 0.8rem;
+    color: #888;
+    margin-top: 8px;
+    text-align: center;
+}
+
+.co-sv-StuProfile-upload-success-message, .StuViewProfile-upload-success-message {
+    font-size: 0.9rem;
+    color: #28a745;
+    font-weight: 500;
+    text-align: center;
+    margin: 10px 0 0 0;
+}
+
+.co-sv-StuProfile-upload-btn-wrapper, .StuViewProfile-upload-btn-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.co-sv-StuProfile-profile-upload-btn, .StuViewProfile-profile-upload-btn {
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.8rem 1rem;
+    background-color: #fff9f9;
+    border: 1px solid #f4dddd;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    color: #555;
+    transition: all 0.2s ease-in-out;
+}
+
+.co-sv-StuProfile-profile-upload-btn:hover, .StuViewProfile-profile-upload-btn:hover {
+    background-color: #fae9e9;
+    border-color: #f4dddd;
+}
+
+.co-sv-StuProfile-remove-image-btn, .StuViewProfile-remove-image-btn {
+    background: #fde8e8;
+    border: 1px solid #f9c6c6;
+    color: #d9534f;
+    border-radius: 8px;
+    cursor: pointer;
+    width: 45px;
+    height: 45px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.co-sv-StuProfile-remove-image-btn:hover, .StuViewProfile-remove-image-btn:hover {
+    background: #d9534f;
+    color: white;
+    border-color: #d9534f;
+}
+
+.co-sv-StuProfile-upload-info-container, .StuViewProfile-upload-info-container {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    padding: 1rem;
+    background-color: #f9fbff;
+    border: 1px solid #dde6f4;
+    border-radius: 8px;
+    text-align: left;
+    font-size: 0.85rem;
+    word-break: break-all;
+}
+
+.co-sv-StuProfile-upload-info-item, .StuViewProfile-upload-info-item {
+    display: flex;
+    align-items: center;
+    color: #555;
+}
+
+.co-sv-StuProfile-upload-info-item:not(:last-child), .StuViewProfile-upload-info-item:not(:last-child) {
+    margin-bottom: 0.75rem;
+}
+
+.co-sv-StuProfile-study-category, .StuViewProfile-study-category {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    padding: 0.5rem;
+    background-color: #fff9f9;
+    border-radius: 8px;
+    border: 1px solid #f4dddd;
+}
+
+.co-sv-StuProfile-study-category label, .StuViewProfile-study-category label {
+    flex: 1;
+    text-align: center;
+    padding: 0.5rem;
+    border-radius: 6px;
+    cursor: default; /* Change cursor for view-only */
+    transition: all 0.2s ease-in-out;
+}
+
+.co-sv-StuProfile-study-category input[type='radio'], .StuViewProfile-study-category input[type='radio'] {
+    display: none;
+}
+
+.co-sv-StuProfile-study-category input[type='radio']:checked + label, .StuViewProfile-study-category input[type='radio']:checked + label {
+    background-color: #d73d3d;
+    color: white;
+    font-weight: 500;
+    box-shadow: 0 2px 8px rgba(32, 133, 246, 0.3);
+}
+
+.co-sv-StuProfile-action-buttons, .StuViewProfile-action-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.co-sv-StuProfile-action-buttons button, .StuViewProfile-action-buttons button {
+    padding: 0.8rem 2rem;
+    border-radius: 8px;
+    border: none;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+
+/* New button styles */
+.co-sv-StuProfile-edit-btn, .StuViewProfile-edit-btn {
+    background-color: #eef2ff; /* Indigo 50 */
+    color: #4f46e5; /* Indigo 600 */
+    margin-left: 25px;
+}
+
+.co-sv-StuProfile-edit-btn:hover, .StuViewProfile-edit-btn:hover {
+    background-color: #e0e7ff; /* Indigo 100 */
+}
+
+.co-sv-StuProfile-block-btn, .StuViewProfile-block-btn {
+    background-color: #374151; /* Cool Gray 700 */
+    color: white;
+    margin-right: auto; /* This pushes the first two buttons to the left */
+}
+
+.co-sv-StuProfile-block-btn:hover, .StuViewProfile-block-btn:hover {
+    background-color: #1f2937; /* Cool Gray 800 */
+}
+/* End of new button styles */
+
+
+.co-sv-StuProfile-discard-btn, .StuViewProfile-discard-btn {
+    background-color: #ffeaec;
+    color: #d73d3d;
+}
+
+.co-sv-StuProfile-save-btn, .StuViewProfile-save-btn {
+    background-color: #d73d3d;
+    color: white;
+}
+
+.co-sv-StuProfile-save-btn:hover, .StuViewProfile-save-btn:hover {
+    background-color: #bc1b09;
+}
+
+.co-sv-StuProfile-discard-btn:hover, .StuViewProfile-discard-btn:hover {
+    background-color: #f0caca;
+}
+/* Image preview modal */
+.co-sv-StuProfile-image-preview-overlay, .StuViewProfile-image-preview-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 3000;
+    cursor: pointer;
+}
+
+.co-sv-StuProfile-image-preview-container, .StuViewProfile-image-preview-container {
+    position: relative;
+    background-color: #fff;
+    padding: 10px;
+    border-radius: 12px;
+    max-width: 90vw;
+    max-height: 90vh;
+    cursor: default;
+}
+
+.co-sv-StuProfile-image-preview-content, .StuViewProfile-image-preview-content {
+    max-width: 100%;
+    max-height: calc(90vh - 20px);
+    display: block;
+    border-radius: 8px;
+}
+
+.co-sv-StuProfile-image-preview-close-btn, .StuViewProfile-image-preview-close-btn {
+    position: absolute;
+    top: -15px;
+    right: -15px;
+    background: white;
+    color: #333;
+    border: 2px solid #333;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    font-size: 2rem;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    padding: 0 0 5px 0;
+}
+
+/* Success popup */
+.co-sv-StuProfile-popup-overlay, .StuViewProfile-popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+}
+
+.co-sv-StuProfile-popup-container, .StuViewProfile-popup-container {
+    background-color: #fff;
+    border-radius: 12px;
+    width: 400px;
+    text-align: center;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+}
+
+.co-sv-StuProfile-popup-header, .StuViewProfile-popup-header {
+    background-color: #d73d3d;
+    color: white;
+    padding: 1rem;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.co-sv-StuProfile-popup-body, .StuViewProfile-popup-body {
+    padding: 2rem;
+}
+
+.co-sv-StuProfile-popup-body h2, .StuViewProfile-popup-body h2 {
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+    color: #333;
+}
+
+.co-sv-StuProfile-popup-body p, .StuViewProfile-popup-body p {
+    margin: 0.25rem 0;
+    color: #666;
+}
+
+.co-sv-StuProfile-popup-footer, .StuViewProfile-popup-footer {
+    padding: 1.5rem;
+    background-color: #f7f7f7;
+}
+
+.co-sv-StuProfile-popup-close-btn, .StuViewProfile-popup-close-btn {
+    background-color: #d9534f;
+    color: white;
+    border: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.co-sv-StuProfile-popup-close-btn:hover, .StuViewProfile-popup-close-btn:hover {
+    background-color: #c9302c;
+}
+
+/* Success icon animations */
+.co-sv-StuProfile-success-icon, .StuViewProfile-success-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: block;
+    stroke-width: 2;
+    stroke: #fff;
+    stroke-miterlimit: 10;
+    margin: 0 auto;
+    box-shadow: inset 0 0 0 #4bb71b;
+    animation: fill 0.4s ease-in-out 0.4s forwards, scale 0.3s ease-in-out 0.9s both;
+}
+
+.co-sv-StuProfile-success-icon--circle, .StuViewProfile-success-icon--circle {
+    stroke-dasharray: 166;
+    stroke-dashoffset: 166;
+    stroke-width: 2;
+    stroke-miterlimit: 10;
+    stroke: #4bb71b;
+    fill: none;
+    animation: stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}
+
+.co-sv-StuProfile-success-icon--check, .StuViewProfile-success-icon--check {
+    transform-origin: 50% 50%;
+    stroke-dasharray: 48;
+    stroke-dashoffset: 48;
+    animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+}
+
+@keyframes stroke {
+    100% {
+        stroke-dashoffset: 0;
+    }
+}
+
+@keyframes scale {
+    0%, 100% {
+        transform: none;
+    }
+    50% {
+        transform: scale3d(1.1, 1.1, 1);
+    }
+}
+
+@keyframes fill {
+    100% {
+        box-shadow: inset 0 0 0 40px #4bb71b;
+    }
+}
+
+/* Mobile responsive styles */
+@media (max-width: 900px) {
+    .co-sv-StuProfile-dashboard-area, .StuViewProfile-dashboard-area {
+        margin-left: 230px;
+        position:absolute;
+        padding: 15px 20px;
+        min-height: calc(100vh - 60px);
+        max-height: calc(100vh - 60px);
+        overflow-y: auto;
+    }
+    .co-sv-StuProfile-main, .StuViewProfile-main {
+        flex-direction: column;
+        height: auto;
+        margin-top: 60px;
+    }
+    .co-sv-StuProfile-overlay, .StuViewProfile-overlay {
+        display: block;
+    }
+    .co-sv-StuProfile-sidebar, .StuViewProfile-sidebar {
+        position: fixed;
+        top: 60px;
+        left: 0;
+        width: 100vw;
+        height: calc(100vh - 60px);
+        max-height: calc(100vh - 60px);
+        overflow-y: auto;
+        overflow-x: hidden;
+        background: #fff;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        z-index: 999;
+        padding: 0 15px;
+        border-right: none;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease-in-out;
+    }
+    .co-sv-StuProfile-sidebar.active, .StuViewProfile-sidebar.active {
+        transform: translateX(0);
+    }
+    .co-sv-StuProfile-form-grid, .StuViewProfile-form-grid {
+        display: block;
+        gap: 0;
+    }
+    .co-sv-StuProfile-personal-info-fields, .StuViewProfile-personal-info-fields {
+        grid-column: auto;
+        display: block;
+    }
+    .co-sv-profile-backbtn{
+        position:absolute;
+        left: 350px;
+        top: 10px;
+         width:100px;
+          height:40px;
+           background-color:#d23b42;
+            border-radius:25px;
+             font-size:1.03rem;
+             color:#fff;
+              border:none; 
+    }
+    
+    /* Adding spacing to each input field on mobile */
+    .co-sv-StuProfile-profile-section-container input:not(:last-child), .StuViewProfile-profile-section-container input:not(:last-child),
+    .co-sv-StuProfile-profile-section-container select:not(:last-child), .StuViewProfile-profile-section-container select:not(:last-child) {
+        margin-bottom: 1.5rem; /* Adjust this value to control spacing */
+    }
+
+    /* To handle the last input field, you might need a different approach if it's the last element in its parent container */
+    .co-sv-StuProfile-profile-section-container input, .StuViewProfile-profile-section-container input,
+    .co-sv-StuProfile-profile-section-container select, .StuViewProfile-profile-section-container select {
+        margin-bottom: 1rem; /* A general margin for all form elements on mobile */
+    }
+    
+    .co-sv-StuProfile-profile-photo-wrapper, .StuViewProfile-profile-photo-wrapper {
+        grid-column: auto;
+        margin-top: 1.5rem;
+    }
+    .co-sv-StuProfile-form-grid input, .StuViewProfile-form-grid input,
+    .co-sv-StuProfile-form-grid select, .StuViewProfile-form-grid select {
+        width: 100%;
+    }
+    .co-sv-StuProfile-action-buttons, .StuViewProfile-action-buttons {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    .co-sv-StuProfile-action-buttons button, .StuViewProfile-action-buttons button {
+        width: 100%;
+    }
+
+    .co-sv-StuProfile-card, .StuViewProfile-card {
+        width: 100% !important;
+        margin-bottom: 1rem;
+        padding: 1rem 1.2rem;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        background-color: white;
+        transition: box-shadow 0.3s ease;
+    }
+    .co-sv-StuProfile-card:hover, .StuViewProfile-card:hover {
+        box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+    }
+    .co-sv-StuProfile-btn, .StuViewProfile-btn,
+    .co-sv-StuProfile-profile-upload-btn, .StuViewProfile-profile-upload-btn,
+    .co-sv-StuProfile-save-btn, .StuViewProfile-save-btn,
+    .co-sv-StuProfile-discard-btn, .StuViewProfile-discard-btn {
+        width: 100% !important;
+        padding: 0.85rem 1rem;
+        font-size: 1rem;
+    }
+    .co-sv-StuProfile-card-button, .StuViewProfile-card-button {
+        padding: 0.6rem 1rem;
+        font-size: 0.95rem;
+    }
+    
+             
+    
+}
+

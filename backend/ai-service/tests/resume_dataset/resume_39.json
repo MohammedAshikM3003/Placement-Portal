@@ -1,0 +1,77 @@
+{
+  "personalInfo": {
+    "name": "Vikram Sharma",
+    "mobile": "7841753099",
+    "email": "vikram.sharma@email.com",
+    "linkedin": "linkedin.com/in/vikramsharma",
+    "github": "github.com/vikramsharma",
+    "portfolio": ""
+  },
+  "summary": "i am hard working persn. got good in coding. learn new things.",
+  "education": {
+    "college": "XYZ Engineering College",
+    "degree": "B.E.",
+    "branch": "Computer Science",
+    "cgpa": "8.2",
+    "graduationYear": "2026"
+  },
+  "skills": [
+    {
+      "category": "Technical",
+      "items": [
+        "HTML",
+        "CSS",
+        "JS",
+        "React",
+        "bootstrap"
+      ]
+    }
+  ],
+  "experiences": [
+    {
+      "title": "Software Developer Intern",
+      "companyName": "ABC Corp",
+      "location": "Remote",
+      "mode": "remote",
+      "fromDate": "2024-01-01",
+      "toDate": "2024-04-01",
+      "description": "worked in abc company. did frontend pages and fixed bugs.",
+      "technologies": [
+        "React",
+        "JavaScript"
+      ]
+    }
+  ],
+  "projects": [
+    {
+      "name": "E-Commerce System",
+      "description": "built library management system. basically managed catalog.",
+      "technologies": [
+        "Node.js",
+        "Express",
+        "MongoDB"
+      ]
+    }
+  ],
+  "certifications": [],
+  "achievements": [
+    {
+      "details": "won hackthon at college level."
+    }
+  ],
+  "platforms": [
+    {
+      "name": "Leetcode",
+      "url": "leetcode.com/vikram"
+    }
+  ],
+  "additionalInfo": [],
+  "resumeSettings": {
+    "jobRole": "Frontend Developer",
+    "customJobRole": "",
+    "fontStyle": "Arial",
+    "pages": "1",
+    "enableAI": true,
+    "linkType": "HyperLink"
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "personalInfo": {
+    "name": "Karan Kumar",
+    "mobile": "8836656134",
+    "email": "karan.kumar@email.com",
+    "linkedin": "linkedin.com/in/karankumar",
+    "github": "github.com/karankumar",
+    "portfolio": ""
+  },
+  "summary": "basically worked on backend and did code. seeking awesome job.",
+  "education": {
+    "college": "",
+    "degree": "",
+    "branch": "",
+    "cgpa": "",
+    "graduationYear": ""
+  },
+  "skills": [
+    {
+      "category": "Technical",
+      "items": [
+        "Java",
+        "Python",
+        "SQL",
+        "Git"
+      ]
+    }
+  ],
+  "experiences": [
+    {
+      "title": "Software Developer Intern",
+      "companyName": "ABC Corp",
+      "location": "Remote",
+      "mode": "remote",
+      "fromDate": "2024-01-01",
+      "toDate": "2024-04-01",
+      "description": "worked in abc company. did frontend pages and fixed bugs.",
+      "technologies": [
+        "React",
+        "JavaScript"
+      ]
+    }
+  ],
+  "projects": [],
+  "certifications": [],
+  "achievements": [
+    {
+      "details": "got award for best project."
+    }
+  ],
+  "platforms": [
+    {
+      "name": "Leetcode",
+      "url": "leetcode.com/karan"
+    }
+  ],
+  "additionalInfo": [],
+  "resumeSettings": {
+    "jobRole": "Data Engineer",
+    "customJobRole": "",
+    "fontStyle": "Arial",
+    "pages": "1",
+    "enableAI": true,
+    "linkType": "HyperLink"
+  }
+}

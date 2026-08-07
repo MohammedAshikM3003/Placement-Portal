@@ -1,0 +1,83 @@
+{
+  "personalInfo": {
+    "name": "Ananya Shetty",
+    "mobile": "7388383954",
+    "email": "ananya.shetty17@anonymized.in",
+    "linkedin": "linkedin.com/in/ananyashetty",
+    "github": "github.com/ananyashetty",
+    "portfolio": ""
+  },
+  "summary": "Motivated software engineer student. I done DSA coding and want to get SDE job. Learn fast.",
+  "education": {
+    "college": "SSN College of Engineering",
+    "degree": "B.Tech",
+    "branch": "Information Technology",
+    "cgpa": "7.60",
+    "graduationYear": "2026"
+  },
+  "skills": [
+    {
+      "category": "Technical Skills",
+      "items": [
+        "Java",
+        "C++",
+        "Python",
+        "Data Structures",
+        "Algorithms",
+        "Git",
+        "SQL"
+      ]
+    }
+  ],
+  "experiences": [
+    {
+      "title": "Software Intern",
+      "companyName": "Infosys",
+      "location": "Chennai, India",
+      "mode": "in-person",
+      "fromDate": "2024-05-01",
+      "toDate": "2024-07-01",
+      "description": "worked at Zoho. did solve DSA bugs and write tests in java.",
+      "technologies": [
+        "Java",
+        "C++"
+      ]
+    }
+  ],
+  "projects": [
+    {
+      "name": "Pathfinding Visualizer",
+      "description": "i built path finder showing Dijkstra algorthm. optimized with clean data structures.",
+      "technologies": [
+        "C++",
+        "algorithms"
+      ]
+    }
+  ],
+  "certifications": [
+    {
+      "certificateName": "AWS Academy Cloud Foundations",
+      "description": "Professional IT Certification"
+    }
+  ],
+  "achievements": [
+    {
+      "details": "won college level coding compition."
+    }
+  ],
+  "platforms": [
+    {
+      "name": "Leetcode",
+      "url": "leetcode.com/ananya"
+    }
+  ],
+  "additionalInfo": [],
+  "resumeSettings": {
+    "jobRole": "Mobile Developer",
+    "customJobRole": "",
+    "fontStyle": "Arial",
+    "pages": "1",
+    "enableAI": true,
+    "linkType": "HyperLink"
+  }
+}

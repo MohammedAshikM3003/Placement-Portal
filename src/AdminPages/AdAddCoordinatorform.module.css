@@ -1,0 +1,2024 @@
+/* Coordinator detail page refactored to match the Admin Profile page design system. */
+
+.Admin-cood-detail-layout {
+    display: flex;
+    width: 100%;
+    height: 100vh;
+    background-color: #f6f8fb;
+    position: relative;
+    font-family: 'Poppins', sans-serif;
+}
+
+.Admin-cood-detail-main-content {
+    flex-grow: 1;
+    padding: 10px 10px 10px 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    overflow-y: auto;
+    overflow-x: hidden;
+    height: calc(100vh - 65px);
+    background-color: #f8f8fb;
+    margin: 65px 0px 0px 280px;
+    box-sizing: border-box;
+}
+
+.Admin-cood-detail-main-content::-webkit-scrollbar {
+    width: 10px;
+}
+
+.Admin-cood-detail-main-content::-webkit-scrollbar-track {
+    background: #f0f2f5;
+}
+
+.Admin-cood-detail-main-content::-webkit-scrollbar-thumb {
+    background: #4EA24E;
+    border-radius: 20px;
+    border: 3px solid #f0f2f5;
+}
+
+.Admin-cood-detail-main-content::-webkit-scrollbar-thumb:hover {
+    background: #2E7D32;
+}
+
+.Admin-cood-detail-main-content.sidebar-open {
+    margin-left: 280px;
+}
+
+.Admin-cood-detail-main-card {
+    background-color: transparent;
+    border-radius: 0;
+    width: 100%;
+    max-width: 1400px;
+    height: auto;
+    padding: 0;
+    box-shadow: none;
+    border: none;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    box-sizing: border-box;
+}
+
+.Admin-cood-detail-title-bar {
+    display: none;
+}
+
+.Admin-cood-detail-details-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 30px;
+    align-items: start;
+    width: 100%;
+}
+
+.Admin-cood-detail-main-column {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    min-width: 0;
+    height: 100%;
+}
+
+.Admin-cood-detail-credentials-card,
+.Admin-cood-detail-photo-box,
+.Admin-cood-detail-login-card {
+    background-color: #ffffff;
+    border: 1px solid #e6f4dd;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.Admin-cood-detail-credentials-card {
+    padding: 2.5rem;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    height: 100%;
+}
+
+.Admin-cood-detail-login-card {
+    width: 100%;
+    margin-top: 0;
+}
+
+.Admin-cood-detail-credentials-card .Admin-cood-detail-card-title,
+.Admin-cood-detail-photo-title {
+    margin: 0 0 1rem 0;
+    padding: 0 0 0.5rem 0;
+    width: fit-content;
+    position: relative;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #333;
+}
+
+.Admin-cood-detail-card-title::after,
+.Admin-cood-detail-photo-title::after {
+    content: "";
+    display: block;
+    width: 48px;
+    height: 3px;
+    margin-top: 8px;
+    border-radius: 20px;
+    background: #4EA24E;
+}
+
+.Admin-cood-detail-main-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #333;
+    margin: 0;
+    padding: 0;
+}
+
+.Admin-cood-detail-card-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    width: 100%;
+    height: 100%;
+}
+
+.Admin-cood-detail-section {
+    padding-top: 8px;
+    padding-bottom: 15px;
+    flex-grow: 1;
+}
+
+.Admin-cood-detail-input-grid,
+.Admin-cood-detail-login-fields,
+.Admin-cood-detail-input-grid-three-col,
+.Admin-cood-detail-login-actions-row,
+.Admin-cood-detail-login-credentials-wrapper {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    width: 100%;
+}
+
+.Admin-cood-detail-field-label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #1f2d3d;
+}
+
+.Admin-cood-detail-label-heading {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    width: fit-content;
+    white-space: nowrap;
+}
+
+.Admin-cood-detail-required-star {
+    color: #d32f2f;
+    margin-left: 4px;
+    display: inline;
+}
+
+/* Field Blink Animation - copied from MainRegistration */
+@keyframes Admin-cood-detail-field-blink {
+    0%, 100% { 
+        background-color: transparent;
+        border-color: initial;
+    }
+    25% { 
+        background-color: #fff9e6;
+        border-color: #ffc107;
+        box-shadow: 0 0 10px rgba(255, 193, 7, 0.5);
+    }
+    50% { 
+        background-color: transparent;
+        border-color: initial;
+    }
+    75% { 
+        background-color: #fff9e6;
+        border-color: #ffc107;
+        box-shadow: 0 0 10px rgba(255, 193, 7, 0.5);
+    }
+}
+
+.Admin-cood-detail-field-highlight {
+    animation: Admin-cood-detail-field-blink 1.5s ease-in-out 2;
+    border-color: #ffc107 !important;
+    box-shadow: 0 0 10px rgba(255, 193, 7, 0.5) !important;
+}
+
+/* Ensure the blink works for all input types */
+:global(.Admin-cood-detail-field-highlight) {
+    animation: Admin-cood-detail-field-blink 1.5s ease-in-out 2 !important;
+}
+
+.Admin-cood-detail-validation-item:focus-visible {
+    outline: 2px solid #4EA24E;
+    outline-offset: 2px;
+    border-radius: 6px;
+}
+
+.Admin-cood-detail-form-input,
+.Admin-cood-detail-datepicker-input {
+    width: 100%;
+    height: 53.6px;
+    padding: 12px 15px;
+    border: 1px solid #def4dd;
+    border-radius: 6px;
+    font-size: 1em;
+    color: #333;
+    background-color: #f9fff9;
+    box-sizing: border-box;
+    transition: border-color 0.3s, box-shadow 0.3s;
+    font-family: 'Poppins', sans-serif;
+}
+
+.Admin-cood-detail-form-input::placeholder,
+.Admin-cood-detail-datepicker-input::placeholder {
+    color: #999;
+}
+
+.Admin-cood-detail-form-input:focus,
+.Admin-cood-detail-datepicker-input:focus {
+    outline: none;
+    border-color: #4EA24E;
+    box-shadow: 0 0 0 3px rgba(82, 236, 79, 0.2);
+}
+
+.Admin-cood-detail-form-select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    color: #888;
+    padding-right: 40px;
+    cursor: pointer;
+}
+
+.Admin-cood-detail-form-select:not([value='']) {
+    color: #333;
+}
+
+.Admin-cood-detail-select-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.Admin-cood-detail-select-wrapper .Admin-cood-detail-dropdown-icon {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    width: 10px;
+    height: 10px;
+    transition: transform 0.3s;
+}
+
+.Admin-cood-detail-select-wrapper select:focus + .Admin-cood-detail-dropdown-icon {
+    transform: translateY(-50%) rotate(180deg);
+}
+
+.Admin-cood-detail-calendar-wrapper,
+.Admin-cood-detail-datepicker-wrapper {
+    width: 100%;
+}
+
+.Admin-cood-detail-datepicker-wrapper .react-datepicker-wrapper,
+.Admin-cood-detail-datepicker-wrapper .react-datepicker__input-container {
+    width: 100%;
+    display: block;
+    position: relative;
+}
+
+.Admin-cood-detail-password-hint {
+    font-size: 0.84rem;
+    color: #5a6f5a;
+    margin-top: 10px;
+    margin-bottom: 2px;
+    line-height: 1.35;
+}
+
+.Admin-cood-detail-password-hint span {
+    font-weight: 800;
+    color: #2f6d2f;
+}
+
+.Admin-cood-detail-validation-box {
+    width: 100%;
+    background-color: #fff3cd;
+    border: 1px solid #ffe69c;
+    border-radius: 12px;
+    padding: 1rem 1.1rem;
+    box-sizing: border-box;
+}
+
+.Admin-cood-detail-validation-heading {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 0.9rem 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #8a6110;
+}
+
+.Admin-cood-detail-validation-icon {
+    color: #f39c12;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.Admin-cood-detail-validation-list {
+    margin: 0;
+    padding-left: 1.2rem;
+    color: #8a6110;
+}
+
+.Admin-cood-detail-validation-item {
+    cursor: pointer;
+    transition: all 0.2s ease;
+    padding: 4px 8px;
+    margin: 2px 0;
+    border-radius: 4px;
+    list-style-position: inside;
+    position: relative;
+    line-height: 1.35;
+}
+
+.Admin-cood-detail-validation-item:hover {
+    background-color: #ffeaa7;
+    color: #664d03;
+    font-weight: 600;
+    transform: translateX(5px);
+}
+
+.Admin-cood-detail-validation-item:focus-visible {
+    outline: 2px solid #4EA24E;
+    outline-offset: 2px;
+    border-radius: 6px;
+}
+
+.Admin-cood-detail-validation-toggle {
+    margin-top: 0.9rem;
+    padding-top: 0.9rem;
+    border-top: 1px solid #ffe69c;
+    display: flex;
+    justify-content: center;
+}
+
+.Admin-cood-detail-show-more-btn {
+    background-color: #f39c12;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.Admin-cood-detail-show-more-btn:hover {
+    background-color: #e67e22;
+    transform: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.Admin-cood-detail-show-more-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.Admin-cood-detail-show-more-caret {
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+    background: inherit;
+    color: #ffffff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+/* Pointer Tooltip - copied from MainRegistration */
+.Admin-cood-detail-validation-pointer-tooltip {
+    position: fixed;
+    background: #111827;
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 6px 9px;
+    border-radius: 6px;
+    white-space: nowrap;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.18);
+    pointer-events: none;
+    z-index: 2147483646;
+}
+
+.Admin-cood-detail-status-error,
+.Admin-cood-detail-input-error {
+    border-color: #d23b42 !important;
+    box-shadow: 0 0 0 2px rgba(210, 59, 66, 0.15);
+}
+
+.Admin-cood-detail-photo-wrapper {
+    width: 100%;
+    max-width: 360px;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    margin-top: -20%;
+}
+
+.Admin-cood-detail-photo-wrapper.Admin-cood-detail-input-error .Admin-cood-detail-photo-box {
+    border-color: #d23b42;
+    box-shadow: 0 0 0 2px rgba(210, 59, 66, 0.15);
+}
+
+.Admin-cood-detail-photo-box {
+    background-color: #ffffff;
+    border: 1px solid #e6f4dd;
+    border-radius: 12px;
+    padding: 2.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    height: 112%;
+}
+
+.Admin-cood-detail-profile-icon-container {
+    padding: 1.5rem 0;
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.Admin-cood-detail-profile-preview-img,
+.Admin-cood-detail-photo-preview {
+    width: 150px;
+    height: 180px;
+    object-fit: cover;
+    border-radius: 12px;
+    border: 4px solid #e0f4dd;
+    transition: transform 0.2s, border-color 0.2s;
+    cursor: pointer;
+}
+
+.Admin-cood-detail-profile-preview-img:hover,
+.Admin-cood-detail-photo-preview:hover {
+    transform: scale(1.02);
+    border-color: #4EA24E;
+}
+
+.Admin-cood-detail-graduation-cap-icon {
+    width: 80px;
+    height: 80px;
+}
+
+.Admin-cood-detail-upload-action-area {
+    margin-top: auto;
+}
+
+.Admin-cood-detail-upload-btn-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.Admin-cood-detail-profile-upload-btn {
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.8rem 1rem;
+    background-color: #fafff9;
+    border: 1px solid #e1f4dd;
+    border-radius: 8px;
+    cursor: pointer;
+    color: #4EA24E;
+    font-weight: 500;
+    transition: all 0.2s ease-in-out;
+}
+
+.Admin-cood-detail-profile-upload-btn:hover {
+    background-color: #edfae9;
+    border-color: #4EA24E;
+}
+
+.Admin-cood-detail-upload-btn-content {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+}
+
+.Admin-cood-detail-remove-image-btn {
+    background: #edfde8;
+    border: 1px solid #d9f9c6;
+    color: #6bd94f;
+    border-radius: 8px;
+    cursor: pointer;
+    width: 45px;
+    height: 45px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.Admin-cood-detail-remove-image-btn:hover {
+    background: #6bd94f;
+    color: white;
+    border-color: #6bd94f;
+}
+
+.Admin-cood-detail-hidden-input {
+    display: none;
+}
+
+.Admin-cood-detail-upload-success-message {
+    font-size: 0.9rem;
+    color: #28a745;
+    font-weight: 500;
+    text-align: center;
+    margin: 10px 0 0 0;
+}
+
+.Admin-cood-detail-upload-hint {
+    font-size: 0.8rem;
+    color: #888;
+    margin-top: 8px;
+    text-align: center;
+}
+
+.Admin-cood-detail-login-buttons-desktop {
+    display: none;
+}
+
+.Admin-cood-detail-mobile-actions,
+.Admin-cood-detail-final-actions {
+    display: flex;
+    gap: 12px;
+    width: 100%;
+}
+
+.Admin-cood-detail-mobile-actions {
+    margin-top: 16px;
+}
+
+.Admin-cood-detail-final-actions {
+    max-width: 1400px;
+    justify-content: flex-end;
+    margin-top: 0;
+    flex-shrink: 0;
+}
+
+.Admin-cood-detail-discard-btn,
+.Admin-cood-detail-confirm-save-btn {
+    padding: 12px 15px;
+    border-radius: 8px;
+    font-size: 0.95em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    min-width: auto;
+    border: none;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    height: 48px;
+    white-space: nowrap;
+}
+
+.Admin-cood-detail-discard-btn {
+    background-color: #949494;
+    color: white;
+}
+
+.Admin-cood-detail-discard-btn:hover {
+    background-color: #808080;
+    box-shadow: none;
+}
+
+.Admin-cood-detail-confirm-save-btn {
+    background-color: #4EA24E;
+    color: white;
+}
+
+.Admin-cood-detail-confirm-save-btn:hover {
+    background-color: #3d8f3d;
+    box-shadow: none;
+}
+
+.Admin-cood-detail-confirm-save-btn:disabled {
+    background-color: #a8d5a8;
+    cursor: not-allowed;
+}
+
+.co-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.2);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.co-modal-content {
+    position: relative;
+    max-width: 90%;
+    max-height: 90%;
+}
+
+.co-modal-image {
+    display: block;
+    max-width: 100%;
+    max-height: 100vh;
+    border-radius: 4px;
+    object-fit: contain;
+}
+
+.co-modal-close {
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    color: #fff;
+    font-size: 40px;
+    font-weight: bold;
+    cursor: pointer;
+    opacity: 0.9;
+    transition: opacity 0.2s;
+    z-index: 1001;
+}
+
+.co-modal-close:hover {
+    opacity: 1;
+}
+
+.success-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.2);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.success-modal-content {
+    background-color: #ffffff;
+    border-radius: 12px;
+    width: 400px;
+    max-width: 90vw;
+    text-align: center;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+    font-family: 'Poppins', sans-serif;
+    animation: fadeIn 0.3s ease-out forwards;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.success-modal-header {
+    background-color: #4EA24E;
+    color: white;
+    padding: 1.2rem;
+    font-size: 1.75rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-align: center;
+}
+
+.success-modal-body {
+    padding: 2rem;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.success-modal-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 20px;
+    background-color: #4fa34f;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+}
+
+.success-modal-icon img {
+    width: 40px;
+    height: 40px;
+}
+
+.success-modal-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #333;
+    margin: 0 0 0.5rem 0;
+}
+
+.success-modal-message {
+    font-size: 1rem;
+    color: #666;
+    margin: 0;
+    line-height: 1.5;
+}
+
+.success-modal-footer {
+    padding: 1.5rem;
+    background-color: #f7f7f7;
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.success-modal-close-btn {
+    background-color: #D23B42;
+    color: white;
+    border: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s, box-shadow 0.2s;
+    box-shadow: 0 2px 8px rgba(210, 59, 66, 0.2);
+    width: auto;
+    max-width: none;
+}
+
+.success-modal-close-btn:hover {
+    background-color: #b53138;
+    box-shadow: 0 4px 12px rgba(210, 59, 66, 0.3);
+}
+
+.mr-popup-overlay {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.2);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.mr-popup-container {
+    background-color: #fff;
+    border-radius: 12px;
+    width: 400px;
+    overflow: hidden;
+    text-align: center;
+}
+
+.mr-popup-header {
+    background-color: #2085f6;
+    color: white;
+    padding: 1rem;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.mr-popup-body {
+    padding: 2.5rem;
+}
+
+.mr-popup-footer {
+    padding: 1.5rem;
+    background-color: #f7f7f7;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.mr-popup-close-btn-blue {
+    background-color: #1976d2;
+    color: white;
+    border: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.mr-popup-close-btn-blue:hover {
+    background-color: #1565c0;
+}
+
+.mr-image-error-icon-container {
+    width: 90px;
+    height: 90px;
+    margin: 0 auto 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #d32f2f;
+    border-radius: 50%;
+    box-shadow: 0 0 15px rgba(211, 47, 47, 0.4);
+}
+
+.mr-image-error-icon {
+    width: 48px;
+    height: 48px;
+    display: block;
+}
+
+.mr-popup-close-btn-red {
+    background-color: #d32f2f;
+    color: white;
+    border: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.mr-popup-close-btn-red:hover {
+    background-color: #b71c1c;
+}
+
+@keyframes adminPopupEnter {
+    from {
+        opacity: 0;
+        transform: translateY(10px) scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.Admin-cood-detail-crop-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+}
+
+.Admin-cood-detail-crop-container {
+    width: min(980px, 94vw);
+    background: #fff;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.28);
+    animation: adminPopupEnter 0.25s ease-out;
+}
+
+.Admin-cood-detail-crop-header {
+    background: #4ea24e;
+    color: #fff;
+    text-align: center;
+    padding: 1.1rem 1.25rem;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.Admin-cood-detail-crop-content {
+    display: grid;
+    grid-template-columns: minmax(0, 1.45fr) minmax(280px, 0.8fr);
+}
+
+.Admin-cood-detail-crop-preview-area {
+    position: relative;
+    min-height: 420px;
+    background: #111;
+}
+
+.Admin-cood-detail-crop-controls {
+    padding: 1.4rem 1.2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+    background: #fff;
+}
+
+.Admin-cood-detail-control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+}
+
+.Admin-cood-detail-control-label {
+    font-size: 0.9rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: #4b4b4b;
+}
+
+.Admin-cood-detail-rotate-control {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+}
+
+.Admin-cood-detail-rotate-btn,
+.Admin-cood-detail-reset-btn,
+.Admin-cood-detail-aspect-btn,
+.Admin-cood-detail-crop-btn {
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.Admin-cood-detail-rotate-btn {
+    width: 88px;
+    height: 38px;
+    border-radius: 8px;
+    background: #f1f3f5;
+    color: #444;
+    font-size: 1.15rem;
+}
+
+.Admin-cood-detail-angle-value {
+    min-width: 42px;
+    text-align: center;
+    font-weight: 700;
+    color: #4ea24e;
+}
+
+.Admin-cood-detail-angle-slider,
+.Admin-cood-detail-zoom-slider {
+    width: 100%;
+    accent-color: #4ea24e;
+}
+
+.Admin-cood-detail-reset-btn {
+    height: 34px;
+    border-radius: 6px;
+    background: #f94a3d;
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.95rem;
+}
+
+.Admin-cood-detail-aspect-ratio-buttons {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.55rem;
+}
+
+.Admin-cood-detail-aspect-btn {
+    height: 38px;
+    border-radius: 7px;
+    background: #f2f4f7;
+    color: #444;
+    font-weight: 700;
+}
+
+.Admin-cood-detail-aspect-active {
+    background: #4ea24e;
+    color: #fff;
+}
+
+.Admin-cood-detail-zoom-value {
+    align-self: flex-end;
+    font-weight: 700;
+    color: #4ea24e;
+    margin-top: -0.15rem;
+}
+
+.Admin-cood-detail-crop-footer {
+    padding: 1rem 1.1rem 1.2rem;
+    display: flex;
+    justify-content: center;
+    gap: 0.9rem;
+    border-top: 1px solid #eef2ee;
+    background: #fff;
+}
+
+.Admin-cood-detail-crop-btn {
+    min-width: 120px;
+    padding: 0.85rem 1.5rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #fff;
+}
+
+.Admin-cood-detail-crop-discard-btn {
+    background: #8f8f8f;
+}
+
+.Admin-cood-detail-crop-upload-btn {
+    background: #4ea24e;
+}
+
+@media (min-width: 768px) {
+    .Admin-cood-detail-input-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+    }
+
+    .Admin-cood-detail-login-fields {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 1.5rem;
+        align-items: start;
+    }
+
+    .Admin-cood-detail-input-grid-three-col {
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 1.5rem;
+    }
+
+    .Admin-cood-detail-photo-wrapper {
+        max-width: none;
+    }
+
+    .Admin-cood-detail-login-buttons-desktop {
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+        grid-column: 1 / -1;
+        margin-top: 10px;
+    }
+
+    .Admin-cood-detail-mobile-actions {
+        display: none;
+    }
+
+    .Admin-cood-detail-discard-btn,
+    .Admin-cood-detail-confirm-save-btn {
+        padding: 10px 20px;
+        min-width: 120px;
+    }
+
+    .Admin-cood-detail-confirm-save-btn {
+        min-width: 150px;
+    }
+
+    .Admin-cood-detail-crop-content {
+        grid-template-columns: minmax(0, 1.45fr) minmax(300px, 0.8fr);
+    }
+}
+
+@media (max-width: 1200px) {
+    .Admin-cood-detail-main-content {
+        margin-left: 0 !important;
+        width: 100% !important;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 1200px) {
+    .Admin-cood-detail-details-grid {
+        grid-template-columns: 2fr 1fr;
+        gap: 1.5rem;
+    }
+
+    .Admin-cood-detail-login-fields,
+    .Admin-cood-detail-input-grid-three-col {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .Admin-cood-detail-photo-wrapper {
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 768px) {
+    .Admin-cood-detail-layout {
+        position: fixed !important;
+        inset: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        overflow: hidden !important;
+        flex-direction: column !important;
+        background-color: #f6f8fb;
+    }
+
+    .Admin-cood-detail-main-content {
+        margin-left: 0 !important;
+        margin-top: 65px !important;
+        width: 100% !important;
+        padding: 10px 10px 10px 20px !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        height: calc(100vh - 65px) !important;
+        max-height: none !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        justify-content: flex-start !important;
+        -webkit-overflow-scrolling: touch !important;
+        gap: 10px;
+        min-height: calc(100vh - 65px) !important;
+    }
+
+    .Admin-cood-detail-details-grid {
+        grid-template-columns: 1fr;
+        gap: 18px;
+    }
+
+    .Admin-cood-detail-credentials-card,
+    .Admin-cood-detail-photo-box {
+        padding: 1.75rem !important;
+    }
+
+    .Admin-cood-detail-photo-wrapper {
+        max-width: 100%;
+    }
+
+    .Admin-cood-detail-crop-content {
+        grid-template-columns: 1fr;
+    }
+
+    .Admin-cood-detail-crop-preview-area {
+        min-height: 300px;
+    }
+
+    .Admin-cood-detail-crop-controls {
+        gap: 1rem;
+    }
+
+    .Admin-cood-detail-crop-footer {
+        flex-direction: column;
+    }
+
+    .Admin-cood-detail-crop-btn {
+        width: 100%;
+    }
+
+    .Admin-cood-detail-input-grid,
+    .Admin-cood-detail-login-fields,
+    .Admin-cood-detail-input-grid-three-col {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .Admin-cood-detail-discard-btn,
+    .Admin-cood-detail-confirm-save-btn {
+        width: 100%;
+    }
+
+    .Admin-cood-detail-mobile-actions {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .Admin-cood-detail-login-buttons-desktop {
+        display: none;
+    }
+}
+
+.Admin-cood-detail-password-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.Admin-cood-detail-password-wrapper input {
+    padding-right: 45px !important;
+}
+
+.Admin-cood-detail-password-toggle-btn {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #999;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    z-index: 10;
+    transition: color 0.2s ease;
+}
+
+.Admin-cood-detail-password-toggle-btn:hover {
+    color: #4EA24E;
+}
+
+/* Profile Image Preview Popup */
+.imagePreviewOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 12000;
+}
+
+.imagePreviewContainer {
+    width: 520px;
+    max-width: 92vw;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+}
+
+.imagePreviewHeader {
+    background: #4EA24E;
+    color: #fff;
+    padding: 1rem;
+    font-size: 1.25rem;
+    font-weight: 700;
+    text-align: center;
+}
+
+.imagePreviewBody {
+    padding: 1rem;
+    max-height: 60vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #fafafa;
+}
+
+.imagePreviewBody img {
+    max-width: 100%;
+    max-height: 54vh;
+    object-fit: contain;
+    border-radius: 8px;
+}
+
+.imagePreviewFooter {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    padding: 1rem;
+    background: #f7f7f7;
+}
+
+.imagePreviewFooterBtn {
+    border: none;
+    border-radius: 8px;
+    padding: 0.7rem 1.2rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.imagePreviewFooterBtn:disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.imagePreviewCloseBtn {
+    background: #e5e7eb;
+    color: #333;
+}
+
+.imagePreviewDownloadBtn {
+    background: #4EA24E;
+    color: #fff;
+}
+
+/* Mobile Input with Country Code - Green Theme */
+.mobileInputWrapper {
+    display: flex;
+    width: 100%;
+    height: 53.6px;
+    border: 1px solid #def4dd;
+    border-radius: 6px;
+    overflow: hidden;
+    background-color: #f9fff9;
+    box-sizing: border-box;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.countryCode {
+    width: 15%;
+    min-width: 50px;
+    background: linear-gradient(135deg, #4EA24E 0%, #2E7D32 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+}
+
+.mobileNumberInput {
+    width: 85%;
+    border: none;
+    border-radius: 0;
+    background-color: transparent;
+    padding: 12px 15px;
+    font-size: 1rem;
+    font-family: 'Poppins', sans-serif;
+    line-height: normal;
+    box-sizing: border-box;
+    height: 100%;
+}
+
+.mobileNumberInput:focus {
+    outline: none;
+    box-shadow: none;
+}
+
+.mobileInputWrapper:focus-within {
+    border-color: #4EA24E;
+    box-shadow: 0 0 0 3px rgba(82, 236, 79, 0.2);
+}
+
+/* Disabled state for mobile input wrapper */
+.mobileInputWrapper:has(.mobileNumberInput:disabled) {
+    background-color: #f5f5f5;
+    cursor: not-allowed;
+    border-color: #e5e7eb;
+}
+
+.mobileNumberInput:disabled {
+    background-color: transparent;
+    cursor: not-allowed;
+    color: #666;
+}
+
+
+.adminBannerContainer {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    z-index: 9999;
+    animation: adminBannerSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes adminBannerSlideIn {
+    0% {
+        opacity: 0;
+        transform: translateX(100%);
+    }
+    100% {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.adminBanner {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    background-color: #4a4a4a;
+    padding: 14px 16px;
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+    gap: 12px;
+    min-width: 260px;
+    max-width: 340px;
+}
+
+.adminBannerIconWrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    margin-top: 2px;
+}
+
+.adminBannerSaveIcon {
+    width: 24px;
+    height: 24px;
+    color: #ffffff;
+}
+
+.adminBannerContent {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+}
+
+.adminBannerHeader {
+    font-size: 14px;
+    font-weight: 600;
+    color: #ffffff;
+    line-height: 1.3;
+    margin: 0;
+    padding: 0;
+}
+
+.adminBannerFieldNamesWrapper {
+    overflow: hidden;
+    max-width: 240px;
+    position: relative;
+}
+
+.adminBannerFieldNamesWrapper.adminBannerScrolling::before,
+.adminBannerFieldNamesWrapper.adminBannerScrolling::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 20px;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.adminBannerFieldNamesWrapper.adminBannerScrolling::before {
+    left: 0;
+    background: linear-gradient(to right, #4a4a4a, transparent);
+}
+
+.adminBannerFieldNamesWrapper.adminBannerScrolling::after {
+    right: 0;
+    background: linear-gradient(to left, #4a4a4a, transparent);
+}
+
+.adminBannerFieldNames {
+    font-size: 13px;
+    font-weight: 400;
+    color: #b0b0b0;
+    line-height: 1.4;
+    margin: 0;
+    padding: 0;
+    white-space: nowrap;
+    display: inline-flex;
+    gap: 30px;
+}
+
+.adminBannerFieldNames span {
+    display: inline-block;
+    padding-right: 30px;
+}
+
+.adminBannerMarquee {
+    animation: adminBannerMarqueeScroll 15s linear infinite;
+}
+
+.adminBannerFieldNamesWrapper:hover .adminBannerMarquee {
+    animation-play-state: paused;
+}
+
+@keyframes adminBannerMarqueeScroll {
+    0% {
+        transform: translateX(0);
+    }
+    100% {
+        transform: translateX(-50%);
+    }
+}
+
+/* --- Admin Unsaved Changes Popup --- */
+.adminUnsavedOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.adminUnsavedContainer {
+    width: 90%;
+    max-width: 400px;
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    animation: slideDown 0.2s ease-out;
+    font-family: 'Poppins', sans-serif;
+}
+
+.adminUnsavedHeader {
+    background: #4EA24E;
+    color: #fff;
+    text-align: center;
+    padding: 20px 24px 16px;
+    font-size: 25px;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+.adminUnsavedBody {
+    padding: 24px;
+    text-align: center;
+}
+
+.adminUnsavedIconWrap {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    margin: 0 auto 16px;
+    background: #ffa500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: warningFill 0.4s ease-in-out 0.4s forwards, scale 0.3s ease-in-out 0.9s both;
+}
+
+.adminUnsavedTitle {
+    margin: 16px 0 8px;
+    color: #333;
+    font-size: 24px;
+    font-weight: 600;
+}
+
+.adminUnsavedFieldsContainer {
+    margin: 20px 0;
+    padding: 16px;
+    background: #fff3e0;
+    border-radius: 8px;
+    border: 1px solid #ffe0b2;
+    max-height: 200px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.adminUnsavedFieldsList {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.adminUnsavedFieldChip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 12px;
+    border-radius: 6px;
+    background: #fff;
+    border: 1px solid #ffb74d;
+    color: #e26a00;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.4;
+    text-align: center;
+}
+
+.adminUnsavedMessage {
+    margin: 16px 0 0;
+    color: #555;
+    font-size: 15px;
+    font-weight: 500;
+    line-height: 1.5;
+}
+
+.adminUnsavedFooter {
+    padding: 16px 24px 24px;
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+}
+
+.adminUnsavedDiscardButton,
+.adminUnsavedSaveButton {
+    min-width: 120px;
+    border: none;
+    border-radius: 6px;
+    padding: 12px 28px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: 'Poppins', sans-serif;
+}
+
+.adminUnsavedDiscardButton {
+    background: #9d9d9d;
+    color: #fff;
+}
+
+.adminUnsavedDiscardButton:hover {
+    background: #8c8c8c;
+}
+
+.adminUnsavedSaveButton {
+    background: #4EA24E;
+    color: #fff;
+}
+
+.adminUnsavedSaveButton:hover {
+    background: #3f9346;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(78, 162, 78, 0.4);
+}
+
+.adminUnsavedDiscardButton:disabled,
+.adminUnsavedSaveButton:disabled {
+    opacity: 0.75;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+@keyframes warningFill {
+    100% {
+        box-shadow: inset 0 0 0 40px #ffa500;
+    }
+}
+
+@media (max-width: 768px) {
+    .adminBannerContainer {
+        top: calc(60px + env(safe-area-inset-top, 0px) + 10px);
+        right: 12px;
+    }
+
+    .adminBanner {
+        padding: 12px 14px;
+        min-width: 220px;
+        max-width: 300px;
+        gap: 10px;
+    }
+
+    .adminBannerHeader {
+        font-size: 13px;
+    }
+
+    .adminBannerFieldNamesWrapper {
+        max-width: 200px;
+    }
+
+    .adminBannerFieldNames {
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .adminBannerContainer {
+        right: 10px;
+    }
+
+    .adminBanner {
+        min-width: 240px;
+        max-width: 280px;
+        padding: 12px 14px;
+        gap: 10px;
+    }
+
+    .adminBannerFieldNamesWrapper {
+        max-width: 170px;
+    }
+}
+
+.Admin-main-profile-discard-btn-disabled {
+    background-color: #f0f0f0 !important;
+    color: #999 !important;
+    cursor: not-allowed !important;
+}
+
+/* Loading Spinner */
+.Admin-main-profile-loading-spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid #ffffff;
+    border-top: 2px solid transparent;
+    border-radius: 50%;
+    animation: admin-spin 1s linear infinite;
+    display: inline-block;
+}
+
+@keyframes admin-spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Success Popup */
+.Admin-main-profile-popup-container {
+    background-color: #fff;
+    border-radius: 12px;
+    width: 400px;
+    text-align: center;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.Admin-main-profile-popup-header {
+    background-color: #4EA24E;
+    color: white;
+    padding: 1rem;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.Admin-main-profile-popup-body {
+    padding: 2rem;
+}
+
+.Admin-main-profile-popup-footer {
+    padding: 1.5rem;
+    background-color: #f7f7f7;
+}
+
+.Admin-main-profile-popup-close-btn {
+    background-color: #4EA24E;
+    color: white;
+    border: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.Admin-main-profile-popup-close-btn:hover {
+    background-color: #2dbc09;
+}
+
+/* Success icon animations */
+.Admin-main-profile-success-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: block;
+    stroke-width: 2;
+    stroke: #fff;
+    margin: 0 auto;
+    box-shadow: inset 0 0 0 #4bb71b;
+    animation: fill 0.4s ease-in-out 0.4s forwards, scale 0.3s ease-in-out 0.9s both;
+}
+
+.Admin-main-profile-success-icon--circle {
+    stroke-dasharray: 166;
+    stroke-dashoffset: 166;
+    stroke-width: 2;
+    stroke: #4bb71b;
+    fill: none;
+    animation: stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}
+
+.Admin-main-profile-success-icon--check {
+    transform-origin: 50% 50%;
+    stroke-dasharray: 48;
+    stroke-dashoffset: 48;
+    animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+}
+
+@keyframes stroke {
+    100% { stroke-dashoffset: 0; }
+}
+
+@keyframes scale {
+    0%, 100% { transform: none; }
+    50% { transform: scale3d(1.1, 1.1, 1); }
+}
+
+@keyframes fill {
+    100% { box-shadow: inset 0 0 0 40px #4bb71b; }
+}
+
+/* Green Theme for DatePicker - Scoped to Admin Profile DOB field */
+.Admin-main-profile-date-wrapper :global(.react-datepicker-wrapper) {
+    width: 100%;
+}
+
+.Admin-main-profile-date-wrapper :global(.react-datepicker__input-container) {
+    width: 100%;
+}
+
+.Admin-main-profile-date-wrapper :global(.react-datepicker__day--selected),
+.Admin-main-profile-date-wrapper :global(.react-datepicker__day--keyboard-selected) {
+    background-color: #4EA24E !important;
+    color: white !important;
+}
+
+.Admin-main-profile-date-wrapper :global(.react-datepicker__day--selected:hover),
+.Admin-main-profile-date-wrapper :global(.react-datepicker__day--keyboard-selected:hover) {
+    background-color: #2E7D32 !important;
+}
+
+.Admin-main-profile-date-wrapper :global(.react-datepicker__day:hover) {
+    background-color: #c8e6c9 !important;
+    color: #333 !important;
+}
+
+.Admin-main-profile-date-wrapper :global(.react-datepicker__day--today) {
+    font-weight: bold;
+    border: 2px solid #4EA24E;
+    border-radius: 50%;
+}
+
+.Admin-main-profile-date-wrapper :global(.react-datepicker__header) {
+    background-color: #4EA24E !important;
+    border-bottom: none !important;
+    padding-top: 8px !important;
+    padding-bottom: 4px !important;
+}
+
+.Admin-main-profile-date-wrapper :global(.react-datepicker__current-month) {
+    display: none !important;
+}
+
+.Admin-main-profile-date-wrapper :global(.react-datepicker__navigation) {
+    display: none !important;
+}
+
+.Admin-main-profile-date-wrapper :global(.react-datepicker__day-name) {
+    color: #000000 !important;
+    font-weight: 700 !important;
+    font-size: 13px !important;
+    width: 2.7rem !important;
+    line-height: 2rem !important;
+    text-align: center !important;
+    display: inline-block !important;
+    margin: 0 !important;
+}
+
+.Admin-main-profile-date-wrapper :global(.react-datepicker__day-names) {
+    margin-top: 4px !important;
+    margin-bottom: 0 !important;
+    padding-bottom: 4px !important;
+    background-color: white !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+}
+
+.Admin-main-profile-date-wrapper :global(.react-datepicker__day) {
+    width: 2.7rem !important;
+    line-height: 2.4rem !important;
+    margin: 0.05rem !important;
+    border-radius: 0.5rem !important;
+    text-align: center !important;
+    font-size: 14px !important;
+}
+
+.Admin-main-profile-date-wrapper :global(.react-datepicker__month) {
+    margin: 0.2rem !important;
+}
+
+.Admin-main-profile-date-wrapper :global(.react-datepicker__navigation-icon::before) {
+    border-color: #ffffff !important;
+}
+
+.Admin-main-profile-date-wrapper :global(.react-datepicker__navigation:hover *::before) {
+    border-color: #ffffff !important;
+}
+
+/* Success Popup Styles */
+.Admin-DB-AdProfile-popup-container { 
+    background-color: #fff; 
+    border-radius: 12px; 
+    width: 400px; 
+    text-align: center; 
+    overflow: hidden; 
+}
+
+.Admin-DB-AdProfile-popup-header { 
+    background-color: #4EA24E; 
+    color: white; 
+    padding: 1rem; 
+    font-size: 1.5rem; 
+    font-weight: 600; 
+}
+
+.Admin-DB-AdProfile-popup-body { 
+    padding: 2rem; 
+}
+
+.Admin-DB-AdProfile-popup-body h2 {
+    margin: 1rem 0 0.5rem 0;
+    font-size: 24px;
+    color: #000;
+    font-weight: 700;
+}
+
+.Admin-DB-AdProfile-popup-body p {
+    margin: 0;
+    color: #888;
+    font-size: 16px;
+}
+
+.Admin-DB-AdProfile-popup-footer { 
+    padding: 1.5rem; 
+    background-color: #f7f7f7; 
+}
+
+.Admin-DB-AdProfile-popup-close-btn { 
+    background-color: #d9534f; 
+    color: white; 
+    border: none; 
+    padding: 0.8rem 1.5rem; 
+    border-radius: 8px; 
+    font-size: 1rem; 
+    font-weight: 500; 
+    cursor: pointer; 
+    transition: background-color 0.2s, box-shadow 0.2s;
+}
+
+.Admin-DB-AdProfile-popup-close-btn:hover {
+    background-color: #c9302c;
+    box-shadow: 0 2px 8px rgba(210, 59, 66, 0.3);
+}
+
+/* Success icon animations */
+.Admin-DB-AdProfile-success-icon {
+    width: 80px; 
+    height: 80px; 
+    border-radius: 50%; 
+    display: block; 
+    stroke-width: 2; 
+    stroke: #fff; 
+    margin: 0 auto; 
+    box-shadow: inset 0 0 0 #4bb71b; 
+    animation: fill 0.4s ease-in-out 0.4s forwards, scale 0.3s ease-in-out 0.9s both;
+}
+
+.Admin-DB-AdProfile-success-icon--circle {
+    stroke-dasharray: 166; 
+    stroke-dashoffset: 166; 
+    stroke-width: 2; 
+    stroke: #4bb71b; 
+    fill: none; 
+    animation: stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}
+
+.Admin-DB-AdProfile-success-icon--check {
+    transform-origin: 50% 50%; 
+    stroke-dasharray: 48; 
+    stroke-dashoffset: 48; 
+    animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+}
+
+@keyframes stroke { 
+    100% { stroke-dashoffset: 0; } 
+}
+
+@keyframes scale { 
+    0%, 100% { transform: none; } 
+    50% { transform: scale3d(1.1, 1.1, 1); } 
+}
+
+@keyframes fill { 
+    100% { box-shadow: inset 0 0 0 40px #4bb71b; } 
+}
+
+/* Saving state - not-allowed cursor on entire page */
+.admin-profile-saving,
+.admin-profile-saving * {
+    cursor: not-allowed !important;
+}
+
+.admin-profile-saving-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 2147483647;
+    background: transparent;
+    cursor: not-allowed;
+    pointer-events: all;
+}
+
+/* Ensure disabled elements show not-allowed cursor */
+.Admin-main-profile-form-input:disabled,
+.Admin-main-profile-form-select:disabled,
+.Admin-main-profile-form-input-login:disabled,
+.Admin-main-profile-date-wrapper input:disabled,
+.Admin-main-profile-layout button:disabled,
+.Admin-main-profile-layout input:disabled,
+.Admin-main-profile-layout select:disabled {
+    cursor: not-allowed !important;
+}
+
+/* Prevent pointer events on disabled labels during saving */
+.admin-profile-saving label {
+    pointer-events: none !important;
+}
+
+/* Custom Dropdown Overrides for AdAddCoordinatorform */
+.coord-form-dropdown-wrapper {
+    max-width: 100% !important;
+    width: 100% !important;
+}
+
+.coord-form-dropdown-header {
+    height: 53.6px !important;
+    border: 1px solid #def4dd !important;
+    border-radius: 6px !important;
+    background-color: #f9fff9 !important;
+    font-size: 1em !important;
+    color: #333 !important;
+    font-family: 'Poppins', sans-serif !important;
+}
+
+.coord-form-dropdown-header:hover {
+    border-color: #4EA24E !important;
+}
+

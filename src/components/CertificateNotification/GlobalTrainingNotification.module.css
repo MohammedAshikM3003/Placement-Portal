@@ -1,0 +1,127 @@
+﻿/* Global Training Toast Notification - matches CertificateStatusBanner style */
+.toastContainer {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    z-index: 9999;
+    animation: slideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.toastSlideOut {
+    animation: slideOut 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slideIn {
+    0%   { opacity: 0; transform: translateX(100%); }
+    100% { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideOut {
+    0%   { opacity: 1; transform: translateX(0); }
+    100% { opacity: 0; transform: translateX(100%); }
+}
+
+.toast {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 14px 16px;
+    border-radius: 10px;
+    background: #895129;
+    gap: 12px;
+    min-width: 260px;
+    max-width: 340px;
+}
+
+.toastIconWrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    margin-top: 2px;
+}
+
+.toastIcon {
+    width: 22px;
+    height: 22px;
+    color: #ffffff;
+}
+
+.toastContent {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.toastTitle {
+    font-size: 13px;
+    font-weight: 700;
+    color: #ffffff;
+    line-height: 1.3;
+    margin: 0;
+    padding: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.toastMarqueeWrapper {
+    overflow: hidden;
+    width: 100%;
+}
+
+.toastMarqueeText {
+    display: inline-block;
+    white-space: nowrap;
+    font-size: 11px;
+    font-weight: 400;
+    color: rgba(255, 255, 255, 0.85);
+    line-height: 1.4;
+    animation: marqueeScroll 12s linear infinite;
+    padding-right: 30px;
+}
+
+.toastCloseBtn {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    opacity: 0.75;
+    transition: opacity 0.2s ease;
+    color: #ffffff;
+    margin-top: 2px;
+}
+
+.toastCloseBtn:hover {
+    opacity: 1;
+}
+
+@keyframes marqueeScroll {
+    0%   { transform: translateX(0); }
+    15%  { transform: translateX(0); }
+    85%  { transform: translateX(-55%); }
+    100% { transform: translateX(-55%); }
+}
+
+@media (max-width: 768px) {
+    .toastContainer { top: 70px; right: 12px; }
+    .toast { min-width: 220px; max-width: 300px; padding: 12px 14px; }
+    .toastTitle { font-size: 12px; }
+    .toastMarqueeText { font-size: 10px; }
+}
+
+@media (max-width: 480px) {
+    .toastContainer { right: 10px; left: 10px; }
+    .toast { min-width: unset; max-width: 100%; }
+}

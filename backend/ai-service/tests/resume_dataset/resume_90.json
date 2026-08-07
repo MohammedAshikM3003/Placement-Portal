@@ -1,0 +1,81 @@
+{
+  "personalInfo": {
+    "name": "Vikram Sharma",
+    "mobile": "7210067937",
+    "email": "vikram.sharma@email.com",
+    "linkedin": "linkedin.com/in/vikramsharma",
+    "github": "github.com/vikramsharma",
+    "portfolio": ""
+  },
+  "summary": "honest boy like coding and gaming. fast learner and team player.",
+  "education": {
+    "college": "XYZ Engineering College",
+    "degree": "B.E.",
+    "branch": "Computer Science",
+    "cgpa": "8.2",
+    "graduationYear": "2026"
+  },
+  "skills": [
+    {
+      "category": "Technical",
+      "items": [
+        "Java",
+        "Python",
+        "SQL",
+        "Git"
+      ]
+    }
+  ],
+  "experiences": [
+    {
+      "title": "Software Developer Intern",
+      "companyName": "ABC Corp",
+      "location": "Remote",
+      "mode": "remote",
+      "fromDate": "2024-01-01",
+      "toDate": "2024-04-01",
+      "description": "worked in abc company. did frontend pages and fixed bugs.",
+      "technologies": [
+        "React",
+        "JavaScript"
+      ]
+    }
+  ],
+  "projects": [
+    {
+      "name": "E-Commerce System",
+      "description": "made attendance tracker. did write code in react and node.",
+      "technologies": [
+        "Node.js",
+        "Express",
+        "MongoDB"
+      ]
+    }
+  ],
+  "certifications": [
+    {
+      "certificateName": "AWS Certified Cloud Practitioner",
+      "description": "Certified in cloud fundamentals"
+    }
+  ],
+  "achievements": [
+    {
+      "details": "secured first place in hackathon."
+    }
+  ],
+  "platforms": [
+    {
+      "name": "Leetcode",
+      "url": "leetcode.com/vikram"
+    }
+  ],
+  "additionalInfo": [],
+  "resumeSettings": {
+    "jobRole": "Database Administrator",
+    "customJobRole": "",
+    "fontStyle": "Arial",
+    "pages": "1",
+    "enableAI": true,
+    "linkType": "HyperLink"
+  }
+}

@@ -1,0 +1,71 @@
+{
+  "personalInfo": {
+    "name": "Priya Kumar",
+    "mobile": "7891174240",
+    "email": "priya.kumar@email.com",
+    "linkedin": "",
+    "github": "github.com/priyakumar",
+    "portfolio": ""
+  },
+  "summary": "super motivated college student looking for cool web development job.",
+  "education": {
+    "college": "",
+    "degree": "",
+    "branch": "",
+    "cgpa": "",
+    "graduationYear": ""
+  },
+  "skills": [
+    {
+      "category": "Technical",
+      "items": [
+        "Java",
+        "Python",
+        "SQL",
+        "Git"
+      ]
+    }
+  ],
+  "experiences": [
+    {
+      "title": "Software Developer Intern",
+      "companyName": "ABC Corp",
+      "location": "Remote",
+      "mode": "remote",
+      "fromDate": "2024-01-01",
+      "toDate": "2024-04-01",
+      "description": "worked in abc company. did frontend pages and fixed bugs.",
+      "technologies": [
+        "React",
+        "JavaScript"
+      ]
+    }
+  ],
+  "projects": [],
+  "certifications": [
+    {
+      "certificateName": "AWS Certified Cloud Practitioner",
+      "description": "Certified in cloud fundamentals"
+    }
+  ],
+  "achievements": [
+    {
+      "details": "participted in coding contest."
+    }
+  ],
+  "platforms": [
+    {
+      "name": "Leetcode",
+      "url": "leetcode.com/priya"
+    }
+  ],
+  "additionalInfo": [],
+  "resumeSettings": {
+    "jobRole": "Cyber Security Engineer",
+    "customJobRole": "",
+    "fontStyle": "Arial",
+    "pages": "1",
+    "enableAI": true,
+    "linkType": "HyperLink"
+  }
+}

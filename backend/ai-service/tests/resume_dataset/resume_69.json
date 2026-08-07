@@ -1,0 +1,67 @@
+{
+  "personalInfo": {
+    "name": "Sneha Kumar",
+    "mobile": "9886674801",
+    "email": "sneha.kumar@email.com",
+    "linkedin": "",
+    "github": "",
+    "portfolio": ""
+  },
+  "summary": "basically worked on backend and did code. seeking awesome job.",
+  "education": {
+    "college": "",
+    "degree": "",
+    "branch": "",
+    "cgpa": "",
+    "graduationYear": ""
+  },
+  "skills": [
+    {
+      "category": "Technical",
+      "items": [
+        "Java",
+        "Python",
+        "SQL",
+        "Git"
+      ]
+    }
+  ],
+  "experiences": [],
+  "projects": [
+    {
+      "name": "E-Commerce System",
+      "description": "built library management system. basically managed catalog.",
+      "technologies": [
+        "Node.js",
+        "Express",
+        "MongoDB"
+      ]
+    }
+  ],
+  "certifications": [
+    {
+      "certificateName": "AWS Certified Cloud Practitioner",
+      "description": "Certified in cloud fundamentals"
+    }
+  ],
+  "achievements": [
+    {
+      "details": "got first prize in coding compition."
+    }
+  ],
+  "platforms": [
+    {
+      "name": "Leetcode",
+      "url": "leetcode.com/sneha"
+    }
+  ],
+  "additionalInfo": [],
+  "resumeSettings": {
+    "jobRole": "Database Administrator",
+    "customJobRole": "",
+    "fontStyle": "Arial",
+    "pages": "1",
+    "enableAI": true,
+    "linkType": "HyperLink"
+  }
+}

@@ -1,0 +1,81 @@
+{
+  "personalInfo": {
+    "name": "Aditya Subramanian",
+    "mobile": "9529921953",
+    "email": "aditya.subramanian29@anonymized.in",
+    "linkedin": "linkedin.com/in/adityasubramanian",
+    "github": "github.com/adityasubramanian",
+    "portfolio": ""
+  },
+  "summary": "analytical student looking for Data Analyst job. done data visualization.",
+  "education": {
+    "college": "College of Engineering Guindy",
+    "degree": "B.Tech",
+    "branch": "Information Technology",
+    "cgpa": "8.71",
+    "graduationYear": "2026"
+  },
+  "skills": [
+    {
+      "category": "Technical Skills",
+      "items": [
+        "SQL",
+        "Python",
+        "Excel",
+        "Tableau",
+        "Data Analysis"
+      ]
+    }
+  ],
+  "experiences": [
+    {
+      "title": "Data Analyst Intern",
+      "companyName": "Zoho",
+      "location": "Chennai, India",
+      "mode": "in-person",
+      "fromDate": "2024-05-01",
+      "toDate": "2024-07-01",
+      "description": "worked in Infosys. did write sql queries and formatted tableau reports.",
+      "technologies": [
+        "SQL",
+        "Python"
+      ]
+    }
+  ],
+  "projects": [
+    {
+      "name": "Sales Dashboard",
+      "description": "made database queries and designed sales dashboard. basically clean up data.",
+      "technologies": [
+        "SQL",
+        "Tableau"
+      ]
+    }
+  ],
+  "certifications": [
+    {
+      "certificateName": "AWS Academy Cloud Foundations",
+      "description": "Professional IT Certification"
+    }
+  ],
+  "achievements": [
+    {
+      "details": "won college level coding compition."
+    }
+  ],
+  "platforms": [
+    {
+      "name": "Leetcode",
+      "url": "leetcode.com/aditya"
+    }
+  ],
+  "additionalInfo": [],
+  "resumeSettings": {
+    "jobRole": "Python Developer",
+    "customJobRole": "",
+    "fontStyle": "Arial",
+    "pages": "1",
+    "enableAI": true,
+    "linkType": "HyperLink"
+  }
+}

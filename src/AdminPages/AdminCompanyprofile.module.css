@@ -1,0 +1,1768 @@
+/* --- Base Layout --- */
+.Admin-cp-layout {
+    display: flex;
+    min-height: 100vh;
+    background-color: #f6f8fb;
+    position: relative;
+    /* ADDED: Ensure layout uses full height on desktop */
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* Sidebar Wrapper: Defaults for Desktop */
+.Admin-cp-sidebar-wrapper {
+    width: auto;
+    flex-shrink: 0;
+    /* Desktop: Sidebar is just part of the flow */
+    position: relative;
+    transform: none;
+    /* Ensure sidebar sits above the overlay so links remain clickable */
+    z-index: 3000;
+}
+
+/* Main Content */
+.Admin-cp-main-content {
+    flex-grow: 1;
+    padding: 10px 10px 10px 20px;
+    margin: 65px 0px 0px 280px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    overflow: hidden;
+    position: relative;
+    height: calc(100vh - 65px);
+}
+
+/* Sidebar overlay for mobile when sidebar is open */
+.Admin-cp-mobile-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0);
+    /* Keep below the sidebar wrapper so sidebar links remain clickable */
+    z-index: 2000;
+}
+
+/* Mobile Toggle Button (Hidden by default on Desktop) */
+.Admin-cp-mobile-toggle {
+    display: none;
+    /* Desktop: Hidden */
+    cursor: pointer;
+    padding: 10px 0;
+    margin-left: 5px;
+    align-self: flex-start;
+    z-index: 100;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Top Card (Filter and Actions) */
+.Admin-cp-top-card {
+    background-color: transparent;
+    display: flex;
+    gap: 10px;
+    align-items: stretch;
+    flex-wrap: nowrap;
+    margin-left: 0;
+    margin-right: 0;
+    height: auto;
+    flex-shrink: 0;
+    width: 100%;
+    min-width: 0;
+}
+
+/* Filter Section */
+.Admin-cp-filter-section {
+    flex: 1 1 auto;
+    min-width: 0;
+    background-color: #e8e8e8;
+    padding: 20px;
+    border-radius: 18px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.Admin-cp-filter-header-container {
+    position: relative;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+}
+
+.Admin-cp-filter-header {
+    text-align: center;
+    font-size: 1rem;
+    font-weight: 500;
+    background-color: #4EA24E;
+    color: white;
+    height: 35px;
+    line-height: 35px;
+    margin: 0 auto;
+    border-radius: 30px;
+    display: block;
+    width: 228px;
+}
+
+.Admin-cp-clear-btn-header {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 35px;
+    line-height: 35px;
+    border: none;
+    border-radius: 30px;
+    background-color: #dcdcdc;
+    color: #333;
+    padding: 0 16px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.Admin-cp-clear-btn-header:hover {
+    background-color: #c0c0c0;
+}
+
+.Admin-cp-filter-icon-container {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    transform: translateY(-50%);
+    font-size: 1.2rem;
+    color: #4EA24E;
+}
+
+.Admin-cp-filter-content {
+    display: grid;
+    grid-template-columns:
+        minmax(0, 1fr) minmax(0, 1fr) minmax(140px, 0.7fr);
+    column-gap: 14px;
+    row-gap: 12px;
+    width: 100%;
+    min-width: 0;
+    flex-grow: 1;
+    align-content: center;
+}
+
+/* Input Wrapper for Label + Input */
+.Admin-cp-input-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 0px;
+    min-width: 0;
+    width: 100%;
+}
+
+/* Static Label (Fixed on Top Left) */
+.Admin-cp-static-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #666;
+    margin-left: 5px;
+    display: block;
+}
+
+/* Dropdown styling */
+.Admin-cp-dropdown-container {
+    position: relative;
+    border: 3px solid #ccc;
+    border-radius: 8px;
+    overflow: hidden;
+    height: 45px;
+    background-color: #ffffff;
+    transition: border-color 0.2s ease, border-width 0.2s ease;
+}
+
+.Admin-cp-dropdown {
+    width: 100%;
+    height: 100%;
+    padding: 0px 15px;
+    border: none;
+    background-color: transparent;
+    appearance: none;
+    cursor: pointer;
+    font-size: 0.95rem;
+    color: #333;
+}
+
+/* Show gray color for first option (placeholder) */
+.Admin-cp-dropdown option:first-child {
+    color: #999;
+}
+
+/* Make other options black */
+.Admin-cp-dropdown option:not(:first-child) {
+    color: #333;
+}
+
+.Admin-cp-dropdown-container::after {
+    content: '▼';
+    position: absolute;
+    top: 50%;
+    right: 15px;
+    transform: translateY(-50%);
+    font-size: 0.7rem;
+    color: #888;
+    pointer-events: none;
+}
+
+.Admin-cp-select-container::after {
+    content: '▼';
+    position: absolute;
+    top: 50%;
+    right: 15px;
+    transform: translateY(-50%);
+    font-size: 0.7rem;
+    color: #888;
+    pointer-events: none;
+    line-height: 1;
+    z-index: 2;
+}
+
+.Admin-cp-text-container {
+    position: relative;
+    border: 3px solid #ccc;
+    border-radius: 8px;
+    overflow: visible;
+    height: 45px;
+    background-color: #ffffff;
+    transition: border-color 0.2s ease, border-width 0.2s ease;
+    width: 100%;
+    min-width: 0;
+}
+
+/* Visiting Date Filter Styling */
+.Admin-cp-text-container.date-container {
+    overflow: visible;
+    position: relative;
+    z-index: 1000;
+}
+
+.Admin-cp-datepicker-wrapper {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+/* Global datepicker popper styling */
+:global(.datepicker-popper) {
+    z-index: 99999 !important;
+}
+
+:global(.react-datepicker-popper) {
+    z-index: 99999 !important;
+}
+
+:global(.react-datepicker__tab-loop) {
+    z-index: 99999 !important;
+}
+
+:global(.react-datepicker-wrapper) {
+    z-index: 1000;
+}
+
+.Admin-cp-datepicker-input {
+    width: 100%;
+    height: 100%;
+    padding: 0px 15px;
+    border: none;
+    background-color: transparent;
+    font-size: 0.95rem;
+    color: #333;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    line-height: 42px;
+}
+
+.Admin-cp-datepicker-input::placeholder {
+    color: #999;
+}
+
+.Admin-cp-datepicker-input:focus::placeholder {
+    opacity: 0;
+}
+
+.Admin-cp-datepicker-input:focus {
+    outline: none;
+}
+
+.Admin-cp-text.date-input {
+    width: 100%;
+    padding-right: 40px;
+    box-sizing: border-box;
+}
+
+.Admin-cp-text.date-input::-webkit-calendar-picker-indicator {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    opacity: 0.6;
+    width: 20px;
+    height: 20px;
+}
+
+.Admin-cp-text.date-input::-webkit-calendar-picker-indicator:hover {
+    opacity: 1;
+}
+
+.Admin-cp-text {
+    width: 100%;
+    height: 100%;
+    padding: 0px 15px;
+    border: none;
+    background-color: transparent;
+    cursor: text;
+    font-size: 0.95rem;
+    color: #333;
+    position: relative;
+    z-index: 0;
+    box-sizing: border-box;
+}
+
+.Admin-cp-select {
+    width: 100%;
+    padding: 8px 15px 0;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: none;
+    position: relative;
+    bottom: 5px;
+}
+
+.Admin-cp-text::placeholder {
+    color: #999;
+    opacity: 1;
+}
+
+.Admin-cp-text:focus::placeholder,
+.Admin-cp-dropdown:focus::placeholder {
+    opacity: 0;
+}
+
+.Admin-cp-text:focus,
+.Admin-cp-dropdown:focus {
+    outline: none;
+}
+
+.Admin-cp-text-container:hover,
+.Admin-cp-text-container.is-focused,
+.Admin-cp-dropdown-container:hover {
+    border-color: #4EA24E;
+}
+
+.Admin-cp-dropdown-container {
+    position: relative;
+}
+
+.Admin-cp-dropdown-container .Admin-cp-floating-label {
+    top: 50%;
+    left: 15px;
+    transform: translateY(-50%);
+    font-size: 0.95rem;
+    color: #999;
+    font-weight: 500;
+}
+
+.Admin-cp-dropdown-container:not([data-filled="true"]) .Admin-cp-dropdown {
+    color: #999;
+}
+
+.Admin-cp-dropdown-container[data-filled="true"] .Admin-cp-dropdown {
+    color: #333;
+}
+
+.Admin-cp-button-group {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: center;
+    margin-top: 8px;
+    margin-bottom: 5px;
+    gap: 45px;
+    border-radius: 10px;
+}
+
+.Admin-cp-button {
+    padding: 8px 20px;
+    border: none;
+    border-radius: 25px;
+    font-size: 1rem;
+    cursor: pointer;
+    font-weight: 700;
+    flex: 1;
+    transition: opacity 0.2s;
+    max-width: 150px;
+}
+
+.Admin-cp-search-btn {
+    background-color: #4EA24E;
+    color: white;
+    border: 2px solid transparent;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.13);
+}
+
+.Admin-cp-search-btn:hover {
+    background-color: #3d8a3d;
+}
+
+
+
+/* Action Cards Section */
+.Admin-cp-action-cards-section {
+    flex: 0 0 430px;
+    min-width: 400px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    overflow: hidden;
+    align-self: stretch;
+}
+
+.Admin-cp-action-card {
+    flex: 1 1 0;
+    min-width: 0;
+    display: grid;
+    grid-template-columns: 105px minmax(0, 1fr) 100px;
+    align-items: center;
+    column-gap: 12px;
+    padding: 12px 16px;
+    box-sizing: border-box;
+    background-color: #ffffff;
+    border: 2px solid #4EA24E;
+    border-radius: 15px;
+    overflow: hidden;
+    transition: border-color 0.2s ease;
+}
+
+.Admin-cp-action-addcard {
+    text-align: center;
+    flex: 0 1 210px;
+    min-width: 190px;
+    padding: 15px;
+    background-color: #ffffff;
+    border-radius: var(--radius-lg, 12px);
+    box-shadow: 0 2px 9px rgba(0, 0, 0, 0.05);
+    border: 3px solid #e0e0e0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Add Company Card Special Styling */
+.Admin-cp-add-card {
+    cursor: pointer;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
+    border-color: #e0e0e0;
+}
+
+.Admin-cp-add-card:hover {
+    border-color: #4ea24e;
+    box-shadow: 0 4px 12px rgba(0, 128, 0, 0.15);
+    transform: translateY(-5px);
+}
+
+.Admin-cp-add-icon {
+    margin-bottom: 10px;
+    margin-top: 0;
+    height: 55px;
+    width: auto;
+}
+
+.Admin-cp-add-header {
+    font-family: var(--font-base);
+    font-size: var(--text-2xl, 1.5rem);
+    font-weight: var(--weight-semibold, 600);
+    margin-bottom: 8px;
+    color: #000000;
+    margin-left: 0;
+    margin-right: 0;
+    margin-top: 0;
+    letter-spacing: normal;
+    line-height: var(--leading-tight, 1.2);
+}
+
+.Admin-cp-add-description {
+    font-family: var(--font-base);
+    font-size: var(--text-md, 1rem);
+    color: var(--color-text-muted, #666666);
+    margin-top: 8px;
+    font-weight: var(--weight-normal, 400);
+    line-height: var(--leading-snug, 1.4);
+    margin-bottom: 0;
+    margin-left: 0;
+    margin-right: 0;
+}
+
+/* Edit/Delete Card Styling */
+.Admin-cp-action-header {
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin: 0;
+    color: #888888;
+    width: 100%;
+    text-align: left;
+    align-self: center;
+    justify-self: start;
+    flex-shrink: 0;
+    transition: color 0.2s ease;
+}
+
+.Admin-cp-header-disabled {
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin: 0;
+    color: #888888 !important;
+    width: 100%;
+    text-align: left;
+    align-self: center;
+    justify-self: start;
+    flex-shrink: 0;
+}
+
+.Admin-cp-header-edit-active {
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin: 0;
+    color: #5932EA !important;
+    width: 100%;
+    text-align: left;
+    align-self: center;
+    justify-self: start;
+    flex-shrink: 0;
+}
+
+.Admin-cp-header-delete-active {
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin: 0;
+    color: #ff0000 !important;
+    width: 100%;
+    text-align: left;
+    align-self: center;
+    justify-self: start;
+    flex-shrink: 0;
+}
+
+.Admin-cp-action-description {
+    font-size: 0.85rem;
+    color: #666;
+    font-weight: 500;
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    display: block;
+    text-align: left;
+    line-height: 1.3;
+    align-self: center;
+    justify-self: stretch;
+    overflow-wrap: break-word;
+}
+
+.Admin-cp-action-btn {
+    padding: 8px 8px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 700;
+    cursor: pointer;
+    width: 100%;
+    min-width: 0;
+    max-width: 100px;
+    margin: 0;
+    justify-self: end;
+    align-self: center;
+    flex: none;
+    box-sizing: border-box;
+    transition: opacity 0.2s, background-color 0.2s, color 0.2s;
+    font-size: 0.85rem;
+}
+
+.Admin-cp-action-btn:disabled {
+    background-color: #e0e0e0 !important;
+    color: #888888 !important;
+    cursor: not-allowed;
+    border-color: transparent !important;
+    box-shadow: none !important;
+    opacity: 1 !important;
+}
+
+.Admin-cp-edit-btn {
+    background-color: #5932EA;
+    color: white;
+}
+
+.Admin-cp-delete-btn {
+    background-color: #ff0000;
+    color: white;
+    border-radius: 8px;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Bottom Card (Company Table) */
+.Admin-cp-bottom-card {
+    background-color: #ffffff;
+    border-radius: 15px;
+    padding: 12px 20px;
+    margin-left: 0;
+    margin-right: 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.Admin-cp-table-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.Admin-cp-table-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #333;
+    margin: 0;
+}
+
+.Admin-cp-table-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.Admin-cp-print-button-container {
+    position: relative;
+}
+
+.Admin-cp-print-btn {
+    background-color: #4EA24E;
+    color: white;
+    border: none;
+    padding: 8px 30px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.Admin-cp-print-btn:hover {
+    background-color: #3d8a3d;
+}
+
+.Admin-cp-export-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 5px;
+    z-index: 2000;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    min-width: 180px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.Admin-cp-export-menu button {
+    padding: 10px 15px;
+    border: none;
+    background: none;
+    text-align: left;
+    cursor: pointer;
+    font-size: 0.95rem;
+    color: #333;
+    transition: background-color 0.2s;
+}
+
+.Admin-cp-export-menu button:hover {
+    background-color: #f0f0f0;
+}
+
+/* Table Styles */
+.Admin-cp-table-container {
+    flex-grow: 1;
+    width: 100%;
+    overflow: auto;
+    border: none;
+    border-radius: 8px;
+    max-height: 100%;
+    padding-bottom: 25px;
+}
+
+/* --- Table Scrollbars (Desktop) --- */
+.Admin-cp-table-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.Admin-cp-table-container::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.Admin-cp-table-container::-webkit-scrollbar-thumb {
+    background: #4ea24e;
+    border-radius: 8px;
+}
+
+.Admin-cp-table-container::-webkit-scrollbar-thumb:hover {
+    background: #4ea24e;
+}
+
+.Admin-cp-students-table {
+    width: 100%;
+    min-width: 900px;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+
+.Admin-cp-table-head-row {
+    position: sticky;
+    top: 0;
+    background-color: #ffffff;
+    z-index: 11;
+}
+
+.Admin-cp-th {
+    padding: 8px 10px;
+    text-align: center;
+    font-weight: 600;
+    color: #999;
+    white-space: nowrap;
+    background-color: white;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.Admin-cp-table-row {
+    border-bottom: 1px solid #f5f5f5;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.Admin-cp-table-row:hover {
+    background-color: #fafafa;
+}
+
+.Admin-cp-selected-row {
+    background-color: #f7fff5 !important;
+}
+
+.Admin-cp-td {
+    padding: 10px 10px;
+    text-align: center;
+    color: #333;
+    vertical-align: middle;
+    font-size: 0.9rem;
+    font-weight: 500;
+    border-bottom: 1px solid #f5f5f5;
+}
+
+/* Column widths */
+.Admin-cp-checkbox {
+    width: 50px;
+    text-align: center;
+}
+
+.Admin-cp-sno {
+    width: 50px;
+    text-align: center;
+}
+
+.Admin-cp-company {
+    width: 120px;
+    text-align: center;
+}
+
+.Admin-cp-domain {
+    width: 100px;
+    text-align: center;
+}
+
+.Admin-cp-job-role {
+    width: 120px;
+    text-align: center;
+}
+
+.Admin-cp-hr-name {
+    width: 100px;
+    text-align: center;
+}
+
+.Admin-cp-mode {
+    width: 80px;
+    text-align: center;
+}
+
+.Admin-cp-visit-date {
+    width: 110px;
+    text-align: center;
+}
+
+.Admin-cp-location {
+    width: 100px;
+    text-align: center;
+}
+
+.Admin-cp-profile {
+    width: 60px;
+    text-align: center;
+}
+
+.Admin-cp-package {
+    width: 60px;
+    text-align: center;
+}
+
+.Admin-cp-location {
+    min-width: 80px;
+    text-align: center;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Responsive Layout Adjustments                                          */
+/* ---------------------------------------------------------------------- */
+
+/* Tablet and below: remove fixed left margin, allow vertical scrolling */
+@media (max-width: 1200px) {
+    .Admin-cp-layout {
+        flex-direction: column;
+
+    }
+
+    .Admin-cp-main-content {
+        margin: 65px 0px 16px 10px;
+    }
+
+    .Admin-cp-top-card {
+        margin-left: 0;
+    }
+}
+
+/* Mobile: stack cards, constrain table height, enable sidebar overlay */
+@media (max-width: 768px) {
+    .Admin-cp-main-content {
+        margin: 80px 0px 16px 10px;
+    }
+
+    .Admin-cp-top-card {
+        flex-direction: column;
+        gap: 16px;
+        height: auto;
+        margin-left: 0;
+    }
+
+    .Admin-cp-filter-section {
+        max-width: 100%;
+        border-radius: 25px;
+    }
+
+    .Admin-cp-filter-content {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .Admin-cp-action-card {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 8px !important;
+        padding: 12px !important;
+    }
+
+    .Admin-cp-action-header,
+    .Admin-cp-header-disabled,
+    .Admin-cp-header-edit-active,
+    .Admin-cp-header-delete-active {
+        align-self: flex-start !important;
+        text-align: left !important;
+        width: 100% !important;
+    }
+
+    .Admin-cp-action-description {
+        margin: 0 !important;
+        width: 100% !important;
+    }
+
+    .Admin-cp-action-btn {
+        width: 100% !important;
+        max-width: none !important;
+        margin-top: 8px !important;
+    }
+
+    .Admin-cp-bottom-card {
+        padding: 12px 12px 16px 12px;
+    }
+
+    .Admin-cp-table-container {
+        max-height: 380px;
+        overflow-y: auto;
+    }
+
+    .Admin-cp-overlay {
+        display: block;
+    }
+}
+
+/* Status Tag Styles */
+.Admin-cp-status-tag {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 5px;
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-transform: capitalize;
+    text-align: center;
+    min-width: 70px;
+}
+
+.Admin-cp-status-confirmed {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+    border-radius: 30px;
+}
+
+.Admin-cp-status-pending {
+    background-color: #ffe3ce;
+    border: 1px solid #ffe3ce;
+    color: #856404;
+    border-radius: 30px;
+}
+
+.Admin-cp-checkbox-input {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: #4EA24E;
+}
+
+/* --- POPUP STYLES --- */
+.Admin-cp-popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+}
+
+.Admin-cp-delete-popup-container {
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+    width: 100%;
+    max-width: 380px;
+    text-align: center;
+    overflow: hidden;
+    animation: slideUp 0.3s ease-in-out;
+    z-index: 1002;
+}
+
+.Admin-cp-delete-popup-header {
+    background-color: #4EA24E;
+    color: white;
+    font-size: 2.2rem;
+    font-weight: 700;
+    padding: 20px 30px;
+}
+
+.Admin-cp-delete-popup-header.warning-header {
+    background-color: #4EA24E;
+}
+
+.Admin-cp-delete-popup-header.deleted-header {
+    background-color: #4EA24E;
+}
+
+.Admin-cp-delete-popup-header.updated-header {
+    background-color: #4EA24E;
+}
+
+.Admin-cp-delete-popup-content {
+    padding: 30px 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.Admin-cp-delete-icon-wrapper {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 25px;
+    animation: scaleIn 0.4s 0.1s ease-in-out backwards;
+}
+
+.Admin-cp-update-icon-wrapper svg {
+    animation: rotateIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes scaleIn {
+    from {
+        transform: scale(0);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes rotateIn {
+    from {
+        transform: rotate(-180deg) scale(0.5);
+        opacity: 0;
+    }
+
+    to {
+        transform: rotate(0) scale(1);
+        opacity: 1;
+    }
+}
+
+.Admin-cp-delete-title {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #333;
+    margin-top: 0px;
+    margin-bottom: 10px;
+}
+
+.Admin-cp-delete-text {
+    font-size: 0.95rem;
+    color: #666;
+    margin: 0 0 25px 0;
+    line-height: 1.5;
+}
+
+.Admin-cp-delete-button-group {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    width: 100%;
+}
+
+.Admin-cp-obsolete-delete-btn {
+    background-color: #e95555;
+    color: white;
+    border: none;
+    padding: 8px 30px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.Admin-cp-obsolete-delete-btn.confirm-btn {
+    background-color: #7F7676;
+    color: white;
+}
+
+.Admin-cp-obsolete-delete-btn.confirm-btn:hover {
+    background-color: #6a6161;
+}
+
+.Admin-cp-obsolete-delete-btn.close-btn {
+    background-color: #d54953;
+    color: white;
+}
+
+.Admin-cp-obsolete-delete-btn.close-btn:hover {
+    background-color: #d54953;
+}
+
+/* Suffix input groups used on the company add/edit form */
+.Admin-cp-input-affix-wrapper {
+    position: relative;
+    width: 100%;
+    border: 1px solid #dce9d9;
+    border-radius: 8px;
+    background-color: #ffffff;
+    overflow: hidden;
+    box-sizing: border-box;
+    min-height: 45px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.Admin-cp-input-affix-wrapper:hover,
+.Admin-cp-input-affix-wrapper:focus-within {
+    border-color: #4EA24E;
+    box-shadow: 0 0 0 3px rgba(78, 162, 78, 0.12);
+}
+
+.Admin-cp-input-affix-input {
+    width: 100%;
+    border: none;
+    background: transparent;
+    padding: 0 86px 0 15px;
+    font-size: 0.95rem;
+    color: #333;
+    outline: none;
+    box-sizing: border-box;
+}
+
+.Admin-cp-input-affix-input::placeholder {
+    color: #999;
+    opacity: 1;
+}
+
+.Admin-cp-input-affix-input:disabled {
+    cursor: not-allowed;
+}
+
+.Admin-cp-input-affix {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    padding: 0 16px;
+    background-color: #4EA24E;
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 0.95rem;
+    white-space: nowrap;
+    flex-shrink: 0;
+    min-width: 72px;
+    box-sizing: border-box;
+    border-left: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+
+/* ============================================================================
+   MOBILE RESPONSIVENESS
+   ============================================================================ */
+
+@media screen and (max-width: 1200px) {
+
+    /* 1. Reset Fixed Margins used in Desktop */
+    .Admin-cp-top-card,
+    .Admin-cp-bottom-card {
+        margin-left: 0;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    /* 2. Sidebar Drawer Logic */
+    .Admin-cp-print-button-container {
+        position: relative;
+        display: inline-block;
+        z-index: 15;
+        margin-top: -90px;
+    }
+
+    .Admin-cp-sidebar-wrapper {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100vh;
+        width: auto;
+        z-index: 3000;
+        /* Allow clicks on sidebar content (navigation links) */
+        pointer-events: auto;
+    }
+
+    /* Dark Overlay to dim content when sidebar is open */
+    .Admin-cp-sidebar-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 2990;
+        pointer-events: auto;
+    }
+
+    /* Show Toggle Button on Mobile */
+    .Admin-cp-mobile-toggle {
+        display: block;
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        z-index: 100;
+    }
+}
+
+@media (max-width: 1100px) {
+    .Admin-cp-layout {
+        position: fixed !important;
+        inset: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        overflow: hidden !important;
+        flex-direction: column !important;
+        background-color: #f6f8fb;
+    }
+
+    .Admin-cp-mobile-overlay {
+        display: block !important;
+    }
+
+    .Admin-cp-main-content {
+        margin-top: 65px !important;
+        width: 100% !important;
+        padding: 10px 10px calc(env(safe-area-inset-bottom, 0px) + 25px) 20px !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        height: calc(100vh - 65px) !important;
+        max-height: none !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        justify-content: flex-start !important;
+        -webkit-overflow-scrolling: touch !important;
+        gap: 10px;
+        min-height: calc(100vh - 65px) !important;
+        margin-left: 0 !important;
+    }
+
+    /* Scrollbar for Main Content */
+    .Admin-cp-main-content::-webkit-scrollbar {
+        width: 10px;
+    }
+
+    .Admin-cp-main-content::-webkit-scrollbar-track {
+        background: #f0f2f5;
+        border-radius: 12px;
+    }
+
+    .Admin-cp-main-content::-webkit-scrollbar-thumb {
+        background-color: #4EA24E;
+        border-radius: 20px;
+        border: 3px solid #f0f2f5;
+    }
+
+    .Admin-cp-main-content::-webkit-scrollbar-thumb:hover {
+        background-color: #3d8a3d;
+    }
+
+    /* Top Card Layout: Stack vertically */
+    .Admin-cp-top-card {
+        margin-left: 0 !important;
+        margin-top: 0px !important;
+        gap: 15px !important;
+        flex-direction: column !important;
+        flex-wrap: nowrap !important;
+        width: 100% !important;
+        height: auto !important;
+    }
+
+    /* Filter Section Adjustments */
+    .Admin-cp-filter-section {
+        border-radius: 25px !important;
+        flex: 1 1 auto !important;
+        width: 100% !important;
+        height: auto !important;
+        max-width: none !important;
+        margin: 0 !important;
+        padding: 1.75rem 1.25rem !important;
+        box-sizing: border-box !important;
+    }
+
+    .Admin-cp-filter-content {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+    }
+
+    /* Add Card Adjustments */
+    .Admin-cp-action-addcard {
+        width: 100% !important;
+        max-width: none !important;
+        margin: 0 !important;
+        height: auto !important;
+        padding: 1.75rem 1.25rem !important;
+        box-sizing: border-box !important;
+        min-width: 0 !important;
+    }
+
+    /* Edit/Delete Cards Container */
+    .Admin-cp-action-cards-section {
+        flex-direction: column !important;
+        gap: 10px !important;
+        height: auto !important;
+        width: 100% !important;
+        max-width: none !important;
+        margin: 0 !important;
+        flex: none !important;
+        min-width: 0 !important;
+    }
+
+    .Admin-cp-action-card {
+        flex: none !important;
+        width: 100% !important;
+        height: auto !important;
+        padding: 1.75rem 1.25rem !important;
+        box-sizing: border-box !important;
+    }
+
+    /* Table Section Adjustments */
+    :global(html.admin-theme body) .Admin-cp-bottom-card {
+        padding: 1.75rem 1.25rem 2.5rem 1.25rem !important;
+        flex: none !important;
+        width: 100% !important;
+        max-width: none !important;
+        margin: 0 0 40px 0 !important;
+    }
+
+    .Admin-cp-table-header-row {
+        position: relative !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 15px !important;
+        flex-wrap: wrap !important;
+    }
+
+    .Admin-cp-table-title-wrap {
+        padding-right: 90px !important;
+        box-sizing: border-box !important;
+        width: 100% !important;
+    }
+
+    .Admin-cp-table-actions {
+        width: 100% !important;
+        display: flex !important;
+        justify-content: center !important;
+        flex-wrap: wrap !important;
+    }
+
+    .Admin-cp-print-button-container {
+        position: absolute !important;
+        top: 0 !important;
+        right: 0 !important;
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
+        display: inline-block !important;
+        z-index: 15 !important;
+    }
+
+    .Admin-cp-table-container {
+        height: auto !important;
+        max-height: none !important;
+        overflow-y: visible !important;
+        overflow-x: auto !important;
+        position: relative !important;
+        bottom: auto !important;
+        flex-grow: 0 !important;
+        padding-bottom: 0 !important;
+    }
+
+    /* Align popup to top for scrolling */
+    .Admin-cp-popup-overlay {
+        align-items: flex-start !important;
+        padding: 90px 10px !important;
+        overflow-y: auto !important;
+        box-sizing: border-box !important;
+    }
+
+    .Admin-cp-popup-container.is-form,
+    .Admin-cp-popup-container.is-success {
+        max-width: 95vw !important;
+        margin-top: 0 !important;
+    }
+}
+
+@media (max-width: 768px) {
+
+    /* Table scrollbar on mobile */
+    .Admin-cp-table-container::-webkit-scrollbar {
+        width: 8px;
+        background: transparent;
+    }
+
+    .Admin-cp-table-container::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .Admin-cp-table-container::-webkit-scrollbar-thumb {
+        background: #4ea24e;
+        border-radius: 8px;
+    }
+
+    .Admin-cp-table-container::-webkit-scrollbar-thumb:hover {
+        background: #3d8a3d;
+    }
+
+    .Admin-cp-table-container::-webkit-scrollbar:horizontal {
+        height: 8px;
+    }
+
+    .Admin-cp-table-container::-webkit-scrollbar-track:horizontal {
+        background: transparent;
+    }
+
+    .Admin-cp-table-container::-webkit-scrollbar-thumb:horizontal {
+        background: #afadad;
+        border-radius: 8px;
+    }
+}
+
+/* Loading Spinner Styles */
+.Admin-cp-loading-cell {
+    text-align: center;
+    height: 200px;
+    vertical-align: middle;
+    width: 100%;
+}
+
+.Admin-cp-loading-row {
+    height: 100%;
+}
+
+.Admin-cp-loading-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    text-align: center;
+    width: 100%;
+}
+
+.Admin-cp-spinner {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 4px solid rgba(78, 162, 78, 0.25);
+    border-top-color: #4EA24E;
+    animation: adminCompanyProfileSpin 0.7s linear infinite;
+    margin: 0 auto;
+}
+
+@keyframes adminCompanyProfileSpin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.Admin-cp-loading-text {
+    color: #1f2937;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+/* Eye Icon for View Column */
+.Admin-cp-profile-eye-icon {
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: #4EA24E;
+}
+
+.Admin-cp-profile-eye-icon:hover {
+    transform: scale(1.1);
+    color: #3d9142;
+}
+
+/* --- POPUP STYLES FOR DELETE CONFIRMATION --- */
+
+@keyframes Admin-cp-stroke {
+    100% {
+        stroke-dashoffset: 0;
+    }
+}
+
+@keyframes Admin-cp-scale {
+
+    0%,
+    100% {
+        transform: none;
+    }
+
+    50% {
+        transform: scale3d(1.1, 1.1, 1);
+    }
+}
+
+@keyframes Admin-cp-warning-fill {
+    100% {
+        box-shadow: inset 0 0 0 40px #FF9800;
+    }
+}
+
+@keyframes Admin-cp-delete-fill {
+    100% {
+        box-shadow: inset 0 0 0 40px #D23B42;
+    }
+}
+
+@keyframes Admin-cp-popup-enter {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.Admin-cp-popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.2);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    padding: 16px;
+    box-sizing: border-box;
+}
+
+.Admin-cp-popup-container {
+    background-color: #fff;
+    border-radius: 12px;
+    width: 400px;
+    max-width: 90vw;
+    text-align: center;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+    font-family: 'Poppins', sans-serif;
+    animation: Admin-cp-popup-enter 0.3s ease-out forwards;
+}
+
+.Admin-cp-popup-header {
+    background-color: #4EA24E;
+    color: white;
+    padding: 1.2rem;
+    font-size: 1.4rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+}
+
+.Admin-cp-popup-body {
+    padding: 2rem;
+}
+
+.Admin-cp-popup-footer {
+    padding: 1.5rem;
+    background-color: #f7f7f7;
+    display: flex;
+    gap: 32px;
+    justify-content: center;
+}
+
+.Admin-cp-popup-cancel-btn,
+.Admin-cp-popup-delete-btn,
+.Admin-cp-popup-close-btn {
+    border: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s, box-shadow 0.2s;
+}
+
+.Admin-cp-popup-cancel-btn {
+    background: #d2d2d2;
+    color: #333;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.Admin-cp-popup-cancel-btn:hover {
+    background: #bbb;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.Admin-cp-popup-delete-btn {
+    background: #D23B42;
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(210, 59, 66, 0.2);
+}
+
+.Admin-cp-popup-delete-btn:hover {
+    background: #b52e35;
+    box-shadow: 0 4px 12px rgba(210, 59, 66, 0.3);
+}
+
+.Admin-cp-popup-close-btn {
+    background-color: #D23B42;
+    color: white;
+    box-shadow: 0 2px 8px rgba(210, 59, 66, 0.2);
+}
+
+.Admin-cp-popup-close-btn:hover {
+    background-color: #b53138;
+    box-shadow: 0 4px 12px rgba(210, 59, 66, 0.3);
+}
+
+.Admin-cp-popup-cancel-btn:disabled,
+.Admin-cp-popup-delete-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+/* Warning Icon */
+.Admin-cp-warning-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto;
+    display: block;
+    background-color: #FF9800;
+    border-radius: 50%;
+    padding: 15px;
+    box-shadow: 0 0 0 0 #FF9800;
+    animation: Admin-cp-warning-fill 0.4s ease-in-out 0.4s forwards, Admin-cp-scale 0.3s ease-in-out 0.9s both;
+}
+
+.Admin-cp-warning-icon--circle {
+    stroke: transparent;
+    stroke-width: 0;
+    fill: none;
+}
+
+.Admin-cp-warning-icon--exclamation {
+    stroke: #ffffff;
+    stroke-width: 4;
+    stroke-linecap: round;
+    stroke-dasharray: 20;
+    stroke-dashoffset: 20;
+    animation: Admin-cp-stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+}
+
+/* Pagination controls */
+.Admin-cp-table-title-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.Admin-cp-table-subtitle {
+    font-size: 0.9rem;
+    color: #6b7280;
+    font-weight: 500;
+}
+
+.Admin-cp-pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.Admin-cp-page-btn {
+    border: 1px solid #4ea24e;
+    background: #ffffff;
+    color: #2f7d31;
+    font-weight: 600;
+    font-size: 0.9rem;
+    border-radius: 8px;
+    padding: 6px 12px;
+    cursor: pointer;
+}
+
+.Admin-cp-page-btn:hover:not(:disabled) {
+    background: #ecf8ec;
+}
+
+.Admin-cp-page-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.Admin-cp-page-indicator {
+    min-width: 56px;
+    text-align: center;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #2f7d31;
+}
+
+/* Icon Wrapper for Delete Success */
+.Admin-cp-icon-wrapper {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #D23B42;
+    box-shadow: 0 0 0 0 #D23B42;
+    animation: Admin-cp-delete-fill 0.4s ease-in-out 0.4s forwards, Admin-cp-scale 0.3s ease-in-out 0.9s both;
+}
+
+/* Responsive for Tablet */
+@media screen and (max-width: 1024px) {
+    .Admin-cp-popup-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.2);
+    }
+}
+
+/* Responsive for Mobile */
+@media screen and (max-width: 768px) {
+    .Admin-cp-popup-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10000;
+        padding: 16px;
+        box-sizing: border-box;
+    }
+
+    .Admin-cp-popup-container {
+        width: 90vw;
+        max-width: 400px;
+    }
+}
+
+/* Custom Dropdown Overrides for AdminCompanyprofile */
+.cp-dropdown-wrapper {
+    max-width: 100% !important;
+    width: 100% !important;
+    min-width: 0 !important;
+}
+
+.cp-dropdown-header {
+    height: 45px !important;
+    border: 3px solid #ccc !important;
+    border-radius: 8px !important;
+    background-color: #ffffff !important;
+    font-size: 0.95rem !important;
+    color: #888 !important;
+    font-weight: 500 !important;
+}
+
+.cp-dropdown-header:hover {
+    border-color: #4EA24E !important;
+}

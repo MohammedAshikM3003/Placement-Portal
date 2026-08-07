@@ -1,0 +1,31 @@
+﻿/*
+ * tokens/typography.css
+ * Font tokens only. No element selectors.
+ * The font itself is loaded in public/index.html.
+ */
+:root {
+  --font-base: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+
+  --text-xs:   0.70rem;   /* ~11px */
+  --text-sm:   0.80rem;   /* ~13px */
+  --text-base: 0.95rem;   /* ~15px */
+  --text-md:   1rem;      /*  16px */
+  --text-lg:   1.10rem;
+  --text-xl:   1.25rem;
+  --text-2xl:  1.50rem;
+  --text-3xl:  1.75rem;
+  --text-4xl:  2.00rem;
+
+  --leading-tight:  1.2;
+  --leading-snug:   1.35;
+  --leading-normal: 1.5;
+  --leading-relaxed:1.65;
+
+  --weight-light:    300;
+  --weight-normal:   400;
+  --weight-medium:   500;
+  --weight-semibold: 600;
+  --weight-bold:     700;
+  --weight-extrabold:800;
+}

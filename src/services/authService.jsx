@@ -1,0 +1,800 @@
+// MongoDB-based Authentication Service
+import profileUtils from '../components/Sidebar/profileUtils';
+import { clearCoordinatorScopedCache, getCoordinatorScopedKey } from '../utils/coordinatorCacheKeys';
+import API_BASE_URL from '../utils/apiConfig';
+const { canonicalStorePath, resolveProfileUrl } = profileUtils;
+
+class AuthService {
+  constructor() {
+    this.baseURL = API_BASE_URL;
+    console.log('🔧 Backend URL:', this.baseURL);
+    
+    // Auth result cache for rapid repeated checks
+    this._authCache = { valid: null, ts: 0 };
+    this._studentCache = { data: null, ts: 0, raw: null };
+  }
+
+  // Decode JWT payload without verification (client-side expiry check)
+  _decodeTokenPayload(token) {
+    try {
+      const parts = token.split('.');
+      if (parts.length !== 3) return null;
+      const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+      return payload;
+    } catch {
+      return null;
+    }
+  }
+
+  // Check if JWT is expired client-side (no network call)
+  isTokenExpired(token) {
+    const payload = this._decodeTokenPayload(token);
+    if (!payload || !payload.exp) return true;
+    // Add 30-second buffer
+    return (payload.exp * 1000) < (Date.now() + 30000);
+  }
+
+  // Helper method for API calls
+  async apiCall(endpoint, options = {}) {
+    try {
+      const fullUrl = `${this.baseURL}${endpoint}`;
+      console.log('🔍 API Call:', fullUrl, options);
+
+      const isFormDataBody = typeof FormData !== 'undefined' && options.body instanceof FormData;
+      const mergedHeaders = {
+        ...(options.headers || {})
+      };
+
+      // Keep JSON requests parseable on backend when custom headers are provided.
+      if (!isFormDataBody && !mergedHeaders['Content-Type']) {
+        mergedHeaders['Content-Type'] = 'application/json';
+      }
+      
+      // Add timeout to prevent hanging requests
+      // 90s to cover worst-case MongoDB Atlas cold-start (10s + 20s + 45s retries)
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 90000); // 90 second timeout for cold Atlas clusters
+      
+      const response = await fetch(fullUrl, {
+        ...options,
+        headers: mergedHeaders,
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
+
+      // Handle network errors and non-JSON responses
+      let data;
+      let rawText = '';
+      try {
+        rawText = await response.text();
+        data = rawText ? JSON.parse(rawText) : null;
+      } catch (parseError) {
+        console.error('Failed to parse response as JSON:', parseError);
+        if (!response.ok) {
+          if (response.status === 401 || response.status === 403) {
+            console.warn('Session expired or unauthorized. Logging out...');
+            this.logout();
+            const currentPath = window.location.pathname;
+            if (currentPath.includes('admin') || currentPath.includes('coordinator')) {
+              window.location.href = '/admin-login';
+            } else {
+              window.location.href = '/';
+            }
+            const error = new Error(`Authentication/Authorization error: ${response.status} Forbidden`);
+            error.status = response.status;
+            throw error;
+          }
+          const error = new Error(`Server error: ${response.status} ${rawText || response.statusText}`);
+          error.status = response.status;
+          throw error;
+        }
+        throw new Error('Server returned invalid response format.');
+      }
+
+      if (!response.ok) {
+        if (response.status === 401 || response.status === 403) {
+          console.warn('Session expired or unauthorized. Logging out...');
+          this.logout();
+          const currentPath = window.location.pathname;
+          if (currentPath.includes('admin') || currentPath.includes('coordinator')) {
+            window.location.href = '/admin-login';
+          } else {
+            window.location.href = '/';
+          }
+        }
+        const message = data?.message || data?.error || `Server error: ${response.status} ${response.statusText}`;
+        const error = new Error(message);
+        error.status = response.status;
+        error.data = data;
+        throw error;
+      }
+
+      return data;
+    } catch (error) {
+      console.error(`API call failed for ${endpoint}:`, error);
+      
+      // Handle different types of errors with user-friendly messages
+      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        // Network connection error
+        throw new Error('❌ Network error: Unable to connect to server. Please check your internet connection and try again.');
+      } else if (error.name === 'AbortError') {
+        // Request timeout
+        throw new Error('❌ Request timeout: Server is taking too long to respond. Please try again.');
+      } else if (error.message.includes('Failed to fetch')) {
+        // General fetch failure (CORS, network issues, etc.)
+        throw new Error('❌ Connection failed: Unable to reach the server. Please check your internet connection.');
+      } else {
+        // Re-throw the original error if it's already formatted
+        throw error;
+      }
+    }
+  }
+
+  // Always refresh college branding on authentication so dashboards reflect latest uploaded logo.
+  refreshCollegeLogoOnAuth() {
+    try {
+      import('./collegeImagesService.js')
+        .then(mod => {
+          if (mod && typeof mod.fetchCollegeImages === 'function') {
+            return mod.fetchCollegeImages('admin1000', { forceRefresh: true });
+          }
+          return null;
+        })
+        .then(images => {
+          const logo = images?.collegeLogo;
+          if (logo) {
+            localStorage.setItem('collegeLogo', logo);
+            try {
+              window.dispatchEvent(new StorageEvent('storage', { key: 'collegeLogo', newValue: logo }));
+            } catch (e) {
+              // Some environments may not support constructing StorageEvent directly.
+            }
+          }
+        })
+        .catch(err => {
+          console.warn('Failed to refresh college logo during authentication:', err);
+        });
+    } catch (e) {
+      console.warn('Unable to trigger college logo refresh:', e);
+    }
+  }
+
+  // Student login with registration number and date of birth
+  async loginStudent(regNo, dob) {
+    try {
+      // CRITICAL: Clear all previous student data before new login
+      console.log('🧹 CLEARING: Previous student data before new login');
+      localStorage.removeItem('studentData');
+      localStorage.removeItem('completeStudentData');
+      localStorage.removeItem('resumeData');
+      localStorage.removeItem('certificatesData');
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('isLoggedIn');
+      localStorage.removeItem('studentRegNo');
+      localStorage.removeItem('studentDob');
+      localStorage.removeItem('authRole');
+
+      // Ensure coordinator session is cleared when switching roles
+      localStorage.removeItem('coordinatorToken');
+      localStorage.removeItem('coordinatorData');
+      localStorage.removeItem('isCoordinatorLoggedIn');
+      localStorage.removeItem('coordinatorUsername');
+
+      // Add timeout to prevent hanging
+      const loginPromise = this.apiCall('/students/login', {
+        method: 'POST',
+        body: JSON.stringify({ regNo, dob })
+      });
+      
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Login timeout - please try again')), 90000) // 90s for cold Atlas cluster
+      );
+      
+      let response;
+      try {
+        response = await Promise.race([loginPromise, timeoutPromise]);
+      } catch (e) {
+        throw e;
+      }
+
+      if (response.token && response.student) {
+        console.log('✅ LOGIN SUCCESS: New student data received:', {
+          regNo: response.student.regNo,
+          name: `${response.student.firstName} ${response.student.lastName}`,
+          id: response.student._id,
+          hasId: !!response.student._id,
+          fullResponse: response.student
+        });
+        
+        // CRITICAL: Check if student is blocked (double-check for security)
+        if (response.student.isBlocked || response.student.blocked) {
+          console.log('❌ LOGIN BLOCKED: Student is blocked');
+          return {
+            success: false,
+            isBlocked: true,
+            blockedUserRole: 'student',
+            coordinator: {
+              name: response.student.blockedBy || 'Placement Office',
+              cabin: response.student.blockedByCabin || 'N/A',
+              blockedBy: response.student.blockedBy || 'Placement Office',
+              blockedByCabin: response.student.blockedByCabin || 'N/A',
+              blockedByRole: response.student.blockedByRole || 'admin'
+            },
+            error: response.student.blockedReason || 'Your account is blocked.'
+          };
+        }
+        
+        // Store only token and minimal data (no sensitive login credentials)
+        localStorage.setItem('authToken', response.token);
+        localStorage.setItem('isLoggedIn', 'true');
+        localStorage.setItem('authRole', 'student');
+        
+        // 📸 FIXED: Store FULL student info including profilePicURL, resume, and other fields
+        // This ensures even if page is refreshed, user sees their data immediately
+        const fullStudent = {
+          _id: response.student._id || response.student.id,
+          id: response.student.id || response.student._id,
+          regNo: response.student.regNo,
+          firstName: response.student.firstName,
+          lastName: response.student.lastName,
+          branch: response.student.branch,
+          degree: response.student.degree,
+          email: response.student.email || response.student.primaryEmail,
+          primaryEmail: response.student.primaryEmail || response.student.email,
+          // 📸 Profile picture - CRITICAL for unblocked students
+          profilePicURL: response.student.profilePicURL || '',
+          // 📄 Resume data - CRITICAL for unblocked students
+          resumeData: response.student.resumeData || null,
+          resumeURL: response.student.resumeURL || '',
+          // Other important fields
+          dob: response.student.dob,
+          phone: response.student.phone || '',
+          gender: response.student.gender || '',
+          cgpa: response.student.cgpa || '',
+          year: response.student.year || '',
+          skills: response.student.skills || '',
+          backlogs: response.student.backlogs || '0',
+          tenthPercentage: response.student.tenthPercentage || '',
+          twelfthPercentage: response.student.twelfthPercentage || '',
+          companyPlaced: response.student.companyPlaced || '',
+          packageOffered: response.student.packageOffered || '',
+          placement: response.student.placement || '',
+          driveCount: response.student.driveCount || 0
+        };
+        localStorage.setItem('studentData', JSON.stringify(fullStudent));
+        // If server provided collegeLogo during login, cache it for immediate dashboard display
+        if (response.collegeLogo) {
+          try {
+            const logoPath = canonicalStorePath(response.collegeLogo) || response.collegeLogo;
+            localStorage.setItem('collegeLogo', logoPath);
+            // Notify listeners (sidebar/dashboard) about the new logo
+            window.dispatchEvent(new StorageEvent('storage', { key: 'collegeLogo', newValue: logoPath }));
+          } catch (e) {
+            console.warn('Failed to cache collegeLogo from login response:', e);
+          }
+        }
+        // Always fetch latest logo right after authentication
+        this.refreshCollegeLogoOnAuth();
+        
+        // Clear any cached data from fastDataService
+        import('./fastDataService.jsx')
+          .then(module => {
+            const fastDataService = module.default;
+            if (fastDataService && typeof fastDataService.clearCache === 'function') {
+              fastDataService.clearCache();
+            }
+          })
+          .catch(err => {
+            console.error('fastDataService clearCache failed:', err);
+          });
+        
+        return {
+          success: true,
+          student: response.student,
+          token: response.token,
+          role: 'student'
+        };
+      }
+
+      return { success: false, error: response.message || 'Login failed - no student data received' };
+    } catch (error) {
+      console.error('Student login error:', error);
+
+      // CRITICAL: Check if this is a blocked account (403) - error.data contains response body
+      if (error.status === 403 || (error.data && error.data.isBlocked)) {
+        console.log('🚫 Blocked account detected:', error.data);
+        return {
+          success: false,
+          isBlocked: true,
+          blockedUserRole: 'student',
+          coordinator: error.data?.coordinator || {
+            name: 'Placement Office',
+            cabin: 'N/A',
+            blockedBy: 'Placement Office',
+            blockedByCabin: 'N/A',
+            blockedByRole: 'admin'
+          },
+          error: error.data?.error || error.message || 'Your account is blocked.'
+        };
+      }
+      
+      // Generic error handling
+      let errorMessage = 'Login failed. Please try again.';
+      if (error.message) {
+        if (error.message.includes('404') || error.message.includes('not found')) {
+          errorMessage = '❌ User not found. Please check your registration number.';
+        } else if (error.message.includes('Network') || error.message.includes('Failed to fetch')) {
+          errorMessage = '❌ Network error. Please check your connection.';
+        } else {
+          errorMessage = `❌ ${error.message}`;
+        }
+      }
+      
+      return { success: false, error: errorMessage };
+    }
+  }
+
+  async loginAdmin(adminLoginID, adminPassword) {
+    try {
+      console.log('🧹 CLEARING: Previous admin data before new login');
+      localStorage.removeItem('adminToken');
+      localStorage.removeItem('adminData');
+      localStorage.removeItem('adminLoginID');
+      localStorage.removeItem('adminProfileCache');
+      localStorage.removeItem('adminProfileCacheTime');
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('isLoggedIn');
+      localStorage.removeItem('authRole');
+
+      // Clear admin image cache from previous session
+      const { default: adminImageCacheService } = await import('./adminImageCacheService.jsx');
+      adminImageCacheService.clearAllCaches();
+
+      // Ensure student/coordinator session is cleared
+      localStorage.removeItem('studentData');
+      localStorage.removeItem('coordinatorToken');
+
+      const response = await this.apiCall('/auth/admin-login', {
+        method: 'POST',
+        body: JSON.stringify({
+          adminLoginID: adminLoginID.trim(),
+          adminPassword: adminPassword.trim()
+        })
+      });
+
+      if (response.success && response.admin && response.token) {
+        console.log('✅ ADMIN LOGIN SUCCESS: Admin data received:', {
+          adminLoginID: response.admin.adminLoginID,
+          name: response.admin.fullName
+        });
+
+        // Store only token and minimal data (no sensitive credentials)
+        localStorage.setItem('authToken', response.token);
+        localStorage.setItem('authRole', 'admin');
+        localStorage.setItem('isLoggedIn', 'true');
+        
+        // Store minimal admin identifier
+        localStorage.setItem('adminLoginID', response.admin.adminLoginID);
+
+        // 🚀 Preload all admin data in BACKGROUND (non-blocking for instant navigation)
+        // This fetches profile data, college images, and attendance while user navigates to dashboard
+        import('./loginDataPreloader.jsx').then(({ default: loginDataPreloader }) => {
+          loginDataPreloader.preloadAdminData(response.admin.adminLoginID, response.admin)
+            .then(() => {
+              console.log('✅ All admin data preloaded and cached in background');
+            })
+            .catch(preloadError => {
+              console.warn('⚠️ Failed to preload admin data (non-critical):', preloadError);
+              
+              // Fallback: Still cache basic profile data
+              try {
+                if (response.admin.profilePhoto) {
+                  adminImageCacheService.cacheAdminProfilePhoto(
+                    response.admin.adminLoginID, 
+                    response.admin.profilePhoto
+                  );
+                }
+                
+                const profileCache = {
+                  name: response.admin.fullName,
+                  profilePhoto: canonicalStorePath(response.admin.profilePhoto) || null,
+                  adminLoginID: response.admin.adminLoginID,
+                  firstName: response.admin.firstName || '',
+                  lastName: response.admin.lastName || '',
+                  emailId: response.admin.emailId || '',
+                  // Store college logo if provided so UIs can render quickly
+                  collegeLogo: canonicalStorePath(response.admin.collegeLogo) || response.admin.collegeLogo || null,
+                  timestamp: Date.now()
+                };
+                localStorage.setItem('adminProfileCache', JSON.stringify(profileCache));
+                localStorage.setItem('adminProfileCacheTime', Date.now().toString());
+              } catch (e) {
+                console.error('❌ Failed to cache fallback profile:', e);
+              }
+            });
+        }).catch(err => {
+          console.error('❌ Failed to import loginDataPreloader:', err);
+        });
+
+        // Always fetch latest logo right after authentication
+        this.refreshCollegeLogoOnAuth();
+
+        return {
+          success: true,
+          admin: response.admin,
+          token: response.token,
+          role: 'admin'
+        };
+      }
+
+      return { success: false, error: response.message || 'Admin login failed' };
+    } catch (error) {
+      console.error('Admin login error:', error);
+
+      // Handle network errors
+      if (error.message && (
+        error.message.includes('Network error') ||
+        error.message.includes('Connection failed') ||
+        error.message.includes('timeout')
+      )) {
+        return { success: false, error: error.message };
+      }
+
+      return {
+        success: false,
+        error: error.message || 'Admin login failed. Please try again.'
+      };
+    }
+  }
+
+  async loginCoordinator(coordinatorId, password) {
+    try {
+      console.log('🧹 CLEARING: Previous coordinator data before new login');
+      const coordinatorKeys = [
+        'coordinatorToken',
+        'coordinatorData',
+        'isCoordinatorLoggedIn',
+        'coordinatorUsername',
+          'coordinatorId',
+          'cachedCoordinatorPicUrl',
+          'coordinatorProfileCache',
+          'coordinatorProfileCacheTime'
+      ];
+        clearCoordinatorScopedCache(coordinatorKeys);
+
+      // Remove student session markers when switching roles
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('studentData');
+      localStorage.removeItem('isLoggedIn');
+      localStorage.removeItem('studentRegNo');
+      localStorage.removeItem('studentDob');
+      localStorage.removeItem('authRole');
+
+      const response = await this.apiCall('/auth/coordinator-login', {
+        method: 'POST',
+        body: JSON.stringify({ coordinatorId, password })
+      });
+
+      if (response.token && response.coordinator) {
+        // Store only token and minimal data (no sensitive credentials)
+        localStorage.setItem('authToken', response.token);
+        localStorage.setItem('authRole', 'coordinator');
+        localStorage.setItem('isCoordinatorLoggedIn', 'true');
+        
+        // Store minimal coordinator identifier
+        const coordinatorIdValue = response.coordinator.coordinatorId || coordinatorId;
+        const usernameValue = response.coordinator.username || coordinatorIdValue;
+        localStorage.setItem('coordinatorId', coordinatorIdValue);
+        localStorage.setItem('coordinatorUsername', usernameValue);
+        
+        // 🆕 Store full coordinator data for instant profile loading (like admin/student)
+        const coordinatorData = {
+          ...response.coordinator,
+          coordinatorId: coordinatorIdValue,
+          username: usernameValue,
+          profilePhoto: canonicalStorePath(response.coordinator.profilePhoto) || null,
+          timestamp: Date.now()
+        };
+        localStorage.setItem('coordinatorData', JSON.stringify(coordinatorData));
+          if (coordinatorData.profilePhoto || coordinatorData.profilePicURL) {
+            const profileCacheKey = getCoordinatorScopedKey('coordinatorProfileCache', coordinatorData);
+            const profileCacheTimeKey = getCoordinatorScopedKey('coordinatorProfileCacheTime', coordinatorData);
+            const photoCacheKey = getCoordinatorScopedKey('cachedCoordinatorPicUrl', coordinatorData);
+            // CRITICAL: Always resolve URLs to production backend (localhost → render.com)
+            const resolvedProfilePhoto = resolveProfileUrl(coordinatorData.profilePhoto || coordinatorData.profilePicURL || null, API_BASE_URL);
+            localStorage.setItem(profileCacheKey, JSON.stringify({
+              ...coordinatorData,
+              profilePhoto: resolvedProfilePhoto,
+              profilePicURL: resolvedProfilePhoto,
+              hasProfilePhoto: true
+            }));
+            localStorage.setItem(profileCacheTimeKey, Date.now().toString());
+            localStorage.setItem(photoCacheKey, resolvedProfilePhoto);
+          }
+        console.log('✅ Coordinator profile data cached for instant loading');
+
+        // 🚀 Fetch COMPLETE profile in background to ensure degree/branch/photo are fully populated
+        // Runs without blocking navigation
+        Promise.resolve().then(async () => {
+          try {
+            const { default: mongoDBService } = await import('./mongoDBService.jsx');
+            const fullResponse = await mongoDBService.getCoordinatorById(coordinatorIdValue);
+            const fullData = fullResponse?.coordinator || fullResponse;
+            if (fullData) {
+              const enriched = {
+                ...coordinatorData,
+                ...fullData,
+                coordinatorId: coordinatorIdValue,
+                username: usernameValue,
+                timestamp: Date.now()
+              };
+              localStorage.setItem('coordinatorData', JSON.stringify(enriched));
+                if (enriched.profilePhoto || enriched.profilePicURL) {
+                  const profileCacheKey = getCoordinatorScopedKey('coordinatorProfileCache', enriched);
+                  const profileCacheTimeKey = getCoordinatorScopedKey('coordinatorProfileCacheTime', enriched);
+                  const photoCacheKey = getCoordinatorScopedKey('cachedCoordinatorPicUrl', enriched);
+                  // CRITICAL: Always resolve URLs to production backend (localhost → render.com)
+                  const resolvedProfilePhoto = resolveProfileUrl(enriched.profilePhoto || enriched.profilePicURL || null, API_BASE_URL);
+                  localStorage.setItem(profileCacheKey, JSON.stringify({
+                    ...enriched,
+                    profilePhoto: resolvedProfilePhoto,
+                    profilePicURL: resolvedProfilePhoto,
+                    hasProfilePhoto: true
+                  }));
+                  localStorage.setItem(profileCacheTimeKey, Date.now().toString());
+                  localStorage.setItem(photoCacheKey, resolvedProfilePhoto);
+                }
+              // Notify sidebar/profile via storage event
+              window.dispatchEvent(new StorageEvent('storage', {
+                key: 'coordinatorData',
+                newValue: JSON.stringify(enriched),
+                storageArea: localStorage
+              }));
+              console.log('✅ Full coordinator profile prefetched and cached');
+            }
+          } catch (prefetchError) {
+            console.warn('⚠️ Background coordinator prefetch failed (non-critical):', prefetchError.message);
+          }
+        });
+
+        // Always fetch latest logo right after authentication
+        this.refreshCollegeLogoOnAuth();
+
+        return {
+          success: true,
+          coordinator: response.coordinator,
+          token: response.token,
+          role: 'coordinator'
+        };
+      }
+
+      return { success: false, error: response.message || 'Login failed - no coordinator data received' };
+    } catch (error) {
+      console.error('Coordinator login error:', error);
+
+      if (error.status === 403 && error.data && error.data.isBlocked) {
+        return {
+          success: false,
+          isBlocked: true,
+          blockedUserRole: 'coordinator',
+          coordinator: error.data.coordinator,
+          error: error.data.error || 'Your coordinator account is blocked.'
+        };
+      }
+
+      let errorMessage = 'Login failed. Please try again.';
+      if (error.message) {
+        if (error.message.includes('404') || error.message.includes('not found')) {
+          errorMessage = '❌ Coordinator not found. Please check your ID.';
+        } else if (error.message.includes('401') || error.message.includes('Invalid credentials')) {
+          errorMessage = '❌ Invalid coordinator ID or password.';
+        } else if (error.message.includes('Network') || error.message.includes('Failed to fetch')) {
+          errorMessage = '❌ Network error. Please check your connection.';
+        } else {
+          errorMessage = `❌ ${error.message}`;
+        }
+      }
+
+      return { success: false, error: errorMessage };
+    }
+  }
+
+  // Student registration
+  async registerStudent(studentData) {
+    try {
+      const response = await this.apiCall('/students', {
+        method: 'POST',
+        body: JSON.stringify(studentData)
+      });
+
+      return {
+        success: true,
+        student: response.student
+      };
+    } catch (error) {
+      console.error('Student registration error:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  // Check if user is logged in (cached — avoids repeated localStorage reads)
+  isLoggedIn() {
+    const now = Date.now();
+    if (this._authCache.valid !== null && (now - this._authCache.ts < 2000)) {
+      return this._authCache.valid;
+    }
+    const token = localStorage.getItem('authToken');
+    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+    const result = !!(token && isLoggedIn && !this.isTokenExpired(token));
+    this._authCache = { valid: result, ts: now };
+    return result;
+  }
+
+  // Invalidate auth cache (call on login/logout)
+  _invalidateAuthCache() {
+    this._authCache = { valid: null, ts: 0 };
+    this._studentCache = { data: null, ts: 0, raw: null };
+  }
+
+  // Get current student data (cached — avoids repeated JSON.parse)
+  getCurrentStudent() {
+    const now = Date.now();
+    const raw = localStorage.getItem('studentData');
+    if (this._studentCache.data && this._studentCache.raw === raw && (now - this._studentCache.ts < 5000)) {
+      return this._studentCache.data;
+    }
+    const data = raw ? JSON.parse(raw) : null;
+    this._studentCache = { data, ts: now, raw };
+    return data;
+  }
+
+  // Logout
+  logout() {
+    // Clear admin image cache
+    import('./adminImageCacheService.jsx')
+      .then(({ default: adminImageCacheService }) => {
+        adminImageCacheService.clearAllCaches();
+        console.log('✅ Admin image cache cleared on logout');
+      })
+      .catch(err => {
+        console.warn('⚠️ Failed to clear admin image cache on logout:', err);
+      });
+
+    // Clear all authentication tokens
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('authRole');
+    localStorage.removeItem('isLoggedIn');
+    
+    // Clear student data
+    localStorage.removeItem('studentData');
+    localStorage.removeItem('completeStudentData');
+    localStorage.removeItem('resumeData');
+    localStorage.removeItem('certificatesData');
+    
+    // Clear coordinator data
+    localStorage.removeItem('coordinatorId');
+    localStorage.removeItem('coordinatorUsername');
+    localStorage.removeItem('isCoordinatorLoggedIn');
+    localStorage.removeItem('coordinatorData'); // Legacy
+    localStorage.removeItem('coordinatorToken'); // Legacy
+    
+    // Clear admin data
+    localStorage.removeItem('adminLoginID');
+    localStorage.removeItem('adminProfileCache');
+    localStorage.removeItem('adminProfileCacheTime');
+    localStorage.removeItem('adminData'); // Legacy
+    localStorage.removeItem('adminToken'); // Legacy
+    localStorage.removeItem('adminId'); // Legacy
+    localStorage.removeItem('userRole'); // Legacy
+    
+    console.log('🧹 All session data cleared');
+    this._invalidateAuthCache();
+  }
+
+  // Update student profile
+  async updateStudentProfile(studentId, updateData) {
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await this.apiCall(`/students/${studentId}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(updateData)
+      });
+
+      // Update localStorage with new data
+      const currentStudent = this.getCurrentStudent();
+      if (currentStudent) {
+        const updatedStudent = { ...currentStudent, ...updateData };
+        localStorage.setItem('studentData', JSON.stringify(updatedStudent));
+      }
+
+      return {
+        success: true,
+        student: response.student
+      };
+    } catch (error) {
+      console.error('Update student profile error:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  // Get authentication token
+  getAuthToken() {
+    return localStorage.getItem('authToken');
+  }
+
+  // Verify token validity (fast client-side check, no network call unless expired)
+  async verifyToken() {
+    try {
+      const token = this.getAuthToken();
+      if (!token) {
+        return { valid: false, error: 'No token found' };
+      }
+
+      // Fast path: check expiry client-side (no server roundtrip)
+      if (!this.isTokenExpired(token)) {
+        return { valid: true };
+      }
+
+      // Token is expired or close to expiry
+      this._invalidateAuthCache();
+      return { valid: false, error: 'Token expired' };
+    } catch (error) {
+      console.error('Token verification error:', error);
+      return { valid: false, error: error.message };
+    }
+  }
+
+  // Legacy methods for compatibility (simplified)
+  async signInWithCustomToken(token) {
+    // This is a legacy Firebase method - not needed for MongoDB
+    console.warn('signInWithCustomToken is not supported in MongoDB auth service');
+    return { success: false, error: 'Method not supported' };
+  }
+
+  async signOut() {
+    this.logout();
+    return { success: true };
+  }
+
+  async createUserWithEmailAndPassword(email, password) {
+    // This is a legacy Firebase method - not needed for MongoDB
+    console.warn('createUserWithEmailAndPassword is not supported in MongoDB auth service');
+    return { success: false, error: 'Method not supported' };
+  }
+
+  async updateProfile(displayName, photoURL) {
+    // This is a legacy Firebase method - not needed for MongoDB
+    console.warn('updateProfile is not supported in MongoDB auth service');
+    return { success: false, error: 'Method not supported' };
+  }
+
+  // Auth state change listener (simplified)
+  onAuthStateChanged(callback) {
+    // For MongoDB, we'll use localStorage changes
+    const checkAuthState = () => {
+      const isLoggedIn = this.isLoggedIn();
+      const student = this.getCurrentStudent();
+      callback(isLoggedIn ? student : null);
+    };
+
+    // Check immediately
+    checkAuthState();
+
+    // Listen for storage changes
+    window.addEventListener('storage', checkAuthState);
+    
+    // Return unsubscribe function
+    return () => {
+      window.removeEventListener('storage', checkAuthState);
+    };
+  }
+}
+
+// Create singleton instance
+const authService = new AuthService();
+
+export default authService;

@@ -1,0 +1,1536 @@
+/* --- Base Layout --- */
+.Admin-es-layout {
+  display: flex;
+  min-height: 100vh;
+  background-color: #f6f8fb;
+  position: relative;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Full-screen overlay for mobile sidebar (click to close). Transparent so no dim effect. */
+.Admin-es-overlay {
+  position: fixed;
+  inset: 0;
+  /* Keep this under the sidebar so links remain clickable */
+  z-index: 999;
+  background: transparent;
+}
+
+/* Sidebar wrapper (inherited from Adsidebar layout) should appear above overlay.
+   We rely on Adsidebar's own z-index, so no extra rule is needed here; the
+   key is that the overlay stays below any sidebar with z-index > 1000. */
+
+/* Main Content */
+.Admin-es-main-content {
+  flex-grow: 1;
+  padding: 10px 10px 10px 20px;
+  margin: 65px 0px 0px 280px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow: hidden;
+  position: relative;
+  height: calc(100vh - 65px);
+}
+
+.Admin-es-main-content::-webkit-scrollbar {
+  width: 10px;
+}
+
+.Admin-es-main-content::-webkit-scrollbar-track {
+  background: #f0f2f5;
+}
+
+.Admin-es-main-content::-webkit-scrollbar-thumb {
+  background-color: #4EA24E;
+  border-radius: 20px;
+  border: 3px solid #f0f2f5;
+}
+
+.Admin-es-main-content::-webkit-scrollbar-thumb:hover {
+  background-color: #3d8a3d;
+}
+
+/* Summary Cards - Top Card Structure */
+.Admin-es-summary-cards {
+  background-color: transparent;
+  display: flex;
+  gap: 20px;
+  align-items: stretch;
+  flex-wrap: nowrap;
+  margin-left: 0;
+  margin-right: 0;
+  height: 245px;
+  flex-shrink: 0;
+}
+
+.Admin-es-summary-cards>.Admin-es-company-profile-search {
+  flex: 1;
+  max-width: 900px;
+}
+
+.Admin-es-summary-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 2px solid grey;
+  box-sizing: border-box;
+}
+
+.Admin-es-summary-card:hover {
+  border: 2px solid rgb(2, 171, 41);
+}
+
+.Admin-es-summary-card-icon {
+  width: 90px;
+  height: 50px;
+  margin: 0 auto 15px auto;
+  background: #f8f9fa;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 4px;
+}
+
+.Admin-es-summary-card-icon img {
+  width: 75px;
+  height: 75px;
+  margin-top: 20px;
+}
+
+.Admin-es-summary-card-title-1 {
+  font-weight: 700;
+  font-size: 1.7em;
+  margin-top: 28px;
+  color: #333;
+}
+
+.Admin-es-summary-card-title-2 {
+  font-weight: 700;
+  font-size: 1.7em;
+  margin-top: 28px;
+  color: #333;
+}
+
+.Admin-es-summary-card-desc-1 {
+  font-size: 0.9em;
+  color: #666;
+  line-height: 1.3;
+}
+
+.Admin-es-summary-card-desc-1-margin {
+  margin-top: 10px;
+}
+
+.Admin-es-summary-card-desc-2 {
+  font-size: 0.9em;
+  color: #666;
+  line-height: 1.3;
+}
+
+.Admin-es-summary-card-desc-2-margin {
+  margin-top: 10px;
+}
+
+/* Company Drive Card Specific Styles */
+.Admin-es-action-addcard {
+  text-align: center;
+  width: 300px;
+  flex-shrink: 0;
+  padding: 20px;
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 2px solid grey;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  box-sizing: border-box;
+  height: 100%;
+}
+
+.Admin-es-add-card {
+  cursor: pointer;
+  transition: border 0.2s, transform 0.2s, box-shadow 0.2s;
+  border-color: #808080;
+}
+
+.Admin-es-add-card:hover {
+  border: 2px solid rgb(2, 171, 41);
+  transform: translateY(-2px);
+}
+
+.Admin-es-add-icon {
+  width: 75px;
+  height: 75px;
+  margin-top: 20px;
+}
+
+.Admin-es-add-header {
+  font-weight: 700;
+  font-size: 1.7em;
+  color: #333;
+  margin-top: 28px;
+  letter-spacing: normal;
+  line-height: normal;
+  margin-bottom: 10px;
+}
+
+.Admin-es-add-description {
+  font-size: 0.9em;
+  color: #666;
+  line-height: 1.3;
+  margin-top: 10px;
+}
+
+/* Filtered Students Card - Green */
+.Admin-es-filtered-students-card {
+  background: #4EA24E;
+  border-radius: 12px;
+  padding: 20px;
+  width: 300px;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  border: 2px solid #4EA24E;
+  transition: transform 0.2s, box-shadow 0.2s;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  box-sizing: border-box;
+  height: 100%;
+}
+
+.Admin-es-filtered-students-card:hover {
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+/* Company Details Card - Green */
+.Admin-es-company-details-card {
+  background: #4EA24E;
+  border-radius: 12px;
+  padding: 20px;
+  width: 300px;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 2px solid #4EA24E;
+  transition: transform 0.2s, box-shadow 0.2s;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  box-sizing: border-box;
+  height: 100%;
+}
+
+.Admin-es-company-details-card:hover {
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+/* Selected Students Progress Card */
+.Admin-es-selected-progress-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 20px;
+  width: 300px;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 2px solid #808088;
+  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  box-sizing: border-box;
+  height: 100%;
+}
+
+.Admin-es-selected-progress-card:hover {
+  border-color: #2085f6;
+  box-shadow: 0 4px 12px rgba(32, 133, 246, 0.2);
+  transform: translateY(-2px);
+}
+
+.Admin-es-selected-title {
+  font-weight: 700;
+  font-size: 1.5em;
+  color: #333;
+  line-height: 1.2;
+  margin-top: -4px;
+}
+
+.Admin-es-selected-count {
+  font-weight: 900;
+  font-size: 3.2em;
+  color: #2085f6;
+  margin: 5px 0;
+}
+
+.Admin-es-progress-bar-container {
+  width: 100%;
+  height: 12px;
+  background-color: #eef2f6;
+  border-radius: 6px;
+  overflow: hidden;
+  margin-top: 10px;
+  border: 1px solid #dcdcdc;
+  box-sizing: border-box;
+}
+
+.Admin-es-progress-bar-fill {
+  height: 100%;
+  background-color: #2085f6;
+  border-radius: 6px;
+  transition: width 0.3s ease;
+}
+
+.Admin-es-selected-desc {
+  font-size: 0.85em;
+  color: #666;
+  margin-top: 10px;
+  line-height: 1.3;
+}
+
+
+.Admin-es-company-details-title {
+  font-weight: 700;
+  font-size: 1.4em;
+  color: #fff;
+  line-height: 1.2;
+  margin-bottom: 12px;
+  align-self: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+  width: 100%;
+  text-align: center;
+  padding-bottom: 6px;
+}
+
+.Admin-es-company-details-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.Admin-es-company-detail-item {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  width: 100%;
+  font-size: 0.95rem;
+  color: #fff;
+  gap: 10px;
+  align-items: center;
+}
+
+.Admin-es-detail-label {
+  font-weight: 600;
+  opacity: 0.9;
+  text-align: left;
+}
+
+.Admin-es-detail-value {
+  font-weight: 500;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.Admin-es-filtered-title {
+  font-weight: 700;
+  font-size: 1.7em;
+  color: #fff;
+  line-height: 1.2;
+  margin-top: -4px;
+}
+
+.Admin-es-filtered-count {
+  font-weight: 900;
+  font-size: 4.5em;
+  color: #fff;
+  margin: 0;
+}
+
+.Admin-es-filtered-desc {
+  font-size: 0.9em;
+  color: #fff;
+  line-height: 1.3;
+}
+
+.Admin-es-company-drive-card .Admin-es-summary-card-desc {
+  font-size: 0.9em;
+  color: #666;
+  line-height: 1.9;
+}
+
+/* Search Filters - Updated to match Company Drive */
+.Admin-es-search-filters {
+  flex: 1;
+  background: #e8e8e8;
+  padding: 20px 25px 23px 25px;
+  border-radius: 18px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  max-width: 600px;
+  box-sizing: border-box;
+}
+
+.Admin-es-search-tab {
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 500;
+  background-color: #4EA24E;
+  color: white;
+  height: 35px;
+  line-height: 35px;
+  margin: 0 auto;
+  border-radius: 30px;
+  display: block;
+  width: 228px;
+}
+
+.Admin-es-filter-header-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.Admin-es-clear-btn-header {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 35px;
+  line-height: 35px;
+  border: none;
+  border-radius: 30px;
+  background-color: #dcdcdc;
+  color: #333;
+  padding: 0 16px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.Admin-es-clear-btn-header:hover {
+  background-color: #c0c0c0;
+}
+
+.Admin-es-search-inputs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 18px;
+  flex-grow: 1;
+  margin-bottom: 0;
+  align-items: start;
+  margin-top: 0;
+}
+
+/* Single wrapper for each grid cell - contains both label and input */
+.Admin-es-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  position: relative;
+  height: 100%;
+  align-items: stretch;
+  padding-top: 25px;
+}
+
+/* Label positioned absolutely above the input */
+.Admin-es-input-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #666;
+  margin-left: 5px;
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 20px;
+  line-height: 20px;
+}
+
+.Admin-es-search-input {
+  position: relative;
+  border: 1.5px solid #d1d5db;
+  border-radius: 8px;
+  overflow: visible;
+  height: 45px;
+  background-color: #ffffff;
+  transition: border-color 0.2s ease;
+}
+
+.Admin-es-search-input:hover {
+  border-color: #4EA24E;
+}
+
+.Admin-es-search-input:focus-within {
+  border-color: #4EA24E;
+}
+
+.Admin-es-search-input input,
+.Admin-es-search-input select {
+  width: 100%;
+  height: 100%;
+  padding: 0px 15px;
+  border: none;
+  background-color: transparent;
+  cursor: text;
+  font-size: 0.95rem;
+  color: #333;
+  position: relative;
+  z-index: 0;
+  outline: none;
+}
+
+.Admin-es-search-input select {
+  width: 100%;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 20px;
+  padding-right: 35px;
+}
+
+.Admin-es-select-input {
+  position: relative;
+}
+
+.Admin-es-select-input::after {
+  content: '▼';
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.7rem;
+  color: #888;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.Admin-es-select-input select {
+  background-image: none !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  padding-right: 35px !important;
+}
+
+.Admin-es-search-input select option {
+  color: #333;
+}
+
+.Admin-es-search-input select option:first-child {
+  color: #999;
+}
+
+.Admin-es-search-input input::placeholder {
+  color: #999;
+}
+
+.Admin-es-search-input label {
+  position: absolute;
+  left: 15px;
+  top: -10px;
+  transform: translateY(0);
+  padding: 0 5px;
+  color: #4EA24E;
+  font-size: 0.75rem;
+  font-weight: 600;
+  pointer-events: none;
+  z-index: 1;
+  background-color: #e8e8e8;
+}
+
+/* Label moves to top when input is focused or has value - Removed transitions */
+.Admin-es-search-input.has-value label,
+.Admin-es-search-input input:focus+label,
+.Admin-es-search-input.filled label {
+  top: -10px;
+  left: 10px;
+  font-size: 0.75rem;
+  color: #4EA24E;
+  font-weight: 600;
+  padding: 0 5px;
+  background-color: #e8e8e8;
+}
+
+.Admin-es-search-input input:focus {
+  outline: none;
+}
+
+.Admin-es-search-input .Admin-es-search-icon {
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #007bff;
+  font-size: 14px;
+}
+
+.Admin-es-search-input .Admin-es-clear-btn {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #999;
+}
+
+/* Batch Range and Year-Sem Sub-fields */
+.Admin-es-batch-range-inputs,
+.Admin-es-yearsem-range-inputs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 45px;
+}
+
+.Admin-es-batch-range-inputs .Admin-es-search-input,
+.Admin-es-yearsem-range-inputs .Admin-es-search-input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+}
+
+.Admin-es-batch-range-sep,
+.Admin-es-yearsem-range-sep {
+  font-weight: 700;
+  color: #666;
+  flex-shrink: 0;
+}
+
+.Admin-es-search-btn-filter {
+  background: #4EA24E;
+  color: white;
+  border: 2px solid transparent;
+  padding: 8px 20px;
+  border-radius: 25px;
+  font-weight: 700;
+  font-size: 1rem;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.13);
+  transition: background 0.2s, transform 0.15s;
+  cursor: pointer;
+  flex: 1;
+  max-width: 150px;
+}
+
+.Admin-es-search-btn-filter:hover {
+  background: #3d8a3d;
+}
+
+
+.Admin-es-clear-search-btn {
+  background: #E0E0E0;
+  color: #787878;
+  border: 2px solid #787878;
+  padding: 8px 20px;
+  border-radius: 25px;
+  font-weight: 700;
+  font-size: 1rem;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.13);
+  transition: background 0.2s, transform 0.15s;
+  cursor: pointer;
+  flex: 1;
+  max-width: 150px;
+}
+
+.Admin-es-clear-search-btn:hover {
+  background: #c5c5c5;
+}
+
+.Admin-es-search-btn:hover {
+  background: #4EA24E;
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.13);
+}
+
+.Admin-es-button-container {
+  display: flex;
+  justify-content: center;
+  gap: 0px;
+  margin-top: 0px;
+  border-radius: 10px;
+}
+
+/* Placed Students Card Specific Styles */
+.Admin-es-placed-students-card {
+  text-align: center;
+  flex: 0 0 211px;
+  flex-shrink: 0;
+  padding: 5px 15px;
+  background-color: #ffffff;
+  border-radius: 15px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 2px solid #808088;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.Admin-es-placed-students-card:hover {
+  box-shadow: 0 4px 12px rgba(50, 234, 50, 0.2);
+  border-color: #4EA24E;
+}
+
+.Admin-es-placed-students-card-sized {
+  flex: 0 0 211px;
+}
+
+.Admin-es-placed-cap-icon {
+  width: 50px;
+  height: 50px;
+}
+
+/* Bottom Card (Student Table) */
+.Admin-es-bottom-card {
+  background-color: #ffffff;
+  border-radius: 15px;
+  padding: 12px 20px;
+  margin-left: 0;
+  margin-right: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.Admin-es-profile-header {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  flex-shrink: 0;
+  width: 100%;
+}
+
+.Admin-es-profile-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #333;
+  justify-self: start;
+}
+
+.Admin-es-header-progress {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background-color: #f8fafc;
+  padding: 6px 16px;
+  border-radius: 20px;
+  border: 1px solid #e2e8f0;
+  justify-self: center;
+}
+
+.Admin-es-header-progress-text {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #475569;
+  white-space: nowrap;
+}
+
+.Admin-es-header-bar-container {
+  width: 140px;
+  height: 8px;
+  background-color: #e2e8f0;
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+  box-sizing: border-box;
+}
+
+.Admin-es-header-bar-fill {
+  height: 100%;
+  background-color: #2085f6;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.Admin-es-print-btn-container {
+  position: relative;
+  justify-self: end;
+}
+
+.Admin-es-print-btn {
+  background-color: #4EA24E;
+  color: white;
+  border: none;
+  padding: 8px 30px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.Admin-es-print-btn:hover {
+  background-color: #3d8a3d;
+}
+
+.Admin-es-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 5px;
+  z-index: 2000;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  min-width: 180px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.Admin-es-dropdown-item {
+  padding: 10px 15px;
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  font-size: 0.95rem;
+  color: #333;
+  transition: background-color 0.2s;
+}
+
+.Admin-es-dropdown-item:hover {
+  background-color: #f0f0f0;
+}
+
+.Admin-es-table-container {
+  width: 100%;
+  overflow: auto;
+  border: none;
+  border-radius: 8px;
+  max-height: 260px;
+  /* controls visible rows before scroll - show 5 rows */
+  padding-bottom: 25px;
+}
+
+/* --- Table Scrollbars (Desktop) --- */
+.Admin-es-table-container::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.Admin-es-table-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.Admin-es-table-container::-webkit-scrollbar-thumb {
+  background: #4ea24e;
+  border-radius: 8px;
+}
+
+.Admin-es-table-container::-webkit-scrollbar-thumb:hover {
+  background: #4ea24e;
+}
+
+.Admin-es-profile-table {
+  width: 100%;
+  min-width: 900px;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.Admin-es-profile-table thead tr {
+  background-color: #ffffff;
+}
+
+.Admin-es-profile-table th {
+  padding: 8px 10px;
+  text-align: center;
+  font-weight: 600;
+  color: #999;
+  white-space: nowrap;
+  background-color: white;
+  border-bottom: 2px solid #e0e0e0;
+  font-size: 0.9rem;
+  position: sticky;
+  top: 0;
+  z-index: 11;
+}
+
+.Admin-es-profile-table tbody tr {
+  cursor: pointer;
+  transition: background-color 0.2s;
+  border-bottom: 1px solid #f5f5f5;
+  height: auto;
+}
+
+.Admin-es-profile-table tbody tr:hover {
+  background-color: #fafafa;
+}
+
+.Admin-es-selected-row {
+  background-color: #f7fff5 !important;
+}
+
+.Admin-es-profile-table td {
+  padding: 10px 10px;
+  text-align: center;
+  color: #333;
+  vertical-align: middle;
+  font-size: 0.9rem;
+  font-weight: 500;
+  border-bottom: 1px solid #f5f5f5;
+}
+
+/* Table Footer Buttons */
+.Admin-es-table-footer {
+  display: flex;
+  justify-content: end;
+  gap: 15px;
+  padding: 10px 0;
+  background-color: transparent;
+  flex-shrink: 0;
+}
+
+.Admin-es-clear-btn {
+  background: #808080;
+  color: white;
+  border: none;
+  padding: 8px 35px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.Admin-es-clear-btn:hover {
+  background: #666666;
+}
+
+.Admin-es-select-btn {
+  background: #4EA24E;
+  color: white;
+  border: none;
+  padding: 8px 35px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.Admin-es-select-btn:hover {
+  background: #3d8a3d;
+}
+
+/* Green Checkbox Styling */
+.Admin-es-checkbox {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #4EA24E;
+}
+
+.Admin-es-checkbox:checked {
+  accent-color: #4EA24E;
+}
+
+.Admin-es-status-badge-one {
+  background: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+  padding: 4px 10px;
+  border-radius: 30px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  display: inline-block;
+  min-width: 70px;
+  text-align: center;
+  text-transform: capitalize;
+}
+
+.Admin-es-status-badge-two {
+  background: #ffe3ce;
+  color: #856404;
+  border: 1px solid #ffe3ce;
+  padding: 4px 10px;
+  border-radius: 30px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  display: inline-block;
+  min-width: 70px;
+  text-align: center;
+  text-transform: capitalize;
+}
+
+.Admin-es-view-icon {
+  width: 25px;
+  height: 25px;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.Admin-es-view-icon:hover {
+  transform: scale(1.1);
+}
+
+/* Success Popup Styles */
+.Admin-es-success-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.2);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+  padding: 20px;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.Admin-es-success-container {
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  width: 400px;
+  max-width: 90vw;
+  overflow: hidden;
+  animation: slideUp 0.3s ease-in-out;
+  font-family: 'Poppins', sans-serif;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(50px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.Admin-es-success-header {
+  background-color: #4ea24e;
+  color: white;
+  font-size: 1.4rem;
+  font-weight: 700;
+  padding: 1.2rem;
+  text-align: center;
+  letter-spacing: 0.02em;
+}
+
+.Admin-es-success-content {
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  min-height: 220px;
+  justify-content: center;
+}
+
+.Admin-es-success-icon-wrapper {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+  background-color: #22C55E;
+  animation: scaleIn 0.4s 0.1s ease-in-out backwards;
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.Admin-es-success-icon {
+  width: 50px;
+  height: 50px;
+}
+
+.Admin-es-success-icon-circle {
+  stroke-width: 2;
+  stroke-miterlimit: 10;
+  stroke: none;
+  fill: none;
+  animation: none;
+}
+
+.Admin-es-success-icon-check {
+  transform-origin: 50% 50%;
+  stroke-dasharray: 48;
+  stroke-dashoffset: 48;
+  stroke-width: 3;
+  stroke: #ffffff;
+  fill: none;
+  animation: stroke 0.4s 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}
+
+@keyframes stroke {
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+.Admin-es-success-title {
+  font-size: 1.45rem;
+  font-weight: 700;
+  color: #1E1F24;
+  margin: 0 0 8px 0;
+}
+
+.Admin-es-success-text {
+  font-size: 0.98rem;
+  color: #6B6D74;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.Admin-es-success-footer {
+  padding: 1.5rem;
+  background-color: #f7f7f7;
+  text-align: center;
+}
+
+.Admin-es-success-close-btn {
+  background-color: #D23B42;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0.8rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(210, 59, 66, 0.2);
+}
+
+.Admin-es-success-close-btn:hover {
+  background-color: #b53138;
+  box-shadow: 0 4px 12px rgba(210, 59, 66, 0.3);
+}
+
+/* ============================================================================
+   RESPONSIVE MEDIA QUERIES (Aligned with AdminEsstudapp)
+   ============================================================================ */
+
+/* Tablet & Large Mobile Landscape (max-width: 1200px) */
+@media (max-width: 1200px) {
+  .Admin-es-main-content {
+    margin: 65px 15px 16px 15px;
+    height: calc(100vh - 65px);
+  }
+
+  .Admin-es-summary-cards {
+    flex-direction: row !important;
+    align-items: stretch !important;
+    gap: 15px !important;
+    height: 245px !important;
+    margin-left: 0;
+  }
+
+  .Admin-es-action-addcard,
+  .Admin-es-filtered-students-card,
+  .Admin-es-company-details-card {
+    width: 240px !important;
+    max-width: 100%;
+    height: 100% !important;
+  }
+
+  .Admin-es-search-filters {
+    width: auto !important;
+    flex: 1 !important;
+    max-width: 900px !important;
+    height: 100% !important;
+    border-radius: 18px;
+    padding: 40px 20px 20px 20px !important;
+  }
+
+  .Admin-es-search-inputs {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* Mobile responsive layout (max-width: 900px) */
+@media (max-width: 900px) {
+  .Admin-es-layout {
+    position: fixed !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    overflow: hidden !important;
+    flex-direction: column !important;
+    background-color: #f6f8fb;
+  }
+
+  .Admin-es-main-content {
+    margin-top: 65px !important;
+    width: 100% !important;
+    padding: 10px 10px 10px 20px;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    height: calc(100vh - 65px) !important;
+    max-height: none !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+    -webkit-overflow-scrolling: touch !important;
+    gap: 10px;
+    min-height: calc(100vh - 65px) !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  .Admin-es-summary-cards {
+    margin-left: 0 !important;
+    margin-top: 0px !important;
+    gap: 15px !important;
+    flex-direction: column !important;
+    flex-wrap: wrap !important;
+    width: 100% !important;
+    height: auto !important;
+    align-items: stretch !important;
+  }
+
+  .Admin-es-summary-card,
+  .Admin-es-action-addcard,
+  .Admin-es-filtered-students-card,
+  .Admin-es-company-details-card,
+  .Admin-es-selected-progress-card {
+    width: 100% !important;
+    height: auto !important;
+    padding: 20px !important;
+    box-sizing: border-box !important;
+    flex: 0 0 auto !important;
+  }
+
+  .Admin-es-summary-card-icon {
+    width: 70px !important;
+    height: 50px !important;
+    margin: 15px auto 10px auto !important;
+  }
+
+  .Admin-es-summary-card-icon img,
+  .Admin-es-add-icon {
+    width: 60px !important;
+    height: 60px !important;
+  }
+
+  .Admin-es-summary-card-title-1,
+  .Admin-es-summary-card-title-2,
+  .Admin-es-add-header,
+  .Admin-es-filtered-title {
+    font-size: 1.4rem !important;
+    margin-top: 15px !important;
+    margin-bottom: 8px !important;
+  }
+
+  .Admin-es-filtered-count {
+    font-size: 3.5rem !important;
+  }
+
+  .Admin-es-search-filters {
+    border-radius: 25px !important;
+    width: 100% !important;
+    height: auto !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    padding: 20px 20px 30px 20px !important;
+    min-height: auto !important;
+  }
+
+  .Admin-es-search-inputs {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+    margin-top: 25px !important;
+  }
+
+
+
+  .Admin-es-bottom-card {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding: 15px 15px 15px 15px !important;
+    flex: none !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .Admin-es-profile-header {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 15px !important;
+    width: 100% !important;
+    text-align: center !important;
+  }
+
+  .Admin-es-profile-title {
+    justify-self: center !important;
+    text-align: center !important;
+  }
+
+  .Admin-es-header-progress {
+    justify-self: center !important;
+    margin: 0 auto !important;
+  }
+
+  .Admin-es-print-btn-container {
+    justify-self: center !important;
+    width: 100% !important;
+    display: flex !important;
+    justify-content: center !important;
+  }
+
+  /* Table Footer Buttons Stacking */
+  .Admin-es-table-footer {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1rem !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    padding: 1.5rem 0 10px 0 !important;
+    position: static !important;
+    background-color: transparent !important;
+  }
+
+  .Admin-es-clear-btn,
+  .Admin-es-select-btn {
+    width: 100% !important;
+    max-width: none !important;
+    padding: 1rem !important;
+    font-size: 1.1rem !important;
+    box-sizing: border-box !important;
+    text-align: center !important;
+    border-radius: 8px !important;
+  }
+
+  /* Table container — let it grow to show all rows on mobile */
+  .Admin-es-table-container {
+    height: auto !important;
+    max-height: none !important;
+    overflow-y: visible !important;
+    overflow-x: auto !important;
+    width: 100% !important;
+    position: relative !important;
+    bottom: auto !important;
+    flex-grow: 0 !important;
+    padding-bottom: 0 !important;
+  }
+}
+
+/* Specific alignments for max-width: 600px matching Application page */
+@media (max-width: 600px) {
+  .Admin-es-bottom-card {
+    padding: 15px !important;
+    max-width: calc(100% - 20px) !important;
+    margin: 0 auto !important;
+    box-sizing: border-box !important;
+  }
+
+  .Admin-es-summary-card,
+  .Admin-es-action-addcard,
+  .Admin-es-filtered-students-card,
+  .Admin-es-company-details-card,
+  .Admin-es-selected-progress-card,
+  .Admin-es-search-filters {
+    max-width: calc(100% - 20px) !important;
+    margin: 0 auto !important;
+    box-sizing: border-box !important;
+  }
+}
+
+/* Small devices tweaks (max-width: 480px) */
+@media (max-width: 480px) {
+  .Admin-es-main-content {
+    padding: 10px 10px 10px 20px;
+  }
+
+  .Admin-es-profile-header {
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 10px !important;
+  }
+
+  .Admin-es-print-btn {
+    width: 100% !important;
+  }
+}
+
+/* Loading Spinner Styles */
+.Admin-es-loading-cell {
+  text-align: center;
+  height: 200px;
+  /* Ensures the loading area is spacious and matches the 5 rows height */
+  vertical-align: middle;
+}
+
+.Admin-es-loading-row {
+  height: 200px;
+}
+
+.Admin-es-loading-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  text-align: center;
+  width: 100%;
+}
+
+.Admin-es-spinner {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 4px solid rgba(78, 162, 78, 0.25);
+  border-top-color: #4EA24E;
+  animation: adminEligibleStudentsSpin 0.7s linear infinite;
+  margin: 0 auto;
+}
+
+@keyframes adminEligibleStudentsSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.Admin-es-loading-text {
+  color: #1f2937;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.Admin-es-empty-cell {
+  text-align: center;
+  padding: 40px;
+  color: #666;
+}
+
+.Admin-es-empty-row {
+  height: 100%;
+}
+
+/* Column styles and widths */
+.Admin-es-col-checkbox {
+  width: 50px;
+  text-align: center;
+}
+
+.Admin-es-col-sno {
+  width: 50px;
+  text-align: center;
+}
+
+.Admin-es-col-name {
+  width: 180px;
+  text-align: center;
+}
+
+.Admin-es-col-yearsem {
+  width: 100px;
+  text-align: center;
+}
+
+.Admin-es-col-regno {
+  width: 130px;
+  text-align: center;
+}
+
+.Admin-es-col-batch {
+  width: 110px;
+  text-align: center;
+}
+
+.Admin-es-col-branch {
+  width: 100px;
+  text-align: center;
+}
+
+.Admin-es-col-cgpa {
+  width: 80px;
+  text-align: center;
+}
+
+.Admin-es-col-pct {
+  width: 80px;
+  text-align: center;
+}
+
+.Admin-es-col-backlogs {
+  width: 90px;
+  text-align: center;
+}
+
+.Admin-es-col-view {
+  width: 60px;
+  text-align: center;
+}
+
+/* Custom Dropdown Overrides for AdminEligibleStudents Page */
+.es-dropdown-wrapper {
+    flex-grow: 1;
+    max-width: 100% !important;
+    width: 100% !important;
+}
+
+.es-dropdown-header {
+    height: 45px !important;
+    border: 1.5px solid #d1d5db !important;
+    border-radius: 8px !important;
+    background-color: #ffffff !important;
+    font-size: 0.95rem !important;
+    color: #333 !important;
+}
+
+.es-dropdown-header:hover {
+    border-color: #4EA24E !important;
+}

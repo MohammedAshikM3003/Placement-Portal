@@ -1,0 +1,17 @@
+.section {
+  margin-bottom: var(--space-2xl);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.sectionHeader {
+  font-size: var(--text-xl);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text);
+  margin-top: 0;
+  margin-bottom: var(--space-lg);
+  border-left: 4px solid var(--color-admin);
+  padding-left: var(--space-sm);
+  line-height: var(--leading-tight);
+  font-family: var(--font-base);
+}

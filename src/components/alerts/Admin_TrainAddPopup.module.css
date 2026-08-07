@@ -1,0 +1,158 @@
+.admin-train-add-popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+  padding: 20px;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.admin-train-add-popup-container {
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  width: 400px;
+  max-width: 90vw;
+  overflow: hidden;
+  animation: slideUp 0.3s ease-in-out;
+  font-family: 'Poppins', sans-serif;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(50px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.admin-train-add-popup-header {
+  background-color: #4EA24E;
+  color: white;
+  font-size: 1.4rem;
+  font-weight: 700;
+  padding: 1.2rem;
+  text-align: center;
+  letter-spacing: 0.02em;
+}
+
+.admin-train-add-popup-body {
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  min-height: 220px;
+  justify-content: center;
+}
+
+.admin-train-add-popup-icon-wrapper {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+  background-color: #22C55E;
+  animation: scaleIn 0.4s 0.1s ease-in-out backwards;
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.admin-train-add-popup-icon {
+  width: 50px;
+  height: 50px;
+}
+
+.admin-train-add-popup-icon-circle {
+  stroke-width: 2;
+  stroke-miterlimit: 10;
+  stroke: none;
+  fill: none;
+  animation: none;
+}
+
+.admin-train-add-popup-icon-check {
+  transform-origin: 50% 50%;
+  stroke-dasharray: 48;
+  stroke-dashoffset: 48;
+  stroke-width: 3;
+  stroke: #ffffff;
+  fill: none;
+  animation: stroke 0.4s 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}
+
+@keyframes stroke {
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+.admin-train-add-popup-title {
+  font-size: 1.45rem;
+  font-weight: 700;
+  color: #1E1F24;
+  margin: 0 0 8px 0;
+}
+
+.admin-train-add-popup-message {
+  font-size: 0.98rem;
+  color: #6B6D74;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.admin-train-add-popup-footer {
+  padding: 1.5rem;
+  background-color: #f7f7f7;
+  text-align: center;
+}
+
+.admin-train-add-popup-close-btn,
+.admin-train-add-popup-progress-btn {
+  background-color: #D23B42;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0.8rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(210, 59, 66, 0.2);
+}
+
+.admin-train-add-popup-close-btn:hover {
+  background-color: #b53138;
+  box-shadow: 0 4px 12px rgba(210, 59, 66, 0.3);
+}
+
+.admin-train-add-popup-progress-btn {
+  cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+  .admin-train-add-popup-overlay {
+    align-items: flex-start;
+    padding: 90px 10px;
+    overflow-y: auto;
+    box-sizing: border-box;
+  }
+
+  .admin-train-add-popup-container {
+    max-width: 95vw;
+    margin-top: 0;
+  }
+}

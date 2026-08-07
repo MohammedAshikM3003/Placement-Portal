@@ -1,0 +1,83 @@
+{
+  "personalInfo": {
+    "name": "Aisha Rao",
+    "mobile": "9725591608",
+    "email": "aisha.rao47@anonymized.in",
+    "linkedin": "linkedin.com/in/aisharao",
+    "github": "github.com/aisharao",
+    "portfolio": ""
+  },
+  "summary": "aspiring Data Scientist. got first prize in coding contest. know Python.",
+  "education": {
+    "college": "College of Engineering Guindy",
+    "degree": "B.Tech",
+    "branch": "Computer Science Engineering",
+    "cgpa": "7.63",
+    "graduationYear": "2026"
+  },
+  "skills": [
+    {
+      "category": "Technical Skills",
+      "items": [
+        "Python",
+        "Pandas",
+        "NumPy",
+        "SQL",
+        "Statistics",
+        "Machine Learning"
+      ]
+    }
+  ],
+  "experiences": [
+    {
+      "title": "Research Intern",
+      "companyName": "TCS",
+      "location": "Chennai, India",
+      "mode": "in-person",
+      "fromDate": "2024-05-01",
+      "toDate": "2024-07-01",
+      "description": "done model development and data cleanups in python.",
+      "technologies": [
+        "Python",
+        "Pandas"
+      ]
+    }
+  ],
+  "projects": [
+    {
+      "name": "Customer Segmentation",
+      "description": "done clustering algorithms on customer datasets. analyzed metrics and data.",
+      "technologies": [
+        "Python",
+        "Pandas",
+        "Machine Learning"
+      ]
+    }
+  ],
+  "certifications": [
+    {
+      "certificateName": "AWS Academy Cloud Foundations",
+      "description": "Professional IT Certification"
+    }
+  ],
+  "achievements": [
+    {
+      "details": "won college level coding compition."
+    }
+  ],
+  "platforms": [
+    {
+      "name": "Leetcode",
+      "url": "leetcode.com/aisha"
+    }
+  ],
+  "additionalInfo": [],
+  "resumeSettings": {
+    "jobRole": "DevOps Engineer",
+    "customJobRole": "",
+    "fontStyle": "Arial",
+    "pages": "1",
+    "enableAI": true,
+    "linkType": "HyperLink"
+  }
+}

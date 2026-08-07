@@ -1,0 +1,18 @@
+﻿/*
+ * variables.css — DEPRECATED AGGREGATOR
+ * ─────────────────────────────────────────────────────────────────────────────
+ * index.css now imports each token file directly.
+ * This file is kept only for backwards compatibility.
+ * Do NOT add new tokens here. Edit the relevant file in styles/tokens/ instead.
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
+
+/* Kept for any legacy @import './styles/variables.css' references */
+@import './tokens/colors.css';
+@import './tokens/spacing.css';
+@import './tokens/radius.css';
+@import './tokens/shadows.css';
+@import './tokens/typography.css';
+@import './tokens/layout.css';
+@import './tokens/zindex.css';
+@import './tokens/motion.css';

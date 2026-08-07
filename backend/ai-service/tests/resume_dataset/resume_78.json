@@ -1,0 +1,58 @@
+{
+  "personalInfo": {
+    "name": "Aditya Mehta",
+    "mobile": "6543960931",
+    "email": "aditya.mehta@email.com",
+    "linkedin": "linkedin.com/in/adityamehta",
+    "github": "github.com/adityamehta",
+    "portfolio": ""
+  },
+  "summary": "i am hard working persn. got good in coding. learn new things.",
+  "education": {
+    "college": "XYZ Engineering College",
+    "degree": "B.E.",
+    "branch": "Computer Science",
+    "cgpa": "8.2",
+    "graduationYear": "2026"
+  },
+  "skills": [
+    {
+      "category": "Technical",
+      "items": [
+        "Node",
+        "Express",
+        "Mongo",
+        "Python",
+        "SQL"
+      ]
+    }
+  ],
+  "experiences": [],
+  "projects": [],
+  "certifications": [
+    {
+      "certificateName": "AWS Certified Cloud Practitioner",
+      "description": "Certified in cloud fundamentals"
+    }
+  ],
+  "achievements": [
+    {
+      "details": "secured first place in hackathon."
+    }
+  ],
+  "platforms": [
+    {
+      "name": "Leetcode",
+      "url": "leetcode.com/aditya"
+    }
+  ],
+  "additionalInfo": [],
+  "resumeSettings": {
+    "jobRole": "Backend Developer",
+    "customJobRole": "",
+    "fontStyle": "Arial",
+    "pages": "1",
+    "enableAI": true,
+    "linkType": "HyperLink"
+  }
+}

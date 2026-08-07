@@ -1,0 +1,1242 @@
+/* --- Base Layout --- */
+.Admin-ht-layout {
+    display: flex;
+    min-height: 100vh;
+    background-color: #f6f8fb;
+    position: relative;
+    /* ADDED: Ensure layout uses full height on desktop */
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* Sidebar Wrapper: Defaults for Desktop */
+.Admin-ht-sidebar-wrapper {
+    width: auto;
+    flex-shrink: 0;
+    /* Desktop: Sidebar is just part of the flow */
+    position: relative;
+    transform: none;
+    /* Ensure sidebar sits above the overlay so links remain clickable */
+    z-index: 3000;
+}
+
+/* Main Content */
+.Admin-ht-main-content {
+    flex-grow: 1;
+    padding: 10px 10px 10px 20px;
+    margin: 65px 0px 0px 280px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    overflow: hidden;
+    position: relative;
+    height: calc(100vh - 65px);
+}
+
+/* Sidebar overlay for mobile when sidebar is open */
+.Admin-ht-mobile-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0);
+    /* Keep below the sidebar wrapper so sidebar links remain clickable */
+    z-index: 2000;
+}
+
+/* Mobile Toggle Button (Hidden by default on Desktop) */
+.Admin-ht-mobile-toggle {
+    display: none;
+    /* Desktop: Hidden */
+    cursor: pointer;
+    padding: 10px 0;
+    margin-left: 5px;
+    align-self: flex-start;
+    z-index: 100;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Top Card (Filter and Actions) */
+.Admin-ht-top-card {
+    background-color: transparent;
+    display: flex;
+    gap: 20px;
+    align-items: stretch;
+    flex-wrap: nowrap;
+    margin-left: 0;
+    margin-right: 0;
+    height: auto;
+    flex-shrink: 0;
+}
+
+/* Filter Section */
+.Admin-ht-filter-section {
+    flex: 1;
+    background-color: #e8e8e8;
+    padding: 20px;
+    border-radius: 18px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    max-width: 750px;
+}
+
+.Admin-ht-filter-header-container {
+    position: relative;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+}
+
+.Admin-ht-filter-header {
+    text-align: center;
+    font-size: 1rem;
+    font-weight: 500;
+    background-color: #4EA24E;
+    color: white;
+    height: 35px;
+    line-height: 35px;
+    margin: 0 auto;
+    border-radius: 30px;
+    display: block;
+    width: 228px;
+}
+
+.Admin-ht-clear-btn-header {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 35px;
+    line-height: 35px;
+    border: none;
+    border-radius: 30px;
+    background-color: #dcdcdc;
+    color: #333;
+    padding: 0 16px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.Admin-ht-clear-btn-header:hover {
+    background-color: #c0c0c0;
+}
+
+.Admin-ht-filter-icon-container {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    transform: translateY(-50%);
+    font-size: 1.2rem;
+    color: #4EA24E;
+}
+
+.Admin-ht-filter-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    flex-grow: 1;
+    align-content: center;
+}
+
+/* Input Wrapper for Label + Input */
+.Admin-ht-input-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 0px;
+}
+
+.Admin-ht-input-wrapper-full {
+    grid-column: 1 / -1;
+}
+
+.Admin-ht-date-range-inputs {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.Admin-ht-date-range-inputs>div:not(.Admin-ht-date-range-sep) {
+    flex: 1;
+    min-width: 0;
+    width: 100%;
+}
+
+.Admin-ht-date-range-sep {
+    font-weight: 700;
+    color: #666;
+    flex-shrink: 0;
+}
+
+/* Static Label (Fixed on Top Left) */
+.Admin-ht-static-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #666;
+    margin-left: 5px;
+    display: block;
+}
+
+/* Dropdown styling */
+.Admin-ht-dropdown-container {
+    position: relative;
+    border: 3px solid #ccc;
+    border-radius: 8px;
+    overflow: hidden;
+    height: 45px;
+    background-color: #ffffff;
+    transition: border-color 0.2s ease, border-width 0.2s ease;
+}
+
+.Admin-ht-dropdown {
+    width: 100%;
+    height: 100%;
+    padding: 0px 15px;
+    border: none;
+    background-color: transparent;
+    appearance: none;
+    cursor: pointer;
+    font-size: 0.95rem;
+    color: #333;
+}
+
+/* Show gray color for first option (placeholder) */
+.Admin-ht-dropdown option:first-child {
+    color: #999;
+}
+
+/* Make other options black */
+.Admin-ht-dropdown option:not(:first-child) {
+    color: #333;
+}
+
+.Admin-ht-dropdown-container::after {
+    content: '▼';
+    position: absolute;
+    top: 50%;
+    right: 15px;
+    transform: translateY(-50%);
+    font-size: 0.7rem;
+    color: #888;
+    pointer-events: none;
+}
+
+.Admin-ht-select-container::after {
+    content: '▼';
+    position: absolute;
+    top: 50%;
+    right: 15px;
+    transform: translateY(-50%);
+    font-size: 0.7rem;
+    color: #888;
+    pointer-events: none;
+    line-height: 1;
+    z-index: 2;
+}
+
+.Admin-ht-text-container {
+    position: relative;
+    border: 3px solid #ccc;
+    border-radius: 8px;
+    overflow: visible;
+    height: 45px;
+    background-color: #ffffff;
+    transition: border-color 0.2s ease, border-width 0.2s ease;
+}
+
+.Admin-ht-text {
+    width: 89%;
+    height: 100%;
+    padding: 0px 15px;
+    border: none;
+    background-color: transparent;
+    cursor: text;
+    font-size: 0.95rem;
+    color: #333;
+    position: relative;
+    z-index: 0;
+}
+
+.Admin-ht-select {
+    width: 100%;
+    padding: 8px 15px 0;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: none;
+    position: relative;
+    bottom: 5px;
+}
+
+.Admin-ht-text::placeholder {
+    color: #999;
+    opacity: 1;
+}
+
+.Admin-ht-text:focus::placeholder,
+.Admin-ht-dropdown:focus::placeholder {
+    opacity: 0;
+}
+
+.Admin-ht-text:focus,
+.Admin-ht-dropdown:focus {
+    outline: none;
+}
+
+.Admin-ht-text-container:hover,
+.Admin-ht-text-container.is-focused,
+.Admin-ht-dropdown-container:hover {
+    border-color: #4EA24E;
+}
+
+.Admin-ht-button-group {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: center;
+    margin-top: 8px;
+    margin-bottom: 5px;
+    gap: 45px;
+    border-radius: 10px;
+}
+
+.Admin-ht-button {
+    padding: 8px 20px;
+    border: none;
+    border-radius: 25px;
+    font-size: 1rem;
+    cursor: pointer;
+    font-weight: 700;
+    flex: 1;
+    transition: opacity 0.2s;
+    max-width: 150px;
+}
+
+.Admin-ht-search-btn {
+    background-color: #4EA24E;
+    color: white;
+    border: 2px solid transparent;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.13);
+}
+
+.Admin-ht-search-btn:hover {
+    background-color: #3d8a3d;
+}
+
+/* Action Cards Section */
+.Admin-ht-action-cards-section {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    gap: 10px;
+    min-width: 0;
+}
+
+.Admin-ht-action-card {
+    flex: 1;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 20px;
+    background-color: #ffffff;
+    border-radius: 15px;
+    box-shadow: none;
+    border: 2px solid #4EA24E;
+    transition: border-color 0.2s ease;
+}
+
+.Admin-ht-action-addcard {
+    text-align: center;
+    width: 211px;
+    flex-shrink: 0;
+    padding: 15px;
+    background-color: #ffffff;
+    border-radius: var(--radius-lg, 12px);
+    box-shadow: 0 2px 9px rgba(0, 0, 0, 0.05);
+    border: 3px solid #e0e0e0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Add Company Card Special Styling */
+.Admin-ht-add-card {
+    cursor: pointer;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
+    border-color: #e0e0e0;
+}
+
+.Admin-ht-add-card:hover {
+    border-color: #4ea24e;
+    box-shadow: 0 4px 12px rgba(0, 128, 0, 0.15);
+    transform: translateY(-5px);
+}
+
+.Admin-ht-add-icon {
+    margin-bottom: 10px;
+    margin-top: 0;
+    height: 55px;
+    width: auto;
+}
+
+.Admin-ht-add-header {
+    font-family: var(--font-base);
+    font-size: var(--text-2xl, 1.5rem);
+    font-weight: var(--weight-semibold, 600);
+    margin-bottom: 8px;
+    color: #000000;
+    margin-left: 0;
+    margin-right: 0;
+    margin-top: 0;
+    letter-spacing: normal;
+    line-height: var(--leading-tight, 1.2);
+}
+
+.Admin-ht-add-description {
+    font-family: var(--font-base);
+    font-size: var(--text-md, 1rem);
+    color: var(--color-text-muted, #666666);
+    margin-top: 8px;
+    font-weight: var(--weight-normal, 400);
+    line-height: var(--leading-snug, 1.4);
+    margin-bottom: 0;
+    margin-left: 0;
+    margin-right: 0;
+}
+
+/* Edit/Delete Card Styling */
+.Admin-ht-action-header {
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin: 0;
+    color: #888888;
+    width: 110px;
+    text-align: left;
+    flex-shrink: 0;
+    transition: color 0.2s ease;
+}
+
+.Admin-ht-header-disabled {
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin: 0;
+    color: #888888 !important;
+    width: 110px;
+    text-align: left;
+    flex-shrink: 0;
+}
+
+.Admin-ht-header-edit-active {
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin: 0;
+    color: #5932EA !important;
+    width: 110px;
+    text-align: left;
+    flex-shrink: 0;
+}
+
+.Admin-ht-header-delete-active {
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin: 0;
+    color: #ff0000 !important;
+    width: 110px;
+    text-align: left;
+    flex-shrink: 0;
+}
+
+.Admin-ht-action-description {
+    font-size: 0.95rem;
+    color: #666;
+    margin: 0 15px;
+    padding: 0;
+    font-weight: 500;
+    line-height: 1.3;
+    flex-grow: 1;
+    display: block;
+    text-align: left;
+}
+
+.Admin-ht-action-btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 700;
+    cursor: pointer;
+    width: 100px;
+    flex-shrink: 0;
+    transition: opacity 0.2s, background-color 0.2s, color 0.2s;
+    font-size: 0.9rem;
+}
+
+.Admin-ht-action-btn:disabled {
+    background-color: #e0e0e0 !important;
+    color: #888888 !important;
+    cursor: not-allowed;
+    border-color: transparent !important;
+    box-shadow: none !important;
+    opacity: 1 !important;
+}
+
+.Admin-ht-edit-btn {
+    background-color: #5932EA;
+    color: white;
+}
+
+.Admin-ht-delete-btn {
+    background-color: #ff0000;
+    color: white;
+    border-radius: 8px;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Bottom Card (Company Table) */
+.Admin-ht-bottom-card {
+    background-color: #ffffff;
+    border-radius: 15px;
+    padding: 12px 20px;
+    margin-left: 0;
+    margin-right: 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.Admin-ht-table-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.Admin-ht-table-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #333;
+}
+
+.Admin-ht-table-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.Admin-ht-print-button-container {
+    position: relative;
+}
+
+.Admin-ht-print-btn {
+    background-color: #4EA24E;
+    color: white;
+    border: none;
+    padding: 8px 30px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.Admin-ht-print-btn:hover {
+    background-color: #3d8a3d;
+}
+
+.Admin-ht-export-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 5px;
+    z-index: 2000;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    min-width: 180px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.Admin-ht-export-menu button {
+    padding: 10px 15px;
+    border: none;
+    background: none;
+    text-align: left;
+    cursor: pointer;
+    font-size: 0.95rem;
+    color: #333;
+    transition: background-color 0.2s;
+}
+
+.Admin-ht-export-menu button:hover {
+    background-color: #f0f0f0;
+}
+
+/* Table Styles */
+.Admin-ht-table-container {
+    flex-grow: 1;
+    width: 100%;
+    overflow: auto;
+    border: none;
+    border-radius: 8px;
+    max-height: 100%;
+    padding-bottom: 25px;
+}
+
+/* --- Table Scrollbars (Desktop) --- */
+.Admin-ht-table-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.Admin-ht-table-container::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.Admin-ht-table-container::-webkit-scrollbar-thumb {
+    background: #4ea24e;
+    border-radius: 8px;
+}
+
+.Admin-ht-table-container::-webkit-scrollbar-thumb:hover {
+    background: #3d8a3d;
+}
+
+.Admin-ht-students-table {
+    width: 100%;
+    min-width: 900px;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+
+.Admin-ht-table-head-row {
+    position: sticky;
+    top: 0;
+    background-color: #ffffff;
+    z-index: 11;
+}
+
+.Admin-ht-th {
+    padding: 8px 10px;
+    text-align: center;
+    font-weight: 600;
+    color: #999;
+    white-space: nowrap;
+    background-color: white;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.Admin-ht-table-row {
+    border-bottom: 1px solid #f5f5f5;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.Admin-ht-table-row:hover {
+    background-color: #fafafa;
+}
+
+.Admin-ht-selected-row {
+    background-color: #f7fff5 !important;
+}
+
+.Admin-ht-td {
+    padding: 10px 10px;
+    text-align: center;
+    color: #333;
+    vertical-align: middle;
+    font-size: 0.9rem;
+    font-weight: 500;
+    border-bottom: 1px solid #f5f5f5;
+}
+
+/* Column widths */
+.Admin-ht-checkbox {
+    width: 50px;
+    text-align: center;
+}
+
+.Admin-ht-sno {
+    width: 50px;
+    text-align: center;
+}
+
+.Admin-ht-course {
+    width: 150px;
+    text-align: center;
+}
+
+.Admin-ht-startdate {
+    width: 110px;
+    text-align: center;
+}
+
+.Admin-ht-enddate {
+    width: 110px;
+    text-align: center;
+}
+
+.Admin-ht-trainer {
+    width: 120px;
+    text-align: center;
+}
+
+.Admin-ht-phase {
+    width: 80px;
+    text-align: center;
+}
+
+.Admin-ht-batch {
+    width: 80px;
+    text-align: center;
+}
+
+.Admin-ht-duration {
+    width: 90px;
+    text-align: center;
+}
+
+.Admin-ht-view {
+    width: 60px;
+    text-align: center;
+}
+
+/* Status Tag Styles */
+.Admin-ht-status-tag {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 5px;
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-transform: capitalize;
+    text-align: center;
+    min-width: 70px;
+}
+
+/* Confirmed Status */
+.Admin-ht-status-confirmed {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+    border-radius: 30px;
+}
+
+/* Pending Status */
+.Admin-ht-status-pending {
+    background-color: #ffe3ce;
+    border: 1px solid #ffe3ce;
+    color: #856404;
+    border-radius: 30px;
+    ;
+}
+
+/* Checkbox Styles */
+.Admin-ht-checkbox-input {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: #4EA24E;
+}
+
+/* --- ICON ANIMATION KEYFRAMES --- */
+@keyframes Admin-ht-stroke {
+    100% {
+        stroke-dashoffset: 0;
+    }
+}
+
+@keyframes Admin-ht-scale {
+
+    0%,
+    100% {
+        transform: none;
+    }
+
+    50% {
+        transform: scale3d(1.1, 1.1, 1);
+    }
+}
+
+@keyframes Admin-ht-warning-fill {
+    100% {
+        box-shadow: inset 0 0 0 40px #FF9800;
+    }
+}
+
+@keyframes Admin-ht-delete-fill {
+    100% {
+        box-shadow: inset 0 0 0 40px #D23B42;
+    }
+}
+
+@keyframes Admin-ht-popup-enter {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Popup Styles */
+.Admin-ht-popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.2);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    padding: 16px;
+    box-sizing: border-box;
+}
+
+.Admin-ht-popup-container {
+    background-color: #fff;
+    border-radius: 12px;
+    width: 400px;
+    max-width: 90vw;
+    text-align: center;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+    font-family: 'Poppins', sans-serif;
+    animation: Admin-ht-popup-enter 0.3s ease-out forwards;
+}
+
+.Admin-ht-popup-header {
+    background-color: #4EA24E;
+    color: white;
+    padding: 1.2rem;
+    font-size: 1.4rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+}
+
+.Admin-ht-popup-body {
+    padding: 2rem;
+}
+
+.Admin-ht-popup-footer {
+    padding: 1.5rem;
+    background-color: #f7f7f7;
+    display: flex;
+    gap: 32px;
+    justify-content: center;
+}
+
+.Admin-ht-popup-cancel-btn,
+.Admin-ht-popup-delete-btn,
+.Admin-ht-popup-close-btn {
+    border: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s, box-shadow 0.2s;
+}
+
+.Admin-ht-popup-cancel-btn {
+    background: #d2d2d2;
+    color: #333;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.Admin-ht-popup-cancel-btn:hover {
+    background: #bbb;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.Admin-ht-popup-delete-btn {
+    background: #D23B42;
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(210, 59, 66, 0.2);
+}
+
+.Admin-ht-popup-delete-btn:hover {
+    background: #b52e35;
+    box-shadow: 0 4px 12px rgba(210, 59, 66, 0.3);
+}
+
+.Admin-ht-popup-close-btn {
+    background-color: #D23B42;
+    color: white;
+    box-shadow: 0 2px 8px rgba(210, 59, 66, 0.2);
+}
+
+.Admin-ht-popup-close-btn:hover {
+    background-color: #b53138;
+    box-shadow: 0 4px 12px rgba(210, 59, 66, 0.3);
+}
+
+.Admin-ht-popup-cancel-btn:disabled,
+.Admin-ht-popup-delete-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+/* Warning Icon */
+.Admin-ht-warning-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto;
+    display: block;
+    background-color: #FF9800;
+    border-radius: 50%;
+    padding: 15px;
+    box-shadow: 0 0 0 0 #FF9800;
+    animation: Admin-ht-warning-fill 0.4s ease-in-out 0.4s forwards, Admin-ht-scale 0.3s ease-in-out 0.9s both;
+}
+
+.Admin-ht-warning-icon--circle {
+    stroke: transparent;
+    stroke-width: 0;
+    fill: none;
+}
+
+.Admin-ht-warning-icon--exclamation {
+    stroke: #ffffff;
+    stroke-width: 4;
+    stroke-linecap: round;
+    stroke-dasharray: 20;
+    stroke-dashoffset: 20;
+    animation: Admin-ht-stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+}
+
+/* Icon Wrapper for Delete Success */
+.Admin-ht-icon-wrapper {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #D23B42;
+    box-shadow: 0 0 0 0 #D23B42;
+    animation: Admin-ht-delete-fill 0.4s ease-in-out 0.4s forwards, Admin-ht-scale 0.3s ease-in-out 0.9s both;
+}
+
+/* Delete Icon - Legacy (keeping for backward compatibility) */
+.Admin-ht-delete-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto;
+    display: block;
+    background-color: #D23B42;
+    border-radius: 50%;
+    padding: 15px;
+}
+
+.Admin-ht-delete-icon--circle {
+    stroke: transparent;
+    stroke-width: 0;
+    fill: none;
+}
+
+.Admin-ht-delete-icon--bin {
+    stroke: #ffffff;
+}
+
+/* ============================================================================
+   MOBILE RESPONSIVENESS
+   ============================================================================ */
+
+@media screen and (max-width: 1200px) {
+
+    /* 1. Reset Fixed Margins used in Desktop */
+    .Admin-ht-top-card,
+    .Admin-ht-bottom-card {
+        margin-left: 0;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    /* 2. Sidebar Drawer Logic */
+    .Admin-ht-print-button-container {
+        position: relative;
+        display: inline-block;
+        z-index: 15;
+        margin-top: -90px;
+    }
+
+    .Admin-ht-sidebar-wrapper {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100vh;
+        width: auto;
+        z-index: 3000;
+        /* Allow clicks on sidebar content (navigation links) */
+        pointer-events: auto;
+    }
+
+    /* Dark Overlay to dim content when sidebar is open */
+    .Admin-ht-sidebar-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 2990;
+        pointer-events: auto;
+    }
+
+    /* Show Toggle Button on Mobile */
+    .Admin-ht-mobile-toggle {
+        display: block;
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        z-index: 100;
+    }
+}
+
+@media (max-width: 900px) {
+    .Admin-ht-layout {
+        position: fixed !important;
+        inset: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        overflow: hidden !important;
+        flex-direction: column !important;
+        background-color: #f6f8fb;
+    }
+
+    .Admin-ht-mobile-overlay {
+        display: block !important;
+    }
+
+    .Admin-ht-main-content {
+        margin-top: 65px !important;
+        width: 100% !important;
+        padding: 10px 10px 10px 20px;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        height: calc(100vh - 65px) !important;
+        max-height: none !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        justify-content: flex-start !important;
+        -webkit-overflow-scrolling: touch !important;
+        gap: 10px;
+        min-height: calc(100vh - 65px) !important;
+        margin-left: 0 !important;
+    }
+
+    /* Scrollbar for Main Content */
+    .Admin-ht-main-content::-webkit-scrollbar {
+        width: 10px;
+    }
+
+    .Admin-ht-main-content::-webkit-scrollbar-track {
+        background: #f0f2f5;
+        border-radius: 12px;
+    }
+
+    .Admin-ht-main-content::-webkit-scrollbar-thumb {
+        background-color: #4EA24E;
+        border-radius: 20px;
+        border: 3px solid #f0f2f5;
+    }
+
+    .Admin-ht-main-content::-webkit-scrollbar-thumb:hover {
+        background-color: #3d8a3d;
+    }
+
+    /* Top Card Layout: Stack vertically */
+    .Admin-ht-top-card {
+        margin-left: 0 !important;
+        margin-top: 0px !important;
+        gap: 15px !important;
+        flex-direction: column !important;
+        flex-wrap: nowrap !important;
+        width: 100% !important;
+        height: auto !important;
+    }
+
+    /* Filter Section Adjustments */
+    .Admin-ht-filter-section {
+        border-radius: 25px !important;
+        flex: 1 1 auto !important;
+        width: 100% !important;
+        height: auto !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    .Admin-ht-filter-content {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+    }
+
+    /* Add Card Adjustments */
+    .Admin-ht-action-addcard {
+        width: 100% !important;
+        height: auto !important;
+        padding: 20px !important;
+        box-sizing: border-box !important;
+    }
+
+    /* Edit/Delete Cards Container */
+    .Admin-ht-action-cards-section {
+        flex-direction: column !important;
+        gap: 10px !important;
+        height: auto !important;
+        width: 100% !important;
+        flex: none !important;
+    }
+
+    .Admin-ht-action-card {
+        flex: 1 1 auto !important;
+        width: 100% !important;
+        min-height: 55px !important;
+        height: auto !important;
+        box-sizing: border-box !important;
+    }
+
+    /* Table Section Adjustments */
+    .Admin-ht-bottom-card {
+        margin-left: 0 !important;
+        padding: 15px 15px 35px 15px !important;
+        flex: none !important;
+        width: 100% !important;
+        margin-bottom: 40px !important;
+    }
+
+    .Admin-ht-table-header-row {
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 15px !important;
+        flex-wrap: wrap !important;
+    }
+
+    .Admin-ht-table-actions {
+        width: 100% !important;
+        justify-content: flex-end !important;
+        flex-wrap: wrap !important;
+    }
+
+    .Admin-ht-table-container {
+        height: auto !important;
+        max-height: none !important;
+        overflow-y: visible !important;
+        overflow-x: auto !important;
+        position: relative !important;
+        bottom: auto !important;
+        flex-grow: 0 !important;
+        padding-bottom: 0 !important;
+    }
+
+    /* Align popup to top for scrolling */
+    .Admin-ht-popup-overlay {
+        align-items: flex-start !important;
+        padding: 90px 10px !important;
+        overflow-y: auto !important;
+        box-sizing: border-box !important;
+    }
+
+    .Admin-ht-popup-container.is-form,
+    .Admin-ht-popup-container.is-success {
+        max-width: 95vw !important;
+        margin-top: 0 !important;
+    }
+}
+
+@media (max-width: 768px) {
+
+    /* Table scrollbar on mobile */
+    .Admin-ht-table-container::-webkit-scrollbar {
+        width: 8px;
+        background: transparent;
+    }
+
+    .Admin-ht-table-container::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .Admin-ht-table-container::-webkit-scrollbar-thumb {
+        background: #4ea24e;
+        border-radius: 8px;
+    }
+
+    .Admin-ht-table-container::-webkit-scrollbar-thumb:hover {
+        background: #3d8a3d;
+    }
+
+    .Admin-ht-table-container::-webkit-scrollbar:horizontal {
+        height: 8px;
+    }
+
+    .Admin-ht-table-container::-webkit-scrollbar-track:horizontal {
+        background: transparent;
+    }
+
+    .Admin-ht-table-container::-webkit-scrollbar-thumb:horizontal {
+        background: #afadad;
+        border-radius: 8px;
+    }
+}
+
+/* Loading Spinner Styles */
+.Admin-ht-loading-cell {
+  text-align: center;
+  height: 200px;
+  vertical-align: middle;
+  width: 100%;
+}
+
+.Admin-ht-loading-row {
+    height: 100%;
+}
+
+.Admin-ht-loading-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  text-align: center;
+  width: 100%;
+}
+
+.Admin-ht-spinner {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 4px solid rgba(78, 162, 78, 0.25);
+  border-top-color: #4EA24E;
+  animation: adminHistoryTrainingSpin 0.7s linear infinite;
+  margin: 0 auto;
+}
+
+@keyframes adminHistoryTrainingSpin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.Admin-ht-loading-text {
+    color: #1f2937;
+    font-weight: 600;
+    font-size: 0.95rem;
+}

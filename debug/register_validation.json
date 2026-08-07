@@ -1,0 +1,16 @@
+[
+  {
+    "page_index": 1,
+    "raw_register": "73152311001",
+    "confidence": 0.85,
+    "is_valid": true,
+    "reason": "Successfully detected valid register number"
+  },
+  {
+    "page_index": 2,
+    "raw_register": "",
+    "confidence": 0.0,
+    "is_valid": false,
+    "reason": "No valid register number candidate matched on this page"
+  }
+]

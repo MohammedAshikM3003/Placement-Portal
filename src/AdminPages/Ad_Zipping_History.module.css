@@ -1,0 +1,569 @@
+/* --- Base Layout --- */
+.Ad-zh-layout {
+    display: flex;
+    min-height: 100vh;
+    background-color: #f6f8fb;
+}
+
+.Ad-zh-main-content {
+    flex-grow: 1;
+    padding: 10px 10px 10px 20px;
+    margin: 65px 2px 0px 286px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    overflow-x: hidden;
+}
+
+/* Mobile sidebar overlay */
+.Ad-zh-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0);
+    z-index: 900;
+}
+
+/* Tab Navigation - Style like Academic Background 12th/Diploma/Both */
+.Ad-zh-tab-container {
+    display: inline-flex;
+    gap: 0.5rem;
+    align-items: center;
+    padding: 0.5rem;
+    background-color: #f9fff9;
+    border-radius: 8px;
+    border: 1px solid #dde6f4;
+}
+
+.Ad-zh-tab-btn {
+    flex: 1;
+    text-align: center;
+    padding: 8px 24px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    color: #666;
+    background-color: transparent;
+    font-weight: 500;
+    font-size: 0.95rem;
+}
+
+.Ad-zh-tab-btn:hover {
+    color: #4EA24E;
+}
+
+.Ad-zh-tab-active {
+    background-color: #4EA24E;
+    color: white;
+    font-weight: 700;
+    box-shadow: 0 2px 8px rgba(78, 162, 78, 0.3);
+}
+
+.Ad-zh-tab-active:hover {
+    background-color: #4EA24E;
+    color: white;
+}
+
+.Ad-zh-action-filter-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.Ad-zh-action-filter-label {
+    background-color: #4EA24E;
+    color: #ffffff;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.Ad-zh-action-filter-select {
+    min-width: 220px;
+    padding: 10px 16px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    background-color: #ffffff;
+    color: #333;
+    cursor: pointer;
+    transition: border-color 0.2s;
+}
+
+.Ad-zh-action-filter-select:focus {
+    outline: none;
+    border-color: #4EA24E;
+}
+
+/* Filter Row */
+.Ad-zh-filter-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.Ad-zh-filter-section {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.Ad-zh-filter-label {
+    background-color: #4EA24E;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.Ad-zh-input {
+    padding: 10px 15px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    background-color: #fff;
+    min-width: 150px;
+    transition: border-color 0.2s;
+}
+
+.Ad-zh-input:focus {
+    outline: none;
+    border-color: #4EA24E;
+}
+
+.Ad-zh-input::placeholder {
+    color: #999;
+}
+
+.Ad-zh-filter-btn {
+    padding: 10px 25px;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    background-color: #4EA24E;
+    color: white;
+    transition: background-color 0.2s;
+}
+
+.Ad-zh-filter-btn:hover {
+    background-color: #3d8a3d;
+}
+
+.Ad-zh-discard-btn {
+    padding: 10px 25px;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    background-color: #E55353;
+    color: white;
+    transition: background-color 0.2s;
+}
+
+.Ad-zh-discard-btn:hover {
+    background-color: #d43f3f;
+}
+
+.Ad-zh-back-btn {
+    padding: 10px 35px;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    background-color: #E55353;
+    color: white;
+    transition: background-color 0.2s;
+}
+
+.Ad-zh-back-btn:hover {
+    background-color: #d43f3f;
+}
+
+/* Table Card */
+.Ad-zh-table-card {
+    background-color: #ffffff;
+    border-radius: 15px;
+    padding: 20px 25px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.Ad-zh-table-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eee;
+}
+
+.Ad-zh-table-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #333;
+    margin: 0;
+}
+
+/* Print Button */
+.Ad-zh-print-button-container {
+    position: relative;
+    display: inline-block;
+    z-index: 15;
+}
+
+.Ad-zh-print-btn {
+    background-color: #4EA24E;
+    color: white;
+    border: none;
+    padding: 8px 30px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.Ad-zh-print-btn:hover {
+    background-color: #3d8a3d;
+}
+
+.Ad-zh-print-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Export Menu */
+.Ad-zh-export-menu {
+    position: absolute;
+    top: 40px;
+    right: 0;
+    z-index: 2000;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    min-width: 180px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.Ad-zh-export-menu button {
+    padding: 10px 15px;
+    border: none;
+    background: none;
+    text-align: left;
+    cursor: pointer;
+    font-size: 0.95rem;
+    color: #333;
+    transition: background-color 0.2s;
+}
+
+.Ad-zh-export-menu button:hover {
+    background-color: #f0f0f0;
+}
+
+/* Table Container */
+.Ad-zh-table-container {
+    height: 300px;
+    overflow-y: scroll;
+    overflow-x: auto;
+    border: none;
+    border-radius: 0;
+}
+
+/* Green Scrollbars */
+.Ad-zh-table-container::-webkit-scrollbar {
+    width: 8px;
+    background: transparent;
+}
+
+.Ad-zh-table-container::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.Ad-zh-table-container::-webkit-scrollbar-thumb {
+    background: #4ea24e;
+    border-radius: 8px;
+}
+
+.Ad-zh-table-container::-webkit-scrollbar-thumb:hover {
+    background: #3d8a3d;
+}
+
+.Ad-zh-table-container::-webkit-scrollbar:horizontal {
+    height: 6px;
+}
+
+.Ad-zh-table-container::-webkit-scrollbar-track:horizontal {
+    background: transparent;
+}
+
+.Ad-zh-table-container::-webkit-scrollbar-thumb:horizontal {
+    background: #afadad;
+    border-radius: 8px;
+}
+
+/* Table Styles */
+.Ad-zh-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+
+.Ad-zh-table-head-row {
+    position: sticky;
+    top: 0;
+    background-color: #ffffff;
+    border-bottom: none;
+    z-index: 11;
+}
+
+.Ad-zh-th {
+    padding: 12px 15px;
+    text-align: center;
+    font-weight: 600;
+    color: #666;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    background-color: #ffffff;
+    border-bottom: none;
+}
+
+.Ad-zh-table-row {
+    transition: background-color 0.1s;
+    border-bottom: 1px solid #eee;
+    height: 47px;
+}
+
+.Ad-zh-table-row:hover {
+    background-color: #f6f6f6;
+}
+
+.Ad-zh-td {
+    padding: 12px 15px;
+    text-align: center;
+    color: #2e2e2e;
+    font-weight: 450;
+}
+
+.Ad-zh-td-batch {
+    text-align: center;
+    font-weight: 500;
+    color: #4A90E2;
+}
+
+/* Action Tags */
+.Ad-zh-action-tag {
+    display: inline-block;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.Ad-zh-action-zipped {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.Ad-zh-action-unzipped {
+    background-color: #cce5ff;
+    color: #004085;
+}
+
+.Ad-zh-action-deleted {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+/* No Data */
+.Ad-zh-no-data {
+    text-align: center;
+    padding: 40px;
+    color: #888;
+    font-size: 1rem;
+}
+
+/* Loading Cell */
+.Ad-zh-loading-cell {
+    text-align: center;
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    position:relative;
+    left:400px;
+    top:50px;
+}
+
+.Ad-zh-spinner {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    border: 4px solid rgba(78, 162, 78, 0.25);
+    border-top-color: #4EA24E;
+    animation: adZhSpin 0.7s linear infinite;
+}
+
+@keyframes adZhSpin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ============================================ */
+/* RESPONSIVE STYLES */
+/* ============================================ */
+
+/* Tablet View */
+@media screen and (max-width: 1024px) {
+    .Ad-zh-main-content {
+        margin: 65px 0px 0 2px;
+        padding: 10px 10px 10px 20px;
+    }
+}
+
+/* Mobile View */
+@media screen and (max-width: 768px) {
+    .Ad-zh-main-content {
+        margin: 70px 0px 0 2px;
+        padding: 10px 10px 10px 20px;
+        padding-bottom: 30px;
+        gap: 10px;
+        width: calc(100% - 30px);
+        max-height: calc(100vh - 70px);
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+
+    .Ad-zh-main-content::-webkit-scrollbar {
+        width: 10px;
+    }
+
+    .Ad-zh-main-content::-webkit-scrollbar-track {
+        background: #f0f2f5;
+    }
+
+    .Ad-zh-main-content::-webkit-scrollbar-thumb {
+        background-color: #4EA24E;
+        border-radius: 20px;
+        border: 3px solid #f0f2f5;
+    }
+
+    .Ad-zh-tab-container {
+        width: 100%;
+        padding: 0.4rem;
+        gap: 0.3rem;
+    }
+
+    .Ad-zh-tab-btn {
+        flex: 1;
+        padding: 8px 10px;
+        font-size: 0.85rem;
+        text-align: center;
+    }
+
+    .Ad-zh-action-filter-wrapper {
+        width: 100%;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .Ad-zh-action-filter-label {
+        text-align: center;
+    }
+
+    .Ad-zh-action-filter-select {
+        width: 100%;
+        min-width: auto;
+    }
+
+    .Ad-zh-table-header {
+        align-items: flex-start;
+        gap: 15px;
+    }
+
+    .Ad-zh-th,
+    .Ad-zh-td {
+        padding: 10px 8px;
+        font-size: 0.8rem;
+    }
+
+    .Ad-zh-action-tag {
+        padding: 4px 10px;
+        font-size: 0.7rem;
+    }
+}
+
+/* Mobile Portrait View */
+@media screen and (max-width: 480px) {
+    .Ad-zh-main-content {
+        margin: 55px 0px 0 2px;
+        padding: 10px 10px 10px 20px;
+        width: calc(100% - 24px);
+    }
+
+    .Ad-zh-tab-btn {
+        padding: 8px 8px;
+        font-size: 0.75rem;
+    }
+
+    .Ad-zh-action-filter-label {
+        font-size: 0.85rem;
+        padding: 8px 15px;
+    }
+
+    .Ad-zh-action-filter-select {
+        padding: 8px 12px;
+        font-size: 0.9rem;
+    }
+
+    .Ad-zh-table-card {
+        padding: 15px;
+    }
+
+    .Ad-zh-table-title {
+        font-size: 1rem;
+    }
+
+    .Ad-zh-print-btn {
+        padding: 8px 25px;
+        font-size: 0.9rem;
+    }
+}
+
+/* Custom Dropdown Overrides for Zipping History */
+.zh-dropdown-wrapper {
+    width: 220px !important;
+}
+
+.zh-dropdown-header {
+    height: 44px !important;
+    border: 2px solid #ddd !important;
+    border-radius: 8px !important;
+    background-color: #ffffff !important;
+    font-size: 0.95rem !important;
+    color: #333 !important;
+}
+
+.zh-dropdown-header:hover {
+    border-color: #4EA24E !important;
+}

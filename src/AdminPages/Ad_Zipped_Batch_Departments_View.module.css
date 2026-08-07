@@ -1,0 +1,741 @@
+/* --- Base Layout --- */
+.Ad-zbdv-layout {
+    display: flex;
+    min-height: 100vh;
+    background-color: #f6f8fb;
+}
+
+.Ad-zbdv-main-content {
+    flex-grow: 1;
+    padding: 10px 10px 10px 20px;
+    margin: 65px 2px 0px 286px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    overflow-x: hidden;
+}
+
+/* Mobile sidebar overlay */
+.Ad-zbdv-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0);
+    z-index: 900;
+}
+
+/* Stats Cards */
+.Ad-zbdv-stats-container {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr 1fr;
+    gap: 25px;
+    flex-shrink: 0;
+    margin-bottom: 20px;
+}
+
+.Ad-zbdv-card {
+    border-radius: 15px;
+    padding: 25px 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+}
+
+.Ad-zbdv-card-info {
+    background: #ffffff;
+    border: 2px dashed #4A90E2;
+}
+
+.Ad-zbdv-card-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #333;
+    margin: 0 0 12px 0;
+}
+
+.Ad-zbdv-card-details {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    color: #555;
+    font-size: 0.95rem;
+}
+
+.Ad-zbdv-card-details p {
+    margin: 0;
+}
+
+.Ad-zbdv-download-btn {
+    margin-top: 14px;
+    background: #4EA24E;
+    color: #fff;
+    border: none;
+    padding: 10px 28px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.Ad-zbdv-download-btn:hover {
+    background: #3d8a3d;
+}
+
+.Ad-zbdv-card-green {
+    background: #4EA24E;
+    color: #fff;
+}
+
+.Ad-zbdv-card-blue {
+    background: #4A90E2;
+    color: #fff;
+}
+
+.Ad-zbdv-card-label {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+.Ad-zbdv-card-number {
+    margin-top: 10px;
+    font-size: 2.8rem;
+    font-weight: 800;
+    line-height: 1;
+}
+
+/* Table Card */
+.Ad-zbdv-table-card {
+    background-color: #ffffff;
+    border-radius: 15px;
+    padding: 20px 25px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.Ad-zbdv-table-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eee;
+}
+
+.Ad-zbdv-table-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #333;
+    margin: 0;
+}
+
+/* Print Button */
+.Ad-zbdv-print-button-container {
+    position: relative;
+    display: inline-block;
+    z-index: 15;
+}
+
+.Ad-zbdv-print-btn {
+    background-color: #4EA24E;
+    color: white;
+    border: none;
+    padding: 8px 30px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.Ad-zbdv-print-btn:hover {
+    background-color: #3d8a3d;
+}
+
+.Ad-zbdv-print-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Export Menu */
+.Ad-zbdv-export-menu {
+    position: absolute;
+    top: 40px;
+    right: 0;
+    z-index: 2000;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    min-width: 180px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.Ad-zbdv-export-menu button {
+    padding: 10px 15px;
+    border: none;
+    background: none;
+    text-align: left;
+    cursor: pointer;
+    font-size: 0.95rem;
+    color: #333;
+    transition: background-color 0.2s;
+}
+
+.Ad-zbdv-export-menu button:hover {
+    background-color: #f0f0f0;
+}
+
+/* Table Container */
+.Ad-zbdv-table-container {
+    height: 300px;
+    overflow-y: scroll;
+    overflow-x: auto;
+    border: none;
+    border-radius: 0;
+    margin-bottom: 20px;
+}
+
+/* Green Scrollbars */
+.Ad-zbdv-table-container::-webkit-scrollbar {
+    width: 8px;
+    background: transparent;
+}
+
+.Ad-zbdv-table-container::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.Ad-zbdv-table-container::-webkit-scrollbar-thumb {
+    background: #4ea24e;
+    border-radius: 8px;
+}
+
+.Ad-zbdv-table-container::-webkit-scrollbar-thumb:hover {
+    background: #3d8a3d;
+}
+
+.Ad-zbdv-table-container::-webkit-scrollbar:horizontal {
+    height: 6px;
+}
+
+.Ad-zbdv-table-container::-webkit-scrollbar-track:horizontal {
+    background: transparent;
+}
+
+.Ad-zbdv-table-container::-webkit-scrollbar-thumb:horizontal {
+    background: #afadad;
+    border-radius: 8px;
+}
+
+/* Table Styles */
+.Ad-zbdv-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+}
+
+.Ad-zbdv-table-head-row {
+    position: sticky;
+    top: 0;
+    background-color: #ffffff;
+    border-bottom: none;
+    z-index: 11;
+}
+
+.Ad-zbdv-th {
+    padding: 14px 15px;
+    text-align: center;
+    font-weight: 600;
+    color: #666;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    background-color: #ffffff;
+    border-bottom: none;
+}
+
+.Ad-zbdv-table-row {
+    transition: background-color 0.1s;
+    border-bottom: 1px solid #eee;
+    height: 47px;
+}
+
+.Ad-zbdv-table-row:hover {
+    background-color: #f6f6f6;
+}
+
+.Ad-zbdv-td {
+    padding: 14px 15px;
+    text-align: center;
+    color: #2e2e2e;
+    font-weight: 500;
+}
+
+.Ad-zbdv-td-name {
+    text-align: center;
+    font-weight: 600;
+}
+
+/* View Button */
+.Ad-zbdv-view-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    transition: transform 0.2s;
+}
+
+.Ad-zbdv-view-btn:hover {
+    transform: scale(1.1);
+}
+
+/* No Data */
+.Ad-zbdv-no-data {
+    text-align: center;
+    padding: 40px;
+    color: #888;
+    font-size: 1rem;
+}
+
+/* Loading Cell */
+.Ad-zbdv-loading-cell {
+    text-align: center;
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    position:relative;
+    left:400px;
+    top:50px;
+}
+
+.Ad-zbdv-spinner {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    border: 4px solid rgba(78, 162, 78, 0.25);
+    border-top-color: #4EA24E;
+    animation: adZbdvSpin 0.7s linear infinite;
+}
+
+@keyframes adZbdvSpin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Action Buttons */
+.Ad-zbdv-action-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+}
+
+.Ad-zbdv-discard-btn {
+    padding: 12px 35px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    background-color: #6c757d;
+    color: white;
+    transition: background-color 0.2s;
+}
+
+.Ad-zbdv-discard-btn:hover {
+    background-color: #5a6268;
+}
+
+.Ad-zbdv-unzip-btn {
+    padding: 12px 35px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    background-color: #4EA24E;
+    color: white;
+    transition: background-color 0.2s;
+}
+
+.Ad-zbdv-unzip-btn:hover {
+    background-color: #3d8a3d;
+}
+
+/* Popup Styles */
+.Ad-zbdv-popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.2);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    padding: 16px;
+}
+
+.Ad-zbdv-popup-container {
+    background-color: #fff;
+    border-radius: 12px;
+    width: 400px;
+    max-width: 90vw;
+    text-align: center;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+    font-family: 'Poppins', sans-serif;
+    animation: adZbdvPopupEnter 0.3s ease-out forwards;
+}
+
+@keyframes adZbdvPopupEnter {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.Ad-zbdv-popup-header {
+    background-color: #4EA24E;
+    color: white;
+    padding: 1.2rem;
+    font-size: 1.4rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+}
+
+.Ad-zbdv-popup-body {
+    padding: 2rem;
+}
+
+.Ad-zbdv-warning-icon,
+.Ad-zbdv-info-icon {
+    margin-bottom: 10px;
+}
+
+.Ad-zbdv-warning-icon svg {
+    width: 80px;
+    height: 80px;
+    display: block;
+    margin: 0 auto;
+    animation: adZbdvPopupIconPop 0.32s ease-out;
+}
+
+.Ad-zbdv-warning-icon-animated {
+    width: 80px;
+    height: 80px;
+    display: block;
+    margin: 0 auto;
+    border-radius: 50%;
+    stroke-width: 2;
+    stroke-miterlimit: 10;
+    box-shadow: inset 0 0 0 #FFA500;
+    animation: adZbdvWarningFill 0.4s ease-in-out 0.4s forwards, adZbdvPopupIconPop 0.3s ease-in-out 0.9s both;
+}
+
+.Ad-zbdv-warning-icon-animated-circle {
+    stroke-dasharray: 166;
+    stroke-dashoffset: 166;
+    stroke-width: 2;
+    stroke-miterlimit: 10;
+    stroke: #FFA500;
+    fill: none;
+    animation: adZbdvWarningStroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}
+
+.Ad-zbdv-warning-icon-animated-exclamation {
+    stroke: #fff;
+    stroke-dasharray: 48;
+    stroke-dashoffset: 48;
+    animation: adZbdvWarningStroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+}
+
+@keyframes adZbdvPopupIconPop {
+    0% {
+        opacity: 0;
+        transform: scale(0.75);
+    }
+    70% {
+        opacity: 1;
+        transform: scale(1.07);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes adZbdvWarningStroke {
+    100% {
+        stroke-dashoffset: 0;
+    }
+}
+
+@keyframes adZbdvWarningFill {
+    100% {
+        box-shadow: inset 0 0 0 40px #FFA500;
+    }
+}
+
+.Ad-zbdv-popup-footer {
+    padding: 1.5rem;
+    background-color: #f7f7f7;
+    display: flex;
+    gap: 32px;
+    justify-content: center;
+}
+
+.Ad-zbdv-popup-cancel-btn,
+.Ad-zbdv-popup-confirm-btn {
+    border: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s, box-shadow 0.2s;
+}
+
+.Ad-zbdv-popup-cancel-btn {
+    background: #d2d2d2;
+    color: #333;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.Ad-zbdv-popup-cancel-btn:hover {
+    background: #bbb;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.Ad-zbdv-popup-confirm-btn {
+    background: #4EA24E;
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(78, 162, 78, 0.22);
+}
+
+.Ad-zbdv-popup-confirm-btn:hover {
+    background: #3d8a3d;
+    box-shadow: 0 4px 12px rgba(61, 138, 61, 0.3);
+}
+
+.Ad-zbdv-popup-cancel-btn:disabled,
+.Ad-zbdv-popup-confirm-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+/* ============================================ */
+/* RESPONSIVE STYLES */
+/* ============================================ */
+
+/* Desktop main-content scrollbar only */
+@media screen and (min-width: 769px) {
+    .Ad-zbdv-main-content {
+        max-height: calc(100vh - 65px);
+        overflow-y: auto;
+       
+    }
+
+    .Ad-zbdv-main-content::-webkit-scrollbar {
+        width: 10px;
+    }
+
+    .Ad-zbdv-main-content::-webkit-scrollbar-track {
+        background: #f0f2f5;
+    }
+
+    .Ad-zbdv-main-content::-webkit-scrollbar-thumb {
+        background-color: #4EA24E;
+        border-radius: 20px;
+        border: 3px solid #f0f2f5;
+    }
+
+    .Ad-zbdv-main-content::-webkit-scrollbar-thumb:hover {
+        background-color: #3d8a3d;
+    }
+}
+
+/* Tablet View */
+@media screen and (max-width: 1024px) {
+    .Ad-zbdv-main-content {
+        margin: 65px 0px 0 2px;
+        padding: 10px 10px 10px 20px;
+    }
+
+    .Ad-zbdv-stats-container {
+        grid-template-columns: 1fr;
+        height: auto;
+        gap: 15px;
+    }
+
+    .Ad-zbdv-card {
+        height: auto;
+        min-height: 120px;
+        padding: 20px;
+    }
+
+    .Ad-zbdv-card-info {
+        justify-content: space-between;
+        text-align: left;
+    }
+
+    .Ad-zbdv-card-number {
+        font-size: 2.4rem;
+    }
+
+    .Ad-zbdv-download-btn {
+        padding: 10px 24px;
+    }
+}
+
+/* Mobile View */
+@media screen and (max-width: 768px) {
+    .Ad-zbdv-main-content {
+        margin: 70px 0px 0 2px;
+        padding: 10px 10px 10px 20px;
+        padding-bottom: 30px;
+        gap: 10px;
+        width: calc(100% - 30px);
+        max-height: calc(100vh - 70px);
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+
+    .Ad-zbdv-main-content::-webkit-scrollbar {
+        width: 10px;
+    }
+
+    .Ad-zbdv-main-content::-webkit-scrollbar-track {
+        background: #f0f2f5;
+    }
+
+    .Ad-zbdv-main-content::-webkit-scrollbar-thumb {
+        background-color: #4EA24E;
+        border-radius: 20px;
+        border: 3px solid #f0f2f5;
+    }
+
+    .Ad-zbdv-stats-container {
+        grid-template-columns: 1fr;
+        height: auto;
+        gap: 10px;
+        margin-bottom: 15px;
+    }
+
+    .Ad-zbdv-card {
+        height: 100px;
+        padding: 15px;
+        flex-direction: row;
+        justify-content: space-around;
+    }
+
+    .Ad-zbdv-card-info {
+        flex-direction: column;
+        height: auto;
+        padding: 15px;
+    }
+
+    .Ad-zbdv-card-title {
+        font-size: 0.95rem;
+    }
+
+    .Ad-zbdv-card-label {
+        font-size: 1.2rem;
+    }
+
+    .Ad-zbdv-card-number {
+        font-size: 2.2rem;
+        margin-top: 0;
+    }
+
+    .Ad-zbdv-download-btn {
+        padding: 8px 20px;
+        font-size: 0.9rem;
+        margin-top: 10px;
+    }
+
+    .Ad-zbdv-table-header {
+        align-items: flex-start;
+        gap: 15px;
+    }
+
+    .Ad-zbdv-th,
+    .Ad-zbdv-td {
+        padding: 10px 8px;
+        font-size: 0.8rem;
+    }
+
+    .Ad-zbdv-action-buttons {
+        gap: 10px;
+    }
+
+    .Ad-zbdv-discard-btn,
+    .Ad-zbdv-unzip-btn {
+        width: 100%;
+        padding: 12px 20px;
+    }
+}
+
+/* Mobile Portrait View */
+@media screen and (max-width: 480px) {
+    .Ad-zbdv-main-content {
+        margin: 55px 0px 0 2px;
+        padding: 10px 10px 10px 20px;
+        width: calc(100% - 24px);
+    }
+
+    .Ad-zbdv-card {
+        min-height: auto;
+        padding: 12px;
+    }
+
+    .Ad-zbdv-card-title {
+        font-size: 0.9rem;
+    }
+
+    .Ad-zbdv-card-details p {
+        font-size: 0.85rem;
+    }
+
+    .Ad-zbdv-card-label {
+        font-size: 1rem;
+    }
+
+    .Ad-zbdv-card-number {
+        font-size: 2rem;
+    }
+
+    .Ad-zbdv-table-card {
+        padding: 15px;
+    }
+
+    .Ad-zbdv-table-title {
+        font-size: 1rem;
+    }
+
+    .Ad-zbdv-print-btn {
+        padding: 8px 25px;
+        font-size: 0.9rem;
+    }
+
+    .Ad-zbdv-popup-container {
+        width: 95%;
+    }
+}

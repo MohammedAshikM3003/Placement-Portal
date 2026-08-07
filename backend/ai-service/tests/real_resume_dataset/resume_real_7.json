@@ -1,0 +1,83 @@
+{
+  "personalInfo": {
+    "name": "Rohan Iyer",
+    "mobile": "6072152026",
+    "email": "rohan.iyer7@anonymized.in",
+    "linkedin": "linkedin.com/in/rohaniyer",
+    "github": "github.com/rohaniyer",
+    "portfolio": ""
+  },
+  "summary": "Backend developer student. i build databases and apis. seeking developer job.",
+  "education": {
+    "college": "SSN College of Engineering",
+    "degree": "B.Tech",
+    "branch": "Information Technology",
+    "cgpa": "8.99",
+    "graduationYear": "2026"
+  },
+  "skills": [
+    {
+      "category": "Technical Skills",
+      "items": [
+        "Node.js",
+        "Express.js",
+        "MongoDB",
+        "SQL",
+        "Python",
+        "REST APIs"
+      ]
+    }
+  ],
+  "experiences": [
+    {
+      "title": "Backend Intern",
+      "companyName": "Freshworks",
+      "location": "Chennai, India",
+      "mode": "in-person",
+      "fromDate": "2024-05-01",
+      "toDate": "2024-07-01",
+      "description": "worked in Zoho. made rest apis and resolved database bottlenecks.",
+      "technologies": [
+        "Node.js",
+        "Express.js"
+      ]
+    }
+  ],
+  "projects": [
+    {
+      "name": "Task Manager API",
+      "description": "built backend task api with token authentication. did write database schemas.",
+      "technologies": [
+        "Node.js",
+        "Express.js",
+        "MongoDB"
+      ]
+    }
+  ],
+  "certifications": [
+    {
+      "certificateName": "AWS Academy Cloud Foundations",
+      "description": "Professional IT Certification"
+    }
+  ],
+  "achievements": [
+    {
+      "details": "won college level coding compition."
+    }
+  ],
+  "platforms": [
+    {
+      "name": "Leetcode",
+      "url": "leetcode.com/rohan"
+    }
+  ],
+  "additionalInfo": [],
+  "resumeSettings": {
+    "jobRole": "Backend Developer",
+    "customJobRole": "",
+    "fontStyle": "Arial",
+    "pages": "1",
+    "enableAI": true,
+    "linkType": "HyperLink"
+  }
+}

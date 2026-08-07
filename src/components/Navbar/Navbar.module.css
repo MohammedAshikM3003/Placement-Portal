@@ -1,0 +1,99 @@
+/* 1. Import Font from Landing Navbar */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
+
+.navbar {
+  display: flex;
+  align-items: center;
+  background: #2085f6; /* Original color preserved */
+  color: #fff;
+  padding: 15px 5%; /* Updated to match LandingNavbar padding */
+  justify-content: space-between;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1001;
+  height: 65px;
+  box-sizing: border-box;
+  /* 2. Apply Font from LandingNavbar */
+  font-family: 'Poppins', sans-serif;
+}
+
+.navbar-left {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  position: relative;
+  left: -45px;
+  margin-top: 4px;
+}
+
+.portal-logo {
+  height: 30px;
+  width: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.portal-logo img {
+  height: 30px;
+  width: 40px;
+  filter: brightness(0) invert(1);
+}
+
+.portal-name {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: white;
+  margin-top: 4px;
+}
+
+.menu {
+  display: flex;
+  gap: 35px;
+}
+
+.hamburger-menu {
+  display: none;
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: 0;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 1003;
+}
+
+.hamburger-menu svg {
+  width: 28px;
+  height: 28px;
+}
+
+@media (max-width: 1200px) {
+  .menu {
+    display: none;
+  }
+  .hamburger-menu {
+    display: flex;
+  }
+  .navbar {
+    padding: 15px 20px;
+  }
+  .navbar-left {
+    position: static;
+    left: 0;
+    margin-top: 0;
+    margin-left: 5px;
+  }
+  .portal-logo {
+    margin-top: 4px;
+  }
+  .portal-name {
+    font-size: 1.2rem;
+    margin-top: 8px;
+  }
+}

@@ -1,0 +1,842 @@
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
+import useAdminAuth from '../utils/useAdminAuth';
+
+import Adnavbar from '../components/Navbar/Adnavbar.js';
+import Adsidebar from '../components/Sidebar/Adsidebar.js';
+import AdCalendar from '../components/Calendar/Ad_Calendar.jsx';
+import styles from './AdminCompanyprofile.module.css';
+import Dropdown from '../components/common/Dropdown/Dropdown';
+
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { ExportProgressAlert, ExportSuccessAlert, ExportFailedAlert } from '../components/alerts';
+import AdminAddcompany from '../assets/AdminAddCompanyicon.svg';
+import Adminicon from '../assets/Adminicon.png';
+
+import mongoDBService from '../services/mongoDBService';
+
+const EyeIcon = () => (
+    <svg className={styles['Admin-cp-profile-eye-icon']} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+        <circle cx="12" cy="12" r="3"></circle>
+    </svg>
+);
+
+// --- Delete Confirmation Popup Component ---
+const DeleteConfirmationPopup = ({ onClose, onConfirm, selectedCount, isDeleting }) => (
+    <div className={styles['Admin-cp-popup-overlay']}>
+        <div className={styles['Admin-cp-popup-container']}>
+            <div className={styles['Admin-cp-popup-header']}>Delete Company</div>
+            <div className={styles['Admin-cp-popup-body']}>
+                <div className={styles['Admin-cp-warning-icon']}>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                        <circle className={styles['Admin-cp-warning-icon--circle']} cx="26" cy="26" r="25" fill="none" />
+                        <path className={styles['Admin-cp-warning-icon--exclamation']} d="M26 16v12M26 34v2" stroke="#ffffff" strokeWidth="3" fill="none" />
+                    </svg>
+                </div>
+                <h2 style={{ margin: '1rem 0 0.5rem 0', fontSize: 24, color: '#333', fontWeight: 600 }}>Are you sure?</h2>
+                <p style={{ margin: 0, color: '#888', fontSize: 16 }}>
+                    Delete {selectedCount} selected compan{selectedCount > 1 ? 'ies' : 'y'}?
+                </p>
+            </div>
+            <div className={styles['Admin-cp-popup-footer']}>
+                <button
+                    onClick={onClose}
+                    className={styles['Admin-cp-popup-cancel-btn']}
+                    disabled={isDeleting}
+                >
+                    Discard
+                </button>
+                <button
+                    onClick={onConfirm}
+                    className={styles['Admin-cp-popup-delete-btn']}
+                    disabled={isDeleting}
+                >
+                    {isDeleting ? 'Deleting...' : 'Delete'}
+                </button>
+            </div>
+        </div>
+    </div>
+);
+
+// --- Delete Success Popup Component ---
+const DeleteSuccessPopup = ({ onClose }) => (
+    <div className={styles['Admin-cp-popup-overlay']}>
+        <div className={styles['Admin-cp-popup-container']}>
+            <div className={styles['Admin-cp-popup-header']}>Deleted !</div>
+            <div className={styles['Admin-cp-popup-body']}>
+                <div className={styles['Admin-cp-icon-wrapper']}>
+                    <svg width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        <line x1="10" y1="11" x2="10" y2="17"></line>
+                        <line x1="14" y1="11" x2="14" y2="17"></line>
+                    </svg>
+                </div>
+                <h2 style={{ margin: '1rem 0 0.5rem 0', fontSize: 24, color: '#000', fontWeight: 700 }}>Company Deleted ✓</h2>
+                <p style={{ margin: 0, color: '#888', fontSize: 16 }}>The selected companies have been deleted successfully!</p>
+            </div>
+            <div className={styles['Admin-cp-popup-footer']}>
+                <button onClick={onClose} className={styles['Admin-cp-popup-close-btn']}>Close</button>
+            </div>
+        </div>
+    </div>
+);
+
+const formatDisplayDate = (value) => {
+    if (!value) return '—';
+    const [year, month, day] = String(value).split('T')[0].split('-');
+    if (!year || !month || !day) return String(value);
+    return `${day}-${month}-${year}`;
+};
+
+const WARNING_MESSAGE = 'Please select company record(s) before deleting.';
+const EDIT_WARNING_MESSAGE = 'Select exactly one company record before editing.';
+
+const EXPORT_HEADERS = [
+    'Company Name',
+    'Company Type',
+    'Job Role',
+    'Mode',
+    'HR Name',
+    'Visit Date',
+    'Location'
+];
+
+function Admincompanyprofile({ onLogout }) {
+    useAdminAuth(); // JWT authentication verification
+    const navigate = useNavigate();
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+    const [companies, setCompanies] = useState([]);
+    const [selectedCompanyIds, setSelectedCompanyIds] = useState(new Set());
+    const [showDeleteWarning, setShowDeleteWarning] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
+    const companiesPerPage = 6;
+    const [showDeleteSuccess, setShowDeleteSuccess] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+    const [isInitialLoading, setIsInitialLoading] = useState(true);
+    const [errorMessage, setErrorMessage] = useState('');
+    const [showExportMenu, setShowExportMenu] = useState(false);
+    const [exportPopupState, setExportPopupState] = useState('none');
+    const [exportProgress, setExportProgress] = useState(0);
+    const [exportType, setExportType] = useState('Excel');
+    const [filters, setFilters] = useState({
+        company: '',
+        companyType: '',
+        hrName: '',
+        mode: '',
+        visitDate: '',
+        location: ''
+    });
+
+    const [companyFocused, setCompanyFocused] = useState(false);
+    const [hrNameFocused, setHrNameFocused] = useState(false);
+    const [modeFocused, setModeFocused] = useState(false);
+    const [visitDateFocused, setVisitDateFocused] = useState(false);
+    const [locationFocused, setLocationFocused] = useState(false);
+
+    const toggleSidebar = () => {
+        setIsSidebarOpen((prev) => !prev);
+    };
+
+    useEffect(() => {
+        const handleCloseSidebar = () => {
+            setIsSidebarOpen(false);
+        };
+        window.addEventListener('closeSidebar', handleCloseSidebar);
+        return () => {
+            window.removeEventListener('closeSidebar', handleCloseSidebar);
+        };
+    }, []);
+
+    const fetchCompanies = useCallback(async () => {
+        setIsLoading(true);
+        setErrorMessage('');
+        try {
+            const data = await mongoDBService.getCompanies();
+            setCompanies(Array.isArray(data) ? data : []);
+        } catch (error) {
+            console.error('Failed to fetch companies:', error);
+            setErrorMessage(error?.message || 'Failed to load companies. Please try again.');
+        } finally {
+            setIsLoading(false);
+            setIsInitialLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchCompanies();
+    }, [fetchCompanies]);
+
+    const filteredCompanies = useMemo(() => {
+        if (!companies.length) return [];
+
+        const companyQuery = filters.company.trim().toLowerCase();
+        const hrNameQuery = filters.hrName.trim().toLowerCase();
+        const modeQuery = filters.mode;
+        const visitDateQuery = filters.visitDate;
+        const companyTypeQuery = filters.companyType;
+        const locationQuery = filters.location.trim().toLowerCase();
+
+        return companies.filter((company) => {
+            const companyName = (company.company || company.companyName || '').toLowerCase();
+            const jobRole = (company.jobRole || '').toLowerCase();
+            const hrName = (company.hrName || '').toLowerCase();
+            const mode = company.mode || '';
+            const visitDate = (company.visitDate || '').slice(0, 10);
+            const companyType = company.companyType || company.domain || '';
+            const location = (company.location || '').toLowerCase();
+
+            const matchesCompanyOrRole =
+                !companyQuery || companyName.includes(companyQuery) || jobRole.includes(companyQuery);
+            const matchesHrName = !hrNameQuery || hrName.includes(hrNameQuery);
+            const matchesMode = !modeQuery || mode === modeQuery;
+            const matchesVisitDate = !visitDateQuery || visitDate === visitDateQuery;
+            const matchesCompanyType = !companyTypeQuery || companyType === companyTypeQuery;
+            const matchesLocation = !locationQuery || location.includes(locationQuery);
+
+            return matchesCompanyOrRole && matchesHrName && matchesMode && matchesVisitDate && matchesCompanyType && matchesLocation;
+        });
+    }, [companies, filters]);
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [filters]);
+
+    const totalPages = Math.ceil(filteredCompanies.length / companiesPerPage) || 1;
+
+    const paginatedCompanies = useMemo(() => {
+        const startIndex = (currentPage - 1) * companiesPerPage;
+        return filteredCompanies.slice(startIndex, startIndex + companiesPerPage);
+    }, [filteredCompanies, currentPage]);
+
+    const handlePrevPage = () => {
+        if (currentPage > 1) {
+            setCurrentPage((prev) => prev - 1);
+            setSelectedCompanyIds(new Set());
+        }
+    };
+
+    const handleNextPage = () => {
+        if (currentPage < totalPages) {
+            setCurrentPage((prev) => prev + 1);
+            setSelectedCompanyIds(new Set());
+        }
+    };
+
+    const matchedCompanyVisitDate = useMemo(() => {
+        const companyQuery = filters.company.trim().toLowerCase();
+        if (!companyQuery) return '';
+        const matchedCompany = companies.find((company) =>
+            (company.company || company.companyName || '').trim().toLowerCase() === companyQuery
+        );
+        return matchedCompany ? (matchedCompany.visitDate || '').slice(0, 10) : '';
+    }, [companies, filters.company]);
+
+    const visitDateOptions = useMemo(() => {
+        if (matchedCompanyVisitDate) return [matchedCompanyVisitDate];
+        if (!companies.length) return [];
+        const uniqueDates = new Set(
+            companies
+                .map((company) => (company.visitDate || '').slice(0, 10))
+                .filter(Boolean)
+        );
+        return Array.from(uniqueDates).sort();
+    }, [companies, matchedCompanyVisitDate]);
+
+    const toggleCompanySelection = useCallback((id) => {
+        setSelectedCompanyIds((prev) => {
+            const next = new Set(prev);
+            if (next.has(id)) {
+                next.delete(id);
+            } else {
+                next.add(id);
+            }
+            return next;
+        });
+    }, []);
+
+    const openAddPopup = useCallback(() => {
+        navigate('/admin-company-profile/manage/add');
+    }, [navigate]);
+
+    const openEditPopup = useCallback(() => {
+        if (selectedCompanyIds.size !== 1) {
+            alert(EDIT_WARNING_MESSAGE);
+            return;
+        }
+
+        const companyId = Array.from(selectedCompanyIds)[0];
+        const company = companies.find((item) => String(item.id || item._id) === String(companyId));
+
+        if (!company) {
+            alert('Selected company could not be found. Please refresh and try again.');
+            return;
+        }
+
+        const selectedCompanyId = company.id || company._id;
+        navigate(`/admin-company-profile/manage/edit/${selectedCompanyId}`, {
+            state: { company }
+        });
+    }, [companies, selectedCompanyIds, navigate]);
+
+    const openViewPopup = useCallback((companyId) => {
+        const company = companies.find((item) => String(item.id || item._id) === String(companyId));
+
+        if (!company) {
+            alert('Company could not be found. Please refresh and try again.');
+            return;
+        }
+        navigate(`/admin-company-profile/manage/view/${companyId}`, {
+            state: { company }
+        });
+    }, [companies, navigate]);
+
+    const handleDeleteClick = useCallback(() => {
+        if (!selectedCompanyIds.size) {
+            alert(WARNING_MESSAGE);
+            return;
+        }
+        setShowDeleteWarning(true);
+    }, [selectedCompanyIds.size]);
+
+    const resetDeleteState = useCallback(() => {
+        setIsDeleting(false);
+        setShowDeleteWarning(false);
+        setSelectedCompanyIds(new Set());
+    }, []);
+
+    const confirmDelete = useCallback(async () => {
+        if (!selectedCompanyIds.size || isDeleting) return;
+
+        setIsDeleting(true);
+        setErrorMessage('');
+
+        try {
+            const deletePromises = Array.from(selectedCompanyIds).map((id) =>
+                mongoDBService.apiCall(`/admin/companies/${id}`, { method: 'DELETE' })
+            );
+
+            await Promise.all(deletePromises);
+            await fetchCompanies();
+
+            setShowDeleteSuccess(true);
+            resetDeleteState();
+        } catch (error) {
+            console.error('Failed to delete companies:', error);
+            setErrorMessage(error?.message || 'Failed to delete selected companies. Please try again.');
+            setShowDeleteWarning(false);
+        } finally {
+            setIsDeleting(false);
+        }
+    }, [selectedCompanyIds, isDeleting, fetchCompanies, resetDeleteState]);
+
+    const exportToExcel = useCallback(async () => {
+        setShowExportMenu(false);
+        if (!filteredCompanies.length) {
+            alert('No records available for export.');
+            return;
+        }
+
+        setExportType('Excel');
+        setExportPopupState('progress');
+        setExportProgress(0);
+
+        // Simulate progress from 0 to 90%
+        const progressInterval = setInterval(() => {
+            setExportProgress((prevProgress) => {
+                if (prevProgress >= 90) {
+                    clearInterval(progressInterval);
+                    return 90;
+                }
+                return prevProgress + 15;
+            });
+        }, 100);
+
+        try {
+            // Small delay to ensure progress animation is visible
+            await new Promise((resolve) => setTimeout(resolve, 300));
+
+            const data = filteredCompanies.map((company) => [
+                company.company || company.companyName || '—',
+                company.companyType || company.domain || '—',
+                company.jobRole || '—',
+                company.mode || '—',
+                company.hrName || '—',
+                (company.visitDate || '').slice(0, 10) || '—',
+                company.location || '—'
+            ]);
+
+            const worksheet = XLSX.utils.aoa_to_sheet([EXPORT_HEADERS, ...data]);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'Company Profiles');
+            XLSX.writeFile(workbook, 'Company_Profile_Report.xlsx');
+
+            clearInterval(progressInterval);
+            setExportProgress(100);
+            await new Promise((resolve) => setTimeout(resolve, 300));
+            setExportPopupState('success');
+        } catch (error) {
+            clearInterval(progressInterval);
+            console.error('Export to Excel failed:', error);
+            setExportPopupState('failed');
+        }
+    }, [filteredCompanies]);
+
+    const exportToPDF = useCallback(async () => {
+        setShowExportMenu(false);
+        if (!filteredCompanies.length) {
+            alert('No records available for export.');
+            return;
+        }
+
+        setExportType('PDF');
+        setExportPopupState('progress');
+        setExportProgress(0);
+
+        // Simulate progress from 0 to 90%
+        const progressInterval = setInterval(() => {
+            setExportProgress((prevProgress) => {
+                if (prevProgress >= 90) {
+                    clearInterval(progressInterval);
+                    return 90;
+                }
+                return prevProgress + 15;
+            });
+        }, 100);
+
+        try {
+            // Small delay to ensure progress animation is visible
+            await new Promise((resolve) => setTimeout(resolve, 300));
+
+            const doc = new jsPDF({ orientation: 'landscape' });
+            const rows = filteredCompanies.map((company) => [
+                company.company || company.companyName || '—',
+                company.companyType || company.domain || '—',
+                company.jobRole || '—',
+                company.mode || '—',
+                company.hrName || '—',
+                (company.visitDate || '').slice(0, 10) || '—',
+                company.location || '—'
+            ]);
+
+            doc.text('Company Profile Report', 14, 15);
+            autoTable(doc, {
+                head: [EXPORT_HEADERS],
+                body: rows,
+                startY: 20,
+                styles: { fontSize: 8 }
+            });
+            doc.save('Company_Profile_Report.pdf');
+
+            clearInterval(progressInterval);
+            setExportProgress(100);
+            await new Promise((resolve) => setTimeout(resolve, 300));
+            setExportPopupState('success');
+        } catch (error) {
+            clearInterval(progressInterval);
+            console.error('Export to PDF failed:', error);
+            setExportPopupState('failed');
+        }
+    }, [filteredCompanies]);
+
+    const closeDeleteSuccess = useCallback(() => setShowDeleteSuccess(false), []);
+    const handleFilterVisitDateChange = useCallback((value) => {
+        setFilters((prev) => ({
+            ...prev,
+            visitDate: value || ''
+        }));
+    }, []);
+
+    const handleClearFilters = useCallback(() => {
+        setFilters({
+            company: '',
+            companyType: '',
+            hrName: '',
+            mode: '',
+            visitDate: '',
+            location: ''
+        });
+    }, []);
+
+    useEffect(() => {
+        setFilters((prev) => {
+            if (matchedCompanyVisitDate && prev.visitDate !== matchedCompanyVisitDate) {
+                return {
+                    ...prev,
+                    visitDate: matchedCompanyVisitDate
+                };
+            }
+            if (!matchedCompanyVisitDate && !visitDateOptions.includes(prev.visitDate)) {
+                return {
+                    ...prev,
+                    visitDate: ''
+                };
+            }
+            return prev;
+        });
+    }, [matchedCompanyVisitDate, visitDateOptions]);
+
+    const hasActiveFilters = Boolean(
+        filters.company.trim() ||
+        filters.companyType ||
+        filters.hrName.trim() ||
+        filters.mode ||
+        filters.visitDate ||
+        filters.location.trim()
+    );
+
+    return (
+        <div className={styles['Admin-cp-layout']}>
+            <div className={`${styles['Admin-cp-sidebar-wrapper']} ${isSidebarOpen ? 'open' : ''}`}>
+                <Adsidebar isOpen={isSidebarOpen} onLogout={onLogout} />
+            </div>
+            {isSidebarOpen && (
+                <div
+                    className={styles['Admin-cp-mobile-overlay']}
+                    onClick={() => setIsSidebarOpen(false)}
+                ></div>
+            )}
+            <div className={styles['Admin-cp-main-content']}>
+                <Adnavbar onToggleSidebar={toggleSidebar} onLogout={onLogout} Adminicon={Adminicon} />
+
+                {showDeleteWarning && (
+                    <DeleteConfirmationPopup 
+                        onClose={() => setShowDeleteWarning(false)} 
+                        onConfirm={confirmDelete} 
+                        selectedCount={selectedCompanyIds.size}
+                        isDeleting={isDeleting}
+                    />
+                )}
+
+                {showDeleteSuccess && (
+                    <DeleteSuccessPopup onClose={closeDeleteSuccess} />
+                )}
+
+                {errorMessage && (
+                    <div className={styles['Admin-cp-error-banner']}>
+                        {errorMessage}
+                    </div>
+                )}
+
+                <div className={styles['Admin-cp-top-card']}>
+                    <div className={`${styles['Admin-cp-action-addcard']} ${styles['Admin-cp-add-card']}`} onClick={openAddPopup} role="button" tabIndex={0} onKeyDown={(event) => event.key === 'Enter' && openAddPopup()}>
+                        <img className={styles['Admin-cp-add-icon']} src={AdminAddcompany} alt="Add company" />
+                        <h4 className={styles['Admin-cp-add-header']}>Add <br /> Company</h4>
+                        <p className={styles['Admin-cp-add-description']}>
+                            Add a new company profile to the portal.
+                        </p>
+                    </div>
+
+                    <div className={styles['Admin-cp-filter-section']}>
+                        <div className={styles['Admin-cp-filter-header-container']}>
+                            <div className={styles['Admin-cp-filter-header']}>Company Profile</div>
+                            {hasActiveFilters && (
+                                <button
+                                    type="button"
+                                    className={styles['Admin-cp-clear-btn-header']}
+                                    onClick={handleClearFilters}
+                                >
+                                    Clear
+                                </button>
+                            )}
+                        </div>
+                        <div className={styles['Admin-cp-filter-content']}>
+                            {/* Company / Job Role Input with Static Label */}
+                            <div className={styles['Admin-cp-input-wrapper']}>
+                                <label className={styles['Admin-cp-static-label']} htmlFor="admin-search-company">
+                                    Company / Job Role
+                                </label>
+                                <div className={`${styles['Admin-cp-text-container']} ${companyFocused ? styles['is-focused'] : ''}`}>
+                                    <input
+                                        id="admin-search-company"
+                                        type="text"
+                                        className={styles['Admin-cp-text']}
+                                        placeholder="Search Company / Job Role"
+                                        value={filters.company}
+                                        onChange={(event) => setFilters((prev) => ({ ...prev, company: event.target.value }))}
+                                        onFocus={() => setCompanyFocused(true)}
+                                        onBlur={() => setCompanyFocused(false)}
+                                        aria-label="Search Company or Job Role"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Company Type Dropdown with Static Label */}
+                            <div className={styles['Admin-cp-input-wrapper']}>
+                                <label className={styles['Admin-cp-static-label']} htmlFor="admin-search-company-type">
+                                    Company Type
+                                </label>
+                                <Dropdown
+                                    id="admin-search-company-type"
+                                    options={['CORE', 'IT', 'ITES(BPO/KPO)', 'Marketing & Sales', 'HR / Business analyst']}
+                                    selectedOption={filters.companyType}
+                                    onSelect={(val) => setFilters((prev) => ({ ...prev, companyType: val }))}
+                                    placeholder="Search Company Type"
+                                    role="admin"
+                                    className={styles['cp-dropdown-wrapper']}
+                                    headerClassName={styles['cp-dropdown-header']}
+                                />
+                            </div>
+
+                            {/* HR Name Input with Static Label */}
+                            <div className={styles['Admin-cp-input-wrapper']}>
+                                <label className={styles['Admin-cp-static-label']} htmlFor="admin-search-hr-name">
+                                    HR Name
+                                </label>
+                                <div className={`${styles['Admin-cp-text-container']} ${hrNameFocused ? styles['is-focused'] : ''}`}>
+                                    <input
+                                        id="admin-search-hr-name"
+                                        type="text"
+                                        className={styles['Admin-cp-text']}
+                                        placeholder="Search HR Name"
+                                        value={filters.hrName}
+                                        onChange={(event) => setFilters((prev) => ({ ...prev, hrName: event.target.value }))}
+                                        onFocus={() => setHrNameFocused(true)}
+                                        onBlur={() => setHrNameFocused(false)}
+                                        aria-label="Search HR Name"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Mode Dropdown with Static Label */}
+                            <div className={styles['Admin-cp-input-wrapper']}>
+                                <label className={styles['Admin-cp-static-label']} htmlFor="admin-search-mode">
+                                    Search Mode
+                                </label>
+                                <Dropdown
+                                    options={['Online', 'Offline', 'Hybrid']}
+                                    selectedOption={filters.mode}
+                                    onSelect={(val) => setFilters((prev) => ({ ...prev, mode: val }))}
+                                    placeholder="Search Mode"
+                                    role="admin"
+                                    className={styles['cp-dropdown-wrapper']}
+                                    headerClassName={styles['cp-dropdown-header']}
+                                />
+                            </div>
+
+                            {/* Visit Date Calendar with Static Label */}
+                            <div className={styles['Admin-cp-input-wrapper']}>
+                                <label className={styles['Admin-cp-static-label']} htmlFor="admin-search-visit-date">
+                                    Visit Date
+                                </label>
+                                <AdCalendar
+                                    id="admin-search-visit-date"
+                                    value={filters.visitDate}
+                                    onChange={handleFilterVisitDateChange}
+                                    variant="filter"
+                                    enabledDates={visitDateOptions}
+                                />
+                            </div>
+
+                            {/* Location Input with Static Label */}
+                            <div className={styles['Admin-cp-input-wrapper']}>
+                                <label className={styles['Admin-cp-static-label']} htmlFor="admin-search-location">
+                                    Location
+                                </label>
+                                <div className={`${styles['Admin-cp-text-container']} ${locationFocused ? styles['is-focused'] : ''}`}>
+                                    <input
+                                        id="admin-search-location"
+                                        type="text"
+                                        className={styles['Admin-cp-text']}
+                                        placeholder="Search Location"
+                                        value={filters.location}
+                                        onChange={(event) => setFilters((prev) => ({ ...prev, location: event.target.value }))}
+                                        onFocus={() => setLocationFocused(true)}
+                                        onBlur={() => setLocationFocused(false)}
+                                        aria-label="Search Location"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className={styles['Admin-cp-action-cards-section']}>
+                        {/* Card 1: Editing */}
+                        <div className={styles['Admin-cp-action-card']}>
+                            <h4 className={selectedCompanyIds.size === 1 ? styles['Admin-cp-header-edit-active'] : styles['Admin-cp-header-disabled']}>Editing</h4>
+                            <p className={styles['Admin-cp-action-description']}>
+                                {selectedCompanyIds.size === 1
+                                    ? `Selected company: ${companies.find(c => String(c.id || c._id) === String(Array.from(selectedCompanyIds)[0]))?.company || ''}`
+                                    : 'Select the company record before editing.'
+                                }
+                            </p>
+                            <button className={`${styles['Admin-cp-action-btn']} ${styles['Admin-cp-edit-btn']}`}
+                                    onClick={openEditPopup}
+                                    disabled={selectedCompanyIds.size !== 1}>
+                                Edit
+                            </button>
+                        </div>
+
+                        {/* Card 2: Deleting */}
+                        <div className={styles['Admin-cp-action-card']}>
+                            <h4 className={selectedCompanyIds.size >= 1 ? styles['Admin-cp-header-delete-active'] : styles['Admin-cp-header-disabled']}>Deleting</h4>
+                            <p className={styles['Admin-cp-action-description']}>
+                                {selectedCompanyIds.size >= 1
+                                    ? `Delete ${selectedCompanyIds.size} selected company record${selectedCompanyIds.size > 1 ? 's' : ''}`
+                                    : 'Select the company records before deleting.'
+                                }
+                            </p>
+                            <button className={`${styles['Admin-cp-action-btn']} ${styles['Admin-cp-delete-btn']}`}
+                                    onClick={handleDeleteClick}
+                                    disabled={!selectedCompanyIds.size}>
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div className={styles['Admin-cp-bottom-card']}>
+                    <div className={styles['Admin-cp-table-header-row']}>
+                        <div className={styles['Admin-cp-table-title-wrap']}>
+                            <h3 className={styles['Admin-cp-table-title']}>COMPANY PROFILE</h3>
+                            {!isInitialLoading && (
+                                <div className={styles['Admin-cp-table-subtitle']}>
+                                    Page {currentPage} of {totalPages} | Showing {paginatedCompanies.length} on this page
+                                </div>
+                            )}
+                        </div>
+                        <div className={styles['Admin-cp-table-actions']}>
+                            {totalPages > 1 && (
+                                <div className={styles['Admin-cp-pagination-controls']}>
+                                    <button
+                                        type="button"
+                                        className={styles['Admin-cp-page-btn']}
+                                        onClick={handlePrevPage}
+                                        disabled={currentPage <= 1 || isLoading}
+                                    >
+                                        Prev
+                                    </button>
+                                    <span className={styles['Admin-cp-page-indicator']}>
+                                        {currentPage} / {totalPages}
+                                    </span>
+                                    <button
+                                        type="button"
+                                        className={styles['Admin-cp-page-btn']}
+                                        onClick={handleNextPage}
+                                        disabled={currentPage >= totalPages || isLoading}
+                                    >
+                                        Next
+                                    </button>
+                                </div>
+                            )}
+                            <div className={styles['Admin-cp-print-button-container']}>
+                                <button
+                                    type="button"
+                                    className={styles['Admin-cp-print-btn']}
+                                    onClick={() => setShowExportMenu((prev) => !prev)}
+                                >
+                                    Print
+                                </button>
+                                {showExportMenu && (
+                                    <div className={styles['Admin-cp-export-menu']}>
+                                        <button type="button" onClick={exportToExcel}>Export to Excel</button>
+                                        <button type="button" onClick={exportToPDF}>Export to PDF</button>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className={styles['Admin-cp-table-container']}>
+                        <table className={styles['Admin-cp-students-table']}>
+                            <thead>
+                                <tr className={styles['Admin-cp-table-head-row']}>
+                                    <th className={`${styles['Admin-cp-th']} ${styles['Admin-cp-checkbox']}`}>Select</th>
+                                    <th className={`${styles['Admin-cp-th']} ${styles['Admin-cp-sno']}`}>S.No</th>
+                                    <th className={`${styles['Admin-cp-th']} ${styles['Admin-cp-company']}`}>Company</th>
+                                    <th className={`${styles['Admin-cp-th']} ${styles['Admin-cp-domain']}`}>Company Type</th>
+                                    <th className={`${styles['Admin-cp-th']} ${styles['Admin-cp-job-role']}`}>Job Role</th>
+                                    <th className={`${styles['Admin-cp-th']} ${styles['Admin-cp-mode']}`}>Mode</th>
+                                    <th className={`${styles['Admin-cp-th']} ${styles['Admin-cp-hr-name']}`}>HR Name</th>
+                                    <th className={`${styles['Admin-cp-th']} ${styles['Admin-cp-visit-date']}`}>Visit Date</th>
+                                    <th className={`${styles['Admin-cp-th']} ${styles['Admin-cp-location']}`}>Location</th>
+                                    <th className={`${styles['Admin-cp-th']} ${styles['Admin-cp-profile']}`}>View</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {isInitialLoading ? (
+                                    <tr className={styles['Admin-cp-loading-row']}>
+                                        <td colSpan="10" className={styles['Admin-cp-loading-cell']}>
+                                            <div className={styles['Admin-cp-loading-wrapper']}>
+                                                <div className={styles['Admin-cp-spinner']}></div>
+                                                <span className={styles['Admin-cp-loading-text']}>Loading companies…</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ) : paginatedCompanies.length ? (
+                                    paginatedCompanies.map((company, index) => {
+                                        const companyId = company.id || company._id;
+                                        const isSelected = selectedCompanyIds.has(companyId);
+
+                                        return (
+                                            <tr
+                                                key={companyId}
+                                                className={`${styles['Admin-cp-table-row']} ${isSelected ? styles['Admin-cp-selected-row'] : ''}`}
+                                                onClick={() => toggleCompanySelection(companyId)}
+                                            >
+                                                <td className={`${styles['Admin-cp-td']} ${styles['Admin-cp-checkbox']}`} onClick={(event) => event.stopPropagation()}>
+                                                    <input
+                                                        type="checkbox"
+                                                        className={styles['Admin-cp-checkbox-input']}
+                                                        checked={isSelected}
+                                                        onChange={() => toggleCompanySelection(companyId)}
+                                                    />
+                                                </td>
+                                                <td className={`${styles['Admin-cp-td']} ${styles['Admin-cp-sno']}`}>{(currentPage - 1) * companiesPerPage + index + 1}</td>
+                                                <td className={`${styles['Admin-cp-td']} ${styles['Admin-cp-company']}`}>{company.company || company.companyName || '—'}</td>
+                                                <td className={`${styles['Admin-cp-td']} ${styles['Admin-cp-domain']}`}>{company.companyType || company.domain || '—'}</td>
+                                                <td className={`${styles['Admin-cp-td']} ${styles['Admin-cp-job-role']}`}>{company.jobRole || '—'}</td>
+                                                <td className={`${styles['Admin-cp-td']} ${styles['Admin-cp-mode']}`}>{company.mode || '—'}</td>
+                                                <td className={`${styles['Admin-cp-td']} ${styles['Admin-cp-hr-name']}`}>{company.hrName || '—'}</td>
+                                                <td className={`${styles['Admin-cp-td']} ${styles['Admin-cp-visit-date']}`}>
+                                                    {formatDisplayDate((company.visitDate || '').slice(0, 10))}
+                                                </td>
+                                                <td className={`${styles['Admin-cp-td']} ${styles['Admin-cp-location']}`}>{company.location || '—'}</td>
+                                                <td className={`${styles['Admin-cp-td']} ${styles['Admin-cp-profile']}`} onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    openViewPopup(companyId);
+                                                }}><EyeIcon /></td>
+                                            </tr>
+                                        );
+                                    })
+                                ) : (
+                                    <tr>
+                                        <td colSpan="10" style={{ textAlign: 'center', padding: '2rem 0' }}>
+                                            No companies found matching the applied filters.
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            {/* Export Alerts */}
+            <ExportProgressAlert 
+                isOpen={exportPopupState === 'progress'} 
+                progress={exportProgress}
+                exportType={exportType}
+            />
+            
+            <ExportSuccessAlert 
+                isOpen={exportPopupState === 'success'} 
+                onClose={() => setExportPopupState('none')}
+                exportType={exportType}
+            />
+            
+            <ExportFailedAlert 
+                isOpen={exportPopupState === 'failed'} 
+                onClose={() => setExportPopupState('none')}
+                exportType={exportType}
+            />
+        </div>
+    );
+}
+
+export default Admincompanyprofile;

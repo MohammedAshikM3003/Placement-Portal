@@ -1,0 +1,85 @@
+{
+  "personalInfo": {
+    "name": "Sneha Subramanian",
+    "mobile": "9372318279",
+    "email": "sneha.subramanian11@anonymized.in",
+    "linkedin": "linkedin.com/in/snehasubramanian",
+    "github": "github.com/snehasubramanian",
+    "portfolio": ""
+  },
+  "summary": "MERN stack developer student. builded full stack sites. fast learner.",
+  "education": {
+    "college": "Amrita School of Engineering",
+    "degree": "B.Tech",
+    "branch": "Information Technology",
+    "cgpa": "9.30",
+    "graduationYear": "2026"
+  },
+  "skills": [
+    {
+      "category": "Technical Skills",
+      "items": [
+        "HTML",
+        "CSS",
+        "JavaScript",
+        "React",
+        "Node.js",
+        "Express.js",
+        "MongoDB",
+        "SQL"
+      ]
+    }
+  ],
+  "experiences": [
+    {
+      "title": "Full Stack Developer Intern",
+      "companyName": "Infosys",
+      "location": "Chennai, India",
+      "mode": "in-person",
+      "fromDate": "2024-05-01",
+      "toDate": "2024-07-01",
+      "description": "done full stack intern at TCS. helped team in web page creation and bugs fixing.",
+      "technologies": [
+        "HTML",
+        "CSS"
+      ]
+    }
+  ],
+  "projects": [
+    {
+      "name": "E-Commerce System",
+      "description": "i builded online shopping website. did database and payment gateway setup.",
+      "technologies": [
+        "React",
+        "Node.js",
+        "MongoDB"
+      ]
+    }
+  ],
+  "certifications": [
+    {
+      "certificateName": "AWS Academy Cloud Foundations",
+      "description": "Professional IT Certification"
+    }
+  ],
+  "achievements": [
+    {
+      "details": "won college level coding compition."
+    }
+  ],
+  "platforms": [
+    {
+      "name": "Leetcode",
+      "url": "leetcode.com/sneha"
+    }
+  ],
+  "additionalInfo": [],
+  "resumeSettings": {
+    "jobRole": "Full Stack Developer",
+    "customJobRole": "",
+    "fontStyle": "Arial",
+    "pages": "1",
+    "enableAI": true,
+    "linkType": "HyperLink"
+  }
+}

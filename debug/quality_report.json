@@ -1,0 +1,222 @@
+{
+  "overall_status": "FAIL",
+  "anomalies_detected_count": 0,
+  "validation_checklist": [
+    {
+      "name": "Students Count",
+      "status": "PASS",
+      "message": "Extracted: 1"
+    },
+    {
+      "name": "Credit Completeness",
+      "status": "FAIL",
+      "message": "Missing credits on 23 subject(s)"
+    },
+    {
+      "name": "Grade Completeness",
+      "status": "PASS",
+      "message": "All grades populated"
+    },
+    {
+      "name": "Grade Validity",
+      "status": "PASS",
+      "message": "All grades valid"
+    },
+    {
+      "name": "Semester Validity",
+      "status": "PASS",
+      "message": "All semesters valid"
+    },
+    {
+      "name": "Duplicate Course Codes",
+      "status": "PASS",
+      "message": "No duplicate course codes"
+    },
+    {
+      "name": "Duplicate Subject Names",
+      "status": "PASS",
+      "message": "No duplicate subject names"
+    },
+    {
+      "name": "Subject Serial Continuity",
+      "status": "PASS",
+      "message": "Subject serials continuous"
+    }
+  ],
+  "triggered_inspector_rules": [],
+  "duplicate_resolutions": [],
+  "trace_audit_logs": [
+    {
+      "tr_id": "p0_img_l0",
+      "text": "K.S.R COLLEGE OF ENGINEERING,",
+      "last_successful_stage": "OCR_LINE_EXTRACTION",
+      "first_failed_stage": "COORDINATE_CLUSTERING",
+      "classification": "UNRESOLVED_TEXT_ROW",
+      "reason": "Unresolved or skipped text content",
+      "confidence": 0.9864093065261841
+    },
+    {
+      "tr_id": "p0_img_l1",
+      "text": "TIRUCHENGODE - 637 215",
+      "last_successful_stage": "OCR_LINE_EXTRACTION",
+      "first_failed_stage": "COORDINATE_CLUSTERING",
+      "classification": "UNRESOLVED_TEXT_ROW",
+      "reason": "Unresolved or skipped text content",
+      "confidence": 0.9638471007347107
+    },
+    {
+      "tr_id": "p0_img_l2",
+      "text": "VHERE",
+      "last_successful_stage": "OCR_LINE_EXTRACTION",
+      "first_failed_stage": "COORDINATE_CLUSTERING",
+      "classification": "UNRESOLVED_TEXT_ROW",
+      "reason": "Unresolved or skipped text content",
+      "confidence": 0.9638246297836304
+    },
+    {
+      "tr_id": "p0_img_l3",
+      "text": "(Autonomous)",
+      "last_successful_stage": "OCR_LINE_EXTRACTION",
+      "first_failed_stage": "COORDINATE_CLUSTERING",
+      "classification": "UNRESOLVED_TEXT_ROW",
+      "reason": "Unresolved or skipped text content",
+      "confidence": 0.9997394680976868
+    },
+    {
+      "tr_id": "p0_img_l4",
+      "text": "FUTURE",
+      "last_successful_stage": "OCR_LINE_EXTRACTION",
+      "first_failed_stage": "COORDINATE_CLUSTERING",
+      "classification": "UNRESOLVED_TEXT_ROW",
+      "reason": "Unresolved or skipped text content",
+      "confidence": 0.9964494705200195
+    },
+    {
+      "tr_id": "p0_img_l5",
+      "text": "UG & PG END SEMESTER EXAMINATIONS - June 2026",
+      "last_successful_stage": "OCR_LINE_EXTRACTION",
+      "first_failed_stage": "COORDINATE_CLUSTERING",
+      "classification": "UNRESOLVED_TEXT_ROW",
+      "reason": "Unresolved or skipped text content",
+      "confidence": 0.96877121925354
+    },
+    {
+      "tr_id": "p0_img_l7",
+      "text": ": 73152311001",
+      "last_successful_stage": "OCR_LINE_EXTRACTION",
+      "first_failed_stage": "COORDINATE_CLUSTERING",
+      "classification": "UNRESOLVED_TEXT_ROW",
+      "reason": "Unresolved or skipped text content",
+      "confidence": 0.9985392093658447
+    },
+    {
+      "tr_id": "p0_img_l6",
+      "text": "Register Number",
+      "last_successful_stage": "OCR_LINE_EXTRACTION",
+      "first_failed_stage": "COORDINATE_CLUSTERING",
+      "classification": "LAYOUT_HEADER_FOOTER_FILTER",
+      "reason": "Filtered dynamically as header/footer",
+      "confidence": 0.9999440312385559
+    },
+    {
+      "tr_id": "p0_img_l8",
+      "text": "Name of the Candidate",
+      "last_successful_stage": "OCR_LINE_EXTRACTION",
+      "first_failed_stage": "COORDINATE_CLUSTERING",
+      "classification": "LAYOUT_HEADER_FOOTER_FILTER",
+      "reason": "Filtered dynamically as header/footer",
+      "confidence": 0.999944806098938
+    },
+    {
+      "tr_id": "p0_img_l9",
+      "text": ": AHISH V",
+      "last_successful_stage": "OCR_LINE_EXTRACTION",
+      "first_failed_stage": "COORDINATE_CLUSTERING",
+      "classification": "UNRESOLVED_TEXT_ROW",
+      "reason": "Unresolved or skipped text content",
+      "confidence": 0.9866635799407959
+    },
+    {
+      "tr_id": "p0_img_l11",
+      "text": ": B.E - Automobile Engineering.",
+      "last_successful_stage": "OCR_LINE_EXTRACTION",
+      "first_failed_stage": "COORDINATE_CLUSTERING",
+      "classification": "UNRESOLVED_TEXT_ROW",
+      "reason": "Unresolved or skipped text content",
+      "confidence": 0.9842420220375061
+    },
+    {
+      "tr_id": "p0_img_l10",
+      "text": "Programme",
+      "last_successful_stage": "OCR_LINE_EXTRACTION",
+      "first_failed_stage": "COORDINATE_CLUSTERING",
+      "classification": "UNRESOLVED_TEXT_ROW",
+      "reason": "Unresolved or skipped text content",
+      "confidence": 0.9998061060905457
+    },
+    {
+      "tr_id": "p0_img_l14",
+      "text": "COURSE CODE",
+      "last_successful_stage": "OCR_LINE_EXTRACTION",
+      "first_failed_stage": "COORDINATE_CLUSTERING",
+      "classification": "UNRESOLVED_TEXT_ROW",
+      "reason": "Unresolved or skipped text content",
+      "confidence": 0.995217502117157
+    },
+    {
+      "tr_id": "p0_img_l15",
+      "text": "COURSE NAME",
+      "last_successful_stage": "OCR_LINE_EXTRACTION",
+      "first_failed_stage": "COORDINATE_CLUSTERING",
+      "classification": "UNRESOLVED_TEXT_ROW",
+      "reason": "Unresolved or skipped text content",
+      "confidence": 0.9951267838478088
+    },
+    {
+      "tr_id": "p0_img_l13",
+      "text": "SEMESTER",
+      "last_successful_stage": "OCR_LINE_EXTRACTION",
+      "first_failed_stage": "COORDINATE_CLUSTERING",
+      "classification": "UNRESOLVED_TEXT_ROW",
+      "reason": "Unresolved or skipped text content",
+      "confidence": 0.9986574649810791
+    },
+    {
+      "tr_id": "p0_img_l12",
+      "text": "S.NO",
+      "last_successful_stage": "OCR_LINE_EXTRACTION",
+      "first_failed_stage": "COORDINATE_CLUSTERING",
+      "classification": "UNRESOLVED_TEXT_ROW",
+      "reason": "Unresolved or skipped text content",
+      "confidence": 0.9829500913619995
+    },
+    {
+      "tr_id": "p0_img_l16",
+      "text": "GRADE OBTAINED",
+      "last_successful_stage": "OCR_LINE_EXTRACTION",
+      "first_failed_stage": "COORDINATE_CLUSTERING",
+      "classification": "UNRESOLVED_TEXT_ROW",
+      "reason": "Unresolved or skipped text content",
+      "confidence": 0.9965642094612122
+    },
+    {
+      "tr_id": "p0_img_l17",
+      "text": "RESULT",
+      "last_successful_stage": "OCR_LINE_EXTRACTION",
+      "first_failed_stage": "COORDINATE_CLUSTERING",
+      "classification": "UNRESOLVED_TEXT_ROW",
+      "reason": "Unresolved or skipped text content",
+      "confidence": 0.9985465407371521
+    },
+    {
+      "tr_id": "p1_img_l1",
+      "text": "examination's decision is final.\".",
+      "last_successful_stage": "OCR_LINE_EXTRACTION",
+      "first_failed_stage": "COORDINATE_CLUSTERING",
+      "classification": "LAYOUT_HEADER_FOOTER_FILTER",
+      "reason": "Filtered dynamically as header/footer",
+      "confidence": 0.9926337003707886
+    }
+  ],
+  "semantic_match_audits": []
+}

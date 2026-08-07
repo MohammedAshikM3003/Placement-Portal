@@ -1,0 +1,48 @@
+{
+  "name": "placement-portal-backend",
+  "version": "1.0.0",
+  "description": "Backend service for Placement Portal with MongoDB database",
+  "main": "server-mongodb.js",
+  "scripts": {
+    "start": "node server-mongodb.js",
+    "start:mongodb": "node server-mongodb.js",
+    "dev": "nodemon server-mongodb.js",
+    "dev:mongodb": "nodemon server-mongodb.js",
+    "verify:academic-data": "node scripts/ensure-academic-data.js",
+    "fix:academic-data": "node scripts/ensure-academic-data.js --apply",
+    "benchmark:marksheets": "node scripts/benchmark-marksheets.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "axios": "^1.12.2",
+    "bcryptjs": "^2.4.3",
+    "bullmq": "^5.21.4",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^5.1.0",
+    "fastest-levenshtein": "^1.0.16",
+    "ioredis": "^5.6.1",
+    "joi": "^17.11.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongodb": "^6.20.0",
+    "mongoose": "^8.19.1",
+    "multer": "^1.4.5-lts.1",
+    "multer-gridfs-storage": "^5.0.2",
+    "nodemailer": "^9.0.3",
+    "pdf-parse": "^1.1.1",
+    "pdf-to-img": "^5.0.0",
+    "puppeteer": "^24.37.3",
+    "tesseract.js": "^7.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  },
+  "keywords": [
+    "placement",
+    "portal",
+    "mongodb",
+    "authentication"
+  ],
+  "author": "Your Name",
+  "license": "MIT"
+}

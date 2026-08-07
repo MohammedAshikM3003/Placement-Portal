@@ -1,0 +1,5 @@
+fastapi
+uvicorn
+language-tool-python
+spacy
+scikit-learn

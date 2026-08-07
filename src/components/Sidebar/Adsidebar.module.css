@@ -1,0 +1,262 @@
+.adsidebar {
+  background: #fff;
+  width: 290px;
+  position: fixed;
+  left: 0;
+  top: 65px;
+  bottom: 0;
+  height: auto;
+  box-shadow: 2px 0 12px #e1e6ef3a;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* Restrict scrolling to inner navigation */
+  z-index: 1002;
+  transition: transform 0.3s ease-in-out;
+  font-family: 'Poppins', sans-serif;
+  margin-top: 1px;
+  will-change: transform; /* Improve animation smoothness */
+}
+
+.adsidebar .ad-nav::-webkit-scrollbar {
+  width: 8px;
+}
+
+.adsidebar .ad-nav::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.adsidebar .ad-nav::-webkit-scrollbar-thumb {
+  background: #4caf50;
+  border-radius: 8px;
+}
+
+.adsidebar .ad-nav::-webkit-scrollbar-thumb:hover {
+  background: #388e3c;
+}
+
+/* Responsive rules for mobile view */
+@media (max-width: 1200px) {
+  .adsidebar {
+    transform: translateX(-100%);
+    width: 280px;
+  }
+  .adsidebar.open {
+    transform: translateX(0);
+  }
+}
+
+.adsidebar .ad-user-info {
+  padding: 0px 20px 0px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.adsidebar .ad-user-details {
+  margin-top: 8px;
+  font-weight: 600;
+  font-size: 1.1em;
+  color: #191c24;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+}
+
+/* Style for profile images */
+.adsidebar .ad-user-details img {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 2px solid #4ea24e;
+}
+
+/* Placeholder circle when no profile photo */
+.adsidebar .ad-placeholder-circle {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.adsidebar .ad-placeholder-circle img {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+  border: none;
+}
+
+
+
+.adsidebar .ad-user-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  flex: 1;
+  text-align: left;
+}
+
+.adsidebar .ad-user-text span {
+  font-size: 1em;
+  font-weight: 600;
+  color: #191c24;
+  line-height: 1.2;
+  word-break: break-word;
+  text-align: left;
+}
+
+.adsidebar .ad-nav {
+  display: flex;
+  flex-direction: column;
+  flex: 1; /* Grow to fill the remaining height */
+  padding: 0;
+  justify-content: flex-start;
+  min-height: 0; /* Crucial for inner scrolling */
+  overflow-y: auto; /* Independent inner scrolling */
+  overflow-x: hidden;
+}
+
+.adsidebar .menu {
+  display: flex;
+  flex-direction: column;
+  align-self: flex-start;
+  width: 100%;
+}
+
+.adsidebar .ad-nav-section {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(4px, 1.2vh, 12px); /* Responsive gap based on height */
+  flex-shrink: 0; /* Prevent list itself from squishing below natural size */
+}
+
+.adsidebar .ad-nav-item {
+  display: flex;
+  align-items: center;
+  font-size: 1.2rem;
+  padding: 7px 25px;
+  color: #222;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.18s;
+  gap: 15px;
+  border-left: 4px solid transparent;
+  margin: 0;
+  flex-shrink: 0; /* Prevent individual item from squishing or overlapping */
+}
+
+.adsidebar .ad-nav-text {
+  white-space: nowrap;
+}
+
+
+/* FIX: Split hover and selected styles. Bold text is now ONLY on selected items. */
+
+/* --- SELECTED ITEM STYLES (Clicked) --- */
+.adsidebar .ad-nav-item.selected {
+  background: #f8f8f8;
+  border-left: 4px solid #4ea24e;
+  color: #4ea24e;
+  font-weight: 600; /* Bold text for selected item */
+}
+
+.adsidebar .ad-nav-item.selected img {
+filter: brightness(0) saturate(100%) invert(49%) sepia(14%) saturate(1828%) hue-rotate(73deg) brightness(93%) contrast(89%);
+}
+.adsidebar .ad-nav-item.selected img {
+  /* Remove the filter line */
+  fill: #eef0ee; /* Only works if 'img' is an SVG */
+}
+
+
+/* --- HOVER ITEM STYLES (Mouse over) --- */
+.adsidebar .ad-nav-item:hover:not(.selected) {
+  background: #f8f8f8;
+  border-left: 4px solid #4ea24e;
+  color: #4ea24e;
+  /* No font-weight change on hover */
+}
+
+.adsidebar .ad-nav-item:hover:not(.selected) img {
+  filter: brightness(0) saturate(100%) invert(49%) sepia(14%) saturate(1828%) hue-rotate(73deg) brightness(93%) contrast(89%);
+
+}
+/* --- END OF FIX --- */
+
+
+.adsidebar .ad-nav-item img {
+  width: 28px;
+  height: 23px;
+  transition: transform 0.2s;
+}
+
+.adsidebar .ad-nav-item[data-view="admin-training"] img {
+  filter: none;
+}
+
+.adsidebar .ad-nav-item.selected[data-view="admin-training"] img,
+.adsidebar .ad-nav-item:hover:not(.selected)[data-view="admin-training"] img {
+  filter: brightness(0) saturate(100%) invert(49%) sepia(14%) saturate(1828%) hue-rotate(73deg) brightness(93%) contrast(89%);
+}
+
+.adsidebar .ad-nav-divider {
+  height: 1px;
+  width: 85%;
+  background: #e0e0e0;
+  margin: 10px auto; /* Tightly packed below the last navigation link */
+  border-top: 1px dotted #ccc;
+  flex-shrink: 0;
+}
+
+.adsidebar .ad-logout-btn {
+  background: #d23b42;
+  color: #fff;
+  padding: 12px 0;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+  flex-shrink: 0;
+  width: calc(100% - 40px);
+  margin: 10px 20px; /* 10px top and bottom margin, 20px horizontal margin */
+  position: relative;
+  z-index: 10;
+  pointer-events: auto;
+}
+
+.adsidebar .ad-logout-btn:hover {
+  background: #d55a6a;
+}
+
+/* Bottom section removed in final architecture */
+
+.overlay {
+  display: none;
+}
+
+@media (max-width: 1200px) {
+  .overlay {
+    display: block;
+    position: fixed;
+    top: 65px;
+    left: 0;
+    width: 100vw;
+    height: calc(100vh - 65px);
+    background-color: rgba(0, 0, 0, 0.4);
+    z-index: 1001;
+  }
+}

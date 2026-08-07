@@ -1,0 +1,675 @@
+import { useState, useEffect, useCallback } from "react"; // Import useEffect and useCallback
+import { useNavigate } from "react-router-dom";
+import useCoordinatorAuth from '../utils/useCoordinatorAuth';
+import {
+ FaUserCircle,  FaEye,
+  FaUsers, FaBuilding, FaBriefcase, FaCertificate, FaUserCheck,
+  FaCalendarAlt, FaUserGraduate, FaChartBar
+} from 'react-icons/fa';
+import { LuLayoutDashboard } from "react-icons/lu";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import * as XLSX from "xlsx";
+import Navbar from "../components/Navbar/Conavbar.js";
+import Sidebar from "../components/Sidebar/Cosidebar.js";
+import mongoDBService from '../services/mongoDBService.jsx';
+import styles from "./Coo_PlacedStudents.module.css";  
+import { ExportProgressAlert, ExportSuccessAlert, ExportFailedAlert } from '../components/alerts';
+import Dropdown from '../components/common/Dropdown/Dropdown';
+
+// Helper function to read coordinator data from storage
+const readStoredCoordinatorData = () => {
+  if (typeof window === 'undefined') return null;
+  try {
+    const stored = localStorage.getItem('coordinatorData');
+    return stored ? JSON.parse(stored) : null;
+  } catch (error) {
+    console.error('Failed to parse coordinatorData:', error);
+    return null;
+  }
+};
+
+// Helper function to resolve coordinator's department/branch
+const resolveCoordinatorDepartment = (data) => {
+  if (!data) return null;
+  const deptValue =
+    data.department ||
+    data.branch ||
+    data.dept ||
+    data.departmentName ||
+    data.coordinatorDepartment ||
+    data.assignedDepartment;
+  return deptValue ? deptValue.toString().toUpperCase() : null;
+};  
+// Component for the Bar Chart
+const BarChartComponent = ({ data }) => {
+  return (
+    <ResponsiveContainer width="100%" height={200}>
+      <BarChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+        <CartesianGrid strokeDasharray="3 3" />
+        <XAxis 
+          dataKey="jobRole" 
+          angle={0}
+          textAnchor="middle"
+          height={30}
+          tick={{ fontSize: 11 }}
+        />
+        <YAxis 
+          allowDecimals={false}
+          domain={[0, 'dataMax + 1']}
+          tick={{ fontSize: 11 }}
+        />
+        <Tooltip />
+        <Bar dataKey="students" fill="#7B68EE" radius={[8, 8, 0, 0]} />
+      </BarChart>
+    </ResponsiveContainer>
+  );
+};
+
+const PlacementDashboard = ({ onLogout, currentView, onViewChange }) => {
+  useCoordinatorAuth(); // JWT authentication verification
+
+  // Data for navigation links
+  const navLinks = [
+    { icon: <LuLayoutDashboard />, text: 'Dashboard' },
+    { icon: <FaUsers />, text: 'Manage Students' },
+    { icon: <FaBuilding />, text: 'Company Profile' },
+    { icon: <FaBriefcase />, text: 'Company Drive' },
+    { icon: <FaCertificate />, text: 'Certificate Verification' },
+    { icon: <FaUserCheck />, text: 'Eligible Students' },
+    { icon: <FaCalendarAlt />, text: 'Attendance' },
+    { icon: <FaUserGraduate />, text: 'Placed Students', active: true },
+    { icon: <FaChartBar />, text: 'Report Analysis' },
+    { icon: <FaUserCircle />, text: 'Profile' },
+  ];
+
+  // State management
+  const [allStudentsData, setAllStudentsData] = useState([]);
+  const [displayedStudents, setDisplayedStudents] = useState([]);
+  const [coordinatorBranch, setCoordinatorBranch] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [filters, setFilters] = useState({
+    batch: 'All Batches',
+    company: 'All Companies',
+    jobRole: 'All Job Roles',
+    package: 'All Packages',
+  });
+  const [searchTerm, setSearchTerm] = useState('');
+  
+  // Stats state
+  const [stats, setStats] = useState({
+    totalPlaced: 0,
+    totalOffers: 0,
+    highestPackage: 0,
+    averagePackage: 0,
+    placedPercentage: 25
+  });
+
+  const [exportPopupState, setExportPopupState] = useState('none'); // 'none' | 'progress' | 'success' | 'failed'
+  const [exportProgress, setExportProgress] = useState(0);
+  const [exportType, setExportType] = useState('Excel');
+  
+  const [companyChartData, setCompanyChartData] = useState([]);
+  
+  const [open, setOpen] = useState(false);
+  const [activeItem, setActiveItem] = useState("Placed Students");
+  const navigate = useNavigate();
+  const [showExportMenu, setShowExportMenu] = useState(false);
+
+  const EyeIcon = () => (
+    <svg className={styles['co-ps-profile-eye-icon']} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+        <circle cx="12" cy="12" r="3"></circle>
+    </svg>
+  );
+
+  // Function to generate company job role chart data
+  const generateCompanyChartData = useCallback((data) => {
+    const companyJobRoleCounts = {};
+
+    // Group by company and count job roles within each company
+    data.forEach(student => {
+      const company = student.company;
+      const jobRole = student.role;
+      
+      if (company && jobRole) {
+        if (!companyJobRoleCounts[company]) {
+          companyJobRoleCounts[company] = {};
+        }
+        companyJobRoleCounts[company][jobRole] = (companyJobRoleCounts[company][jobRole] || 0) + 1;
+      }
+    });
+
+    // Get selected company and job role from filters
+    const selectedCompany = filters.company;
+    const selectedJobRole = filters.jobRole;
+
+    // If a specific company is selected
+    if (selectedCompany !== 'All Companies' && companyJobRoleCounts[selectedCompany]) {
+      let jobRolesData;
+      
+      // If a specific job role is also selected, show only that job role
+      if (selectedJobRole !== 'All Job Roles' && companyJobRoleCounts[selectedCompany][selectedJobRole]) {
+        jobRolesData = [{
+          jobRole: selectedJobRole,
+          students: companyJobRoleCounts[selectedCompany][selectedJobRole]
+        }];
+      } else {
+        // Show all job roles for the selected company
+        jobRolesData = Object.keys(companyJobRoleCounts[selectedCompany]).map(jobRole => ({
+          jobRole: jobRole,
+          students: companyJobRoleCounts[selectedCompany][jobRole],
+        })).sort((a, b) => a.jobRole.localeCompare(b.jobRole));
+      }
+      
+      setCompanyChartData(jobRolesData);
+    } else {
+      // If no specific company is selected, show first company's data
+      const companies = Object.keys(companyJobRoleCounts);
+      if (companies.length > 0) {
+        const firstCompany = companies[0];
+        const jobRolesData = Object.keys(companyJobRoleCounts[firstCompany]).map(jobRole => ({
+          jobRole: jobRole,
+          students: companyJobRoleCounts[firstCompany][jobRole],
+        })).sort((a, b) => a.jobRole.localeCompare(b.jobRole));
+        
+        setCompanyChartData(jobRolesData);
+      } else {
+        setCompanyChartData([]);
+      }
+    }
+  }, [filters]);
+
+  useEffect(() => {
+    const coordinatorData = readStoredCoordinatorData();
+    const branch = resolveCoordinatorDepartment(coordinatorData);
+    
+    if (branch) {
+      setCoordinatorBranch(branch);
+      console.log('Coordinator branch:', branch);
+      fetchPlacedStudents(branch);
+    } else {
+      setIsLoading(false);
+      console.error('No coordinator branch found');
+    }
+  }, []);
+
+  // Function to fetch placed students from backend
+  const fetchPlacedStudents = async (branch) => {
+    try {
+      setIsLoading(true);
+      const response = await mongoDBService.getPlacedStudents({ dept: branch });
+      
+      if (response.success && response.data) {
+        // Map and add serial numbers
+        const mappedData = response.data.map((student, index) => ({
+          sno: index + 1,
+          name: student.name,
+          regNo:
+            student.registrationNumber ||
+            student.regNo ||
+            student.regno ||
+            student.rollNo ||
+            student.rollNumber ||
+            student.studentId ||
+            student._id ||
+            '',
+          dept: student.dept || student.department || student.branch || '',
+          batch: student.batch || student.batchYear || '',
+          company: student.company || student.companyName || '',
+          role: student.role || student.jobRole || student.designation || '',
+          pkg: student.pkg || student.package || student.salary || student.ctc || '',
+          status: student.status || 'Accepted'
+        }));
+        
+        setAllStudentsData(mappedData);
+        setDisplayedStudents(mappedData);
+        calculateStats(mappedData);
+        generateCompanyChartData(mappedData);
+      } else {
+        setAllStudentsData([]);
+        setDisplayedStudents([]);
+      }
+    } catch (error) {
+      console.error('Error fetching placed students:', error);
+      setAllStudentsData([]);
+      setDisplayedStudents([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Calculate statistics from placed students data
+  const calculateStats = (data) => {
+    if (!data || data.length === 0) {
+      setStats({
+        totalPlaced: 0,
+        totalOffers: 0,
+        highestPackage: 0,
+        averagePackage: 0,
+        placedPercentage: 0
+      });
+      return;
+    }
+
+    const acceptedStudents = data.filter(s => s.status === 'Accepted');
+    const packages = data.map(s => parseFloat(s.pkg) || 0);
+    const total = data.length;
+    const placed = acceptedStudents.length;
+    
+    setStats({
+      totalPlaced: placed,
+      totalOffers: total,
+      highestPackage: packages.length > 0 ? Math.max(...packages) : 0,
+      averagePackage: packages.length > 0 ? (packages.reduce((a, b) => a + b, 0) / packages.length) : 0,
+      placedPercentage: total > 0 ? Math.round((placed / total) * 100) : 0
+    });
+  };
+
+  // Function to handle filter changes (only for batch and company)
+  const handleFilterChange = (e) => {
+    const { name, value } = e.target;
+    setFilters(prevFilters => ({
+      ...prevFilters,
+      [name]: value,
+    }));
+  };
+
+  const handleClearFilters = () => {
+    setFilters({
+      batch: 'All Batches',
+      company: 'All Companies',
+      jobRole: 'All Job Roles',
+      package: 'All Packages',
+    });
+    setSearchTerm('');
+  };
+
+  const handleCardClick = (view) => {
+    if (onViewChange) {
+      onViewChange(view);
+    }
+  };
+  
+  // Auto-apply filters when filter values change
+  useEffect(() => {
+    const filteredData = allStudentsData.filter(student => {
+      const batchMatch = filters.batch === 'All Batches' || student.batch === filters.batch;
+      const companyMatch = filters.company === 'All Companies' || student.company === filters.company;
+      const jobRoleMatch = filters.jobRole === 'All Job Roles' || student.role === filters.jobRole;
+      const packageMatch = filters.package === 'All Packages' || student.pkg === filters.package;
+      
+      const searchLower = searchTerm.trim().toLowerCase();
+      const searchMatch = !searchLower || 
+        (student.name || '').toLowerCase().includes(searchLower) ||
+        (student.regNo || '').toLowerCase().includes(searchLower);
+      
+      return batchMatch && companyMatch && jobRoleMatch && packageMatch && searchMatch;
+    });
+    setDisplayedStudents(filteredData);
+    calculateStats(filteredData);
+    generateCompanyChartData(filteredData);
+  }, [filters, searchTerm, allStudentsData]);
+
+  // Get unique batches, companies, and job roles for dropdown options
+  const uniqueBatches = ['All Batches', ...new Set(allStudentsData.map(s => s.batch))].sort();
+  const uniqueCompanies = ['All Companies', ...new Set(allStudentsData.map(s => s.company))].sort();
+  const uniqueJobRoles = [...new Set(allStudentsData.map(s => s.role))].filter(Boolean).sort();
+  const uniquePackages = [...new Set(allStudentsData.map(s => s.pkg))].filter(Boolean).sort((a, b) => parseFloat(a) - parseFloat(b));
+
+  const simulateExport = async (operation, exportFunction) => {
+    setShowExportMenu(false);
+
+    setExportType(operation === 'excel' ? 'Excel' : 'PDF');
+    setExportPopupState('progress');
+    setExportProgress(0);
+
+    let progressInterval;
+    let progressTimeout;
+
+    try {
+      // Simulate progress from 0 to 100
+      progressInterval = setInterval(() => {
+        setExportProgress(prev => Math.min(prev + 10, 100));
+      }, 200);
+
+      // Wait for progress animation to complete
+      await new Promise(resolve => {
+        progressTimeout = setTimeout(() => {
+          clearInterval(progressInterval);
+          resolve();
+        }, 2000);
+      });
+      
+      // Perform the actual export
+      exportFunction();
+
+      setExportProgress(100);
+      setExportPopupState('success');
+    } catch (error) {
+      if (progressInterval) clearInterval(progressInterval);
+      if (progressTimeout) clearTimeout(progressTimeout);
+
+      setExportPopupState('failed');
+    }
+  };
+
+  // Export to Excel (now uses displayedStudents)
+  const exportToExcel = () => {
+    try {
+      const data = displayedStudents.map(student => [
+        student.sno, 
+        student.name, 
+        student.regNo, 
+        student.dept, 
+        student.batch,
+        student.company, 
+        student.role, 
+        student.pkg, 
+        student.status,
+      ]);
+      const header = ["S .No", "Name", "Reg No", "Department", "Batch", "Company", "Job Role", "Package", "Status"];
+      const ws = XLSX.utils.aoa_to_sheet([header, ...data]);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Placed Students");
+      XLSX.writeFile(wb, "Placed_Students_Report.xlsx");
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  // Export to PDF (now uses displayedStudents)
+  const exportToPDF = () => {
+    try {
+      const doc = new jsPDF("landscape");
+      const columns = [
+       " S .No", "Name", "Reg No", "Department", "Batch", "Company", "Job Role", "Package", "Status"
+      ];
+    
+      const rows = displayedStudents.map(student => [
+        student.sno, 
+        student.name, 
+        student.regNo, 
+        student.dept, 
+        student.batch,
+        student.company, 
+        student.role, 
+        student.pkg, 
+        student.status,
+      ]);
+    
+      doc.text("Placed Students Report", 14, 15);
+    
+      // ✅ use the imported function directly
+      autoTable(doc, {
+        head: [columns],
+        body: rows,
+        startY: 20,
+        styles: { fontSize: 8 },
+      });
+    
+      doc.save("Placed_Students_Report.pdf");
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  // Wrapper for PDF export with popup
+  const handleExportToPDF = () => {
+    simulateExport('pdf', exportToPDF);
+  };
+
+  const handleExportToExcel = () => {
+    simulateExport('excel', exportToExcel);
+  };
+
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const toggleSidebar = () => {
+    setIsSidebarOpen(prev => !prev);
+  };
+
+  // This function will set the active item when a menu item is clicked
+  const handleItemClick = (itemName) => {
+    setActiveItem(itemName);
+  };
+
+  return (
+    <>
+
+      <Navbar onToggleSidebar={toggleSidebar} />                  
+      <Sidebar isOpen={isSidebarOpen} onLogout={onLogout} currentView="placed-students" onViewChange={onViewChange}
+          onClose={() => setIsSidebarOpen(false)}
+        />
+      <div className={styles['co-ps-portal-container']}>
+    
+       
+        {/* Main Content */}
+        <main className={styles['co-ps-main-content']}>
+          
+          
+          <div className={styles['co-ps-filters-container']}>
+            {/* Batch Filter */}
+            <Dropdown
+              options={uniqueBatches}
+              selectedOption={filters.batch}
+              onSelect={(val) => handleFilterChange({ target: { name: 'batch', value: val } })}
+              placeholder="All Batches"
+              role="coordinator"
+              className={styles['co-ps-dropdown-wrapper']}
+              headerClassName={styles['co-ps-dropdown-header']}
+            />
+            
+            {/* Company Filter */}
+            <Dropdown
+              options={uniqueCompanies}
+              selectedOption={filters.company}
+              onSelect={(val) => handleFilterChange({ target: { name: 'company', value: val } })}
+              placeholder="All Companies"
+              role="coordinator"
+              className={styles['co-ps-dropdown-wrapper']}
+              headerClassName={styles['co-ps-dropdown-header']}
+            />
+            
+            {/* Job Role Filter */}
+            <Dropdown
+              options={['All Job Roles', ...uniqueJobRoles]}
+              selectedOption={filters.jobRole}
+              onSelect={(val) => handleFilterChange({ target: { name: 'jobRole', value: val } })}
+              placeholder="All Job Roles"
+              role="coordinator"
+              className={styles['co-ps-dropdown-wrapper']}
+              headerClassName={styles['co-ps-dropdown-header']}
+            />
+
+            {/* Package Filter */}
+            <Dropdown
+              options={['All Packages', ...uniquePackages]}
+              selectedOption={filters.package}
+              onSelect={(val) => handleFilterChange({ target: { name: 'package', value: val } })}
+              placeholder="All Packages"
+              role="coordinator"
+              className={styles['co-ps-dropdown-wrapper']}
+              headerClassName={styles['co-ps-dropdown-header']}
+            />
+
+            {/* Clear button */}
+            <button
+              type="button"
+              className={styles['co-ps-clear-btn']}
+              onClick={handleClearFilters}
+              disabled={
+                filters.batch === 'All Batches' &&
+                filters.company === 'All Companies' &&
+                filters.jobRole === 'All Job Roles' &&
+                filters.package === 'All Packages' &&
+                !searchTerm
+              }
+            >
+              Clear
+            </button>
+          </div>
+
+          <div className={styles['co-ps-dashboard-grid']}>
+            <div className={styles['co-ps-stats-section']}>
+              <div className={`${styles['co-ps-stat-card']} ${styles['co-ps-card-purple']}`}>
+                <div className={styles['co-ps-card-label']}>Total Placed Students</div>
+                <div className={styles['co-ps-card-value']}>{stats.totalPlaced}</div>
+              </div>
+              <div className={`${styles['co-ps-stat-card']} ${styles['co-ps-card-teal']}`}>
+                <div className={styles['co-ps-card-label']}>Total Offers Received</div>
+                <div className={styles['co-ps-card-value']}>{stats.totalOffers}</div>
+              </div>
+              <div className={`${styles['co-ps-stat-card']} ${styles['co-ps-card-blue']}`}>
+                <div className={styles['co-ps-card-label']}>Highest Package</div>
+                <div className={styles['co-ps-card-value']}>{stats.highestPackage.toFixed(1)} <span style={{ fontSize: '17px' }}>LPA</span></div>
+              </div>
+              <div className={`${styles['co-ps-stat-card']} ${styles['co-ps-card-orange']}`}>
+                <div className={styles['co-ps-card-label']}>Average Package</div>
+                <div className={styles['co-ps-card-value']}>{stats.averagePackage.toFixed(1)} <span style={{ fontSize: '17px' }}>LPA</span></div>
+              </div>
+            </div>
+            
+            {/* Company Job Roles Bar Chart */}
+            <div className={styles['co-ps-chart-container']}>
+              <div className={styles['co-ps-chart-header']}>
+                <div className={styles['co-ps-chart-title']}>
+                  {filters.company === 'All Companies' ? 'Company Name' : filters.company}
+                </div>
+              </div>
+              <div className={styles['co-ps-chart-content']}>
+                <BarChartComponent data={companyChartData} />
+              </div>
+            </div>
+          </div>
+          
+          <div className={styles['co-ps-table-container']}>
+            <div className={styles['co-ps-table-header-row']}>
+              <div className={styles['co-ps-table-header']}>PLACED STUDENTS DETAILS</div>
+              <div className={styles['co-ps-table-actions']}>
+                <input
+                  type="text"
+                  className={styles['co-ps-search-input']}
+                  placeholder="Search name or reg no"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                <div className={styles['co-ps-dropdown-container']}>
+                  <button className={styles['co-ps-print-btn']} onClick={() => setOpen(!open)} >
+                    Print
+                  </button>
+                  {open && (
+                     <div className={styles['co-ps-dropdown-menu']}>
+                       <span onClick={handleExportToExcel}>Export to Excel</span>
+                       <span onClick={handleExportToPDF}>Save as PDF</span>
+                     </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className={styles['co-ps-table-scroll']}>
+              <table className={styles['co-ps-students-table']}>
+                <thead>
+                  <tr>
+                    <th>S.No</th>
+                    <th>Name</th>
+                    <th>Reg No.</th>
+                    <th>Department</th>
+                    <th>Batch</th>
+                    <th>Company</th>
+                    <th>Job Role</th>
+                    <th>Package</th>
+                    <th>Offer</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {isLoading ? (
+                    <tr className={styles['co-ps-loading-row']}>
+                      <td colSpan="10" className={styles['co-ps-loading-cell']}>
+                        <div className={styles['co-ps-loading-wrapper']}>
+                          <div className={styles['co-ps-spinner']}></div>
+                          <span className={styles['co-ps-loading-text']}>Loading placed students...</span>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : displayedStudents.length === 0 ? (
+                    <tr>
+                      <td colSpan="10" style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
+                        No placed students found
+                      </td>
+                    </tr>
+                  ) : (
+                    displayedStudents.map((student, index) => (
+                      <tr key={student.sno}>
+                        <td>{index + 1}</td>
+                        <td>
+                          <span className={styles['co-ps-student-name']}>
+                            {student.name}
+                          </span>
+                        </td>
+                        <td>{student.regNo}</td>
+                        <td>{student.dept}</td>
+                        <td>{student.batch}</td>
+                        <td>{student.company}</td>
+                        <td>{student.role}</td>
+                        <td>{student.pkg}</td>
+                        <td 
+                          style={{ 
+                            color: String(student.status || '').trim().toLowerCase() === "accepted" ? '#00B728' : String(student.status || '').trim().toLowerCase() === "rejected" ? '#E62727' : '#888',
+                            fontWeight: 'bold'
+                          }}
+                        >
+                          {student.status}
+                        </td>
+                        <td>
+                          <button
+                            type="button"
+                            style={{ border: 'none', background: 'transparent', padding: 0, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
+                            onClick={() => handleCardClick('placed-students-view')}
+                            aria-label={`View ${student.name}`}
+                            title="View student profile"
+                          >
+                            <FaEye className={styles['co-ps-profile-eye-icon']} />
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </main>
+      </div>
+
+      <ExportProgressAlert
+        isOpen={exportPopupState === 'progress'}
+        onClose={() => {}}
+        progress={exportProgress}
+        exportType={exportType}
+        color="#d23b42"
+        progressColor="#d23b42"
+      />
+
+      <ExportSuccessAlert
+        isOpen={exportPopupState === 'success'}
+        onClose={() => setExportPopupState('none')}
+        exportType={exportType}
+        color="#d23b42"
+      />
+
+      <ExportFailedAlert
+        isOpen={exportPopupState === 'failed'}
+        onClose={() => setExportPopupState('none')}
+        exportType={exportType}
+        color="#d23b42"
+      />
+    </>
+  );
+};
+
+export default PlacementDashboard;

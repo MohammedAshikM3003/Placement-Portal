@@ -1,0 +1,24 @@
+{
+  "total_pages": 2,
+  "total_students": 1,
+  "register_numbers": [
+    "73152311001"
+  ],
+  "candidate_names": [
+    "Ahish V"
+  ],
+  "departments": [
+    "Electrical and Electronics Engineering"
+  ],
+  "programmes": [
+    "Course Code"
+  ],
+  "semester_distribution": {
+    "4": 1
+  },
+  "total_subjects": 32,
+  "page_types": {
+    "1": "scanned",
+    "2": "scanned"
+  }
+}

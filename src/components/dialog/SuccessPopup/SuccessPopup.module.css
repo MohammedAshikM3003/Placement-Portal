@@ -1,0 +1,121 @@
+﻿/*
+ * SuccessPopup.module.css
+ * Shared success/save confirmation popup used across all portals.
+ * Colors auto-adapt to the active role theme via var(--primary).
+ */
+
+/* Overlay */
+.overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: rgba(0, 0, 0, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-modal, 1000);
+  cursor: pointer;
+  animation: fadeIn 0.2s ease;
+}
+
+/* Container */
+.container {
+  background-color: var(--color-white, #fff);
+  border-radius: var(--radius-lg, 12px);
+  width: 400px;
+  max-width: 90vw;
+  text-align: center;
+  box-shadow: var(--shadow-lg, 0 5px 15px rgba(0, 0, 0, 0.3));
+  overflow: hidden;
+  font-family: var(--font-base, 'Poppins', sans-serif);
+  animation: scaleIn 0.3s ease-out forwards;
+  cursor: default;
+}
+
+/* Header bar */
+.header {
+  background-color: var(--primary, #197AFF);
+  color: #fff;
+  padding: 1.2rem;
+  font-size: var(--text-xl, 1.4rem);
+  font-weight: var(--weight-bold, 700);
+  letter-spacing: 0.02em;
+}
+
+/* Body */
+.body {
+  padding: 2rem;
+}
+
+.title {
+  margin: 1rem 0 0.5rem 0;
+  font-size: 1.5rem;
+  font-weight: var(--weight-bold, 700);
+  color: var(--color-text, #000);
+}
+
+.message {
+  color: var(--color-text-muted, #888);
+  font-size: var(--text-md, 1rem);
+  line-height: 1.6;
+}
+
+/* Animated SVG checkmark */
+.successIcon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: block;
+  stroke-width: 2;
+  stroke: #fff;
+  stroke-miterlimit: 10;
+  margin: 0 auto 20px;
+  box-shadow: inset 0 0 0 #22C55E;
+  animation:
+    successFill  0.4s ease-in-out 0.4s forwards,
+    successScale 0.3s ease-in-out 0.9s both;
+}
+
+.successIconCircle {
+  stroke-dasharray: 166;
+  stroke-dashoffset: 166;
+  stroke-width: 2;
+  stroke-miterlimit: 10;
+  stroke: #22C55E;
+  fill: none;
+  animation: successStroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}
+
+.successIconCheck {
+  transform-origin: 50% 50%;
+  stroke-dasharray: 48;
+  stroke-dashoffset: 48;
+  animation: successStroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+}
+
+/* Footer */
+.footer {
+  padding: 1.5rem;
+  background-color: #f7f7f7;
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+}
+
+/* Buttons */
+.closeBtn {
+  background-color: var(--primary, #d23b42);
+  color: #fff;
+  border: none;
+  padding: 0.8rem 1.8rem;
+  border-radius: var(--radius-md, 8px);
+  font-weight: var(--weight-medium, 500);
+  font-family: var(--font-base, 'Poppins', sans-serif);
+  font-size: var(--text-base, 0.95rem);
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: background-color var(--transition-fast, 0.15s);
+}
+
+.closeBtn:hover {
+  filter: brightness(0.9);
+}
