@@ -6,6 +6,11 @@ import Adsidebar from '../components/Sidebar/Adsidebar';
 import styles from './Ad_ZipActive_Batches_Department.module.css';
 import Adminicon from '../assets/Adminicon.png';
 import Ad_zipfile_icon from '../assets/Ad_zipfile_icon.svg';
+import * as XLSX from 'xlsx';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import mongoDBService from '../services/mongoDBService.jsx';
+import { ExportProgressAlert, ExportSuccessAlert, ExportFailedAlert } from '../components/alerts';
 
 const getDepartmentFullForm = (dept) => {
     if (!dept) return '';
@@ -23,11 +28,6 @@ const getDepartmentFullForm = (dept) => {
     };
     return mapping[upperDept] || dept;
 };
-import * as XLSX from 'xlsx';
-import { jsPDF } from 'jspdf';
-import autoTable from 'jspdf-autotable';
-import mongoDBService from '../services/mongoDBService.jsx';
-import { ExportProgressAlert, ExportSuccessAlert, ExportFailedAlert } from '../components/alerts';
 
 const Ad_ZipActive_Batches_Department = () => {
     const navigate = useNavigate();

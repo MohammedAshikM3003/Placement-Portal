@@ -7,6 +7,11 @@ import '../components/alerts/AlertStyles.css';
 import { API_BASE_URL, joinApiUrl } from '../utils/apiConfig';
 import { PreviewProgressAlert } from '../components/alerts/DownloadPreviewAlerts';
 import { normalizeSkillCategories, DEFAULT_SKILL_CATEGORIES } from '../utils/skillUtils';
+import PopupExperience from './PopupExperience.jsx';
+import PopupProject from './PopupProject.jsx';
+import PopupCertification from './PopupCertification.jsx';
+import PopupAchievementBuilder from './PopupAchievementBuilder.jsx';
+import PopupAdditionalInfo from './PopupAdditionalInfo.jsx';
 
 // Dropdown Options Constants
 const JOB_ROLE_OPTIONS = [
@@ -48,11 +53,6 @@ const PAGES_OPTIONS = [
 ];
 
 // Popup components
-import PopupExperience from './PopupExperience.jsx';
-import PopupProject from './PopupProject.jsx';
-import PopupCertification from './PopupCertification.jsx';
-import PopupAchievementBuilder from './PopupAchievementBuilder.jsx';
-import PopupAdditionalInfo from './PopupAdditionalInfo.jsx';
 
 // ===== ATS KEYWORDS MAPPING =====
 // Used by AI for generating relevant content — NOT auto-added to skills
