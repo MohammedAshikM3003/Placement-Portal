@@ -846,9 +846,14 @@ const formatDobForPassword = (value) => {
 
     if (typeof value === 'string') {
         const trimmed = value.trim();
-        // If it's in YYYY-MM-DD format, convert to DDMMYYYY
-        if (trimmed.match(/^\d{4}-\d{2}-\d{2}$/)) {
-            const [year, month, day] = trimmed.split('-');
+        // If it's in YYYY-MM-DD or YYYY/MM/DD format, convert to DDMMYYYY
+        if (trimmed.match(/^\d{4}[-/]\d{2}[-/]\d{2}$/)) {
+            const [year, month, day] = trimmed.split(/[-/]/);
+            return `${day}${month}${year}`;
+        }
+        // If it's in DD-MM-YYYY or DD/MM/YYYY format, convert to DDMMYYYY
+        if (trimmed.match(/^\d{2}[-/]\d{2}[-/]\d{4}$/)) {
+            const [day, month, year] = trimmed.split(/[-/]/);
             return `${day}${month}${year}`;
         }
         // If it's already in DDMMYYYY format or other format, return as-is
@@ -2694,7 +2699,7 @@ function Admainprofile() {
             setOtpEmail(adminEmail);
             return await triggerOtpOrExecute({
                 onSkipOtp: async () => {
-                    await executeSave();
+                    await executeConfirmSave();
                 },
                 onOpenOtp: () => {
                     setIsOtpOpen(true);

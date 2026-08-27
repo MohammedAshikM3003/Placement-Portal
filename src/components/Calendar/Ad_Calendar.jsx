@@ -50,17 +50,55 @@ const Ad_Calendar = forwardRef(function Ad_Calendar({
   const daysInMonth  = new Date(calYear, calMonth + 1, 0).getDate();
   const firstWeekDay = new Date(calYear, calMonth, 1).getDay();
 
-  const selDay   = value ? parseInt(value.split('-')[2]) : null;
-  const selMonth = value ? parseInt(value.split('-')[1]) - 1 : null;
-  const selYear  = value ? parseInt(value.split('-')[0]) : null;
+  const parsedDate = useMemo(() => {
+    if (!value) return { day: null, month: null, year: null };
+    const parts = value.split(/[-/]/);
+    if (parts.length !== 3) return { day: null, month: null, year: null };
+
+    // Format YYYY-MM-DD or YYYY/MM/DD
+    if (parts[0].length === 4 || parseInt(parts[0]) > 1000) {
+      const year = parseInt(parts[0]);
+      const month = parseInt(parts[1]) - 1;
+      const day = parseInt(parts[2]);
+      return { day, month, year };
+    }
+
+    // Format DD-MM-YYYY or DD/MM/YYYY
+    if (parts[2].length === 4 || parseInt(parts[2]) > 1000) {
+      const day = parseInt(parts[0]);
+      const month = parseInt(parts[1]) - 1;
+      const year = parseInt(parts[2]);
+      return { day, month, year };
+    }
+
+    return { day: null, month: null, year: null };
+  }, [value]);
+
+  const selDay   = parsedDate.day;
+  const selMonth = parsedDate.month;
+  const selYear  = parsedDate.year;
   const isSelected = (d) => d === selDay && calMonth === selMonth && calYear === selYear;
   const isToday = (d) => d === today.getDate() && calMonth === today.getMonth() && calYear === today.getFullYear();
 
-  const displayVal = value
-    ? (() => { const [y,m,d] = value.split('-'); return `${d}-${m}-${y}`; })()
-    : '';
+  // Sync calendar view with selected date
+  useEffect(() => {
+    if (selMonth !== null && selYear !== null && !isNaN(selMonth) && !isNaN(selYear)) {
+      setCalMonth(selMonth);
+      setCalYear(selYear);
+    }
+  }, [selMonth, selYear]);
 
-  const currentYearForPicker = (maxDateValue || today).getFullYear();
+  const displayVal = useMemo(() => {
+    if (selDay === null || selMonth === null || selYear === null || isNaN(selDay) || isNaN(selMonth) || isNaN(selYear)) {
+      return '';
+    }
+    const dd = String(selDay).padStart(2, '0');
+    const mm = String(selMonth + 1).padStart(2, '0');
+    const yyyy = String(selYear);
+    return `${dd}-${mm}-${yyyy}`;
+  }, [selDay, selMonth, selYear]);
+
+  const currentYearForPicker = today.getFullYear();
   const startYear = currentYearForPicker - 100;
   const years = Array.from({ length: 101 }, (_, i) => startYear + i);
   const yearListRef    = useRef(null);
@@ -200,9 +238,33 @@ const Ad_Calendar = forwardRef(function Ad_Calendar({
                 .ad-year-scroll::-webkit-scrollbar-thumb:hover {
                   background-color: #3d8a3d;
                 }
-                .ad-year-scroll {
-                  scrollbar-width: thin;
-                  scrollbar-color: #4EA24E #e8f5e9;
+                .ad-year-scroll::-webkit-scrollbar-button,
+                .ad-year-scroll::-webkit-scrollbar-button:single-button,
+                .ad-year-scroll::-webkit-scrollbar-button:start:increment,
+                .ad-year-scroll::-webkit-scrollbar-button:start:decrement,
+                .ad-year-scroll::-webkit-scrollbar-button:end:increment,
+                .ad-year-scroll::-webkit-scrollbar-button:end:decrement,
+                .ad-year-scroll::-webkit-scrollbar-button:vertical:start:increment,
+                .ad-year-scroll::-webkit-scrollbar-button:vertical:start:decrement,
+                .ad-year-scroll::-webkit-scrollbar-button:vertical:end:increment,
+                .ad-year-scroll::-webkit-scrollbar-button:vertical:end:decrement,
+                .ad-year-scroll::-webkit-scrollbar-button:vertical:increment,
+                .ad-year-scroll::-webkit-scrollbar-button:vertical:decrement,
+                .ad-year-scroll::-webkit-scrollbar-button:horizontal:increment,
+                .ad-year-scroll::-webkit-scrollbar-button:horizontal:decrement,
+                .ad-year-scroll::-webkit-scrollbar-button:increment,
+                .ad-year-scroll::-webkit-scrollbar-button:decrement {
+                  display: none !important;
+                  width: 0 !important;
+                  height: 0 !important;
+                  background: transparent !important;
+                  border: none !important;
+                }
+                @supports (-moz-appearance: none) {
+                  .ad-year-scroll {
+                    scrollbar-width: thin;
+                    scrollbar-color: #4EA24E #e8f5e9;
+                  }
                 }
               `}</style>
               <div
@@ -280,9 +342,9 @@ const Ad_Calendar = forwardRef(function Ad_Calendar({
                         border: 'none',
                         cursor: isDisabled ? 'not-allowed' : 'pointer', fontSize: '0.95rem',
                         fontWeight: sel || tod ? 700 : 500,
-                        backgroundColor: sel ? themeColor : isHov ? hoverColor : tod ? hoverColor : 'transparent',
-                        color: sel ? '#fff' : isDisabled ? '#b7b7b7' : tod ? themeColor : '#333',
-                        opacity: isDisabled ? 0.45 : 1,
+                        backgroundColor: sel ? themeColor : isHov ? hoverColor : tod ? '#e2f7e2' : 'transparent',
+                        color: sel ? '#fff' : tod ? themeColor : isDisabled ? '#b7b7b7' : '#333',
+                        opacity: isDisabled && !tod ? 0.45 : 1,
                         fontFamily: "'Poppins', sans-serif",
                         transition: 'background-color 0.15s',
                         position: 'relative'
@@ -335,11 +397,11 @@ const Ad_Calendar = forwardRef(function Ad_Calendar({
             ? 'none'
             : (triggerHighlighted ? (themeColor === '#4EA24E' ? '0 0 0 3px rgba(78,162,78,0.18), 0 0 14px rgba(78,162,78,0.28)' : '0 0 0 3px rgba(210,59,66,0.18), 0 0 14px rgba(210,59,66,0.28)') : hovered && !disabled ? (themeColor === '#4EA24E' ? '0 0 0 3px rgba(78,162,78,0.2)' : '0 0 0 3px rgba(210,59,66,0.2)') : 'none'),
           borderRadius: '8px',
-          padding: isFilterVariant ? '0px 15px' : '0.9rem',
+          padding: isFilterVariant ? '0px 10px' : '0.9rem',
           height: isFilterVariant ? '45px' : 'auto',
           cursor: disabled ? 'not-allowed' : 'pointer',
           backgroundColor: disabled ? '#f5f5f5' : '#ffffff',
-          fontSize: '0.95rem',
+          fontSize: isFilterVariant ? '0.78rem' : '0.95rem',
           userSelect: 'none', boxSizing: 'border-box', width: '100%',
           opacity: disabled ? 0.78 : 1,
           transition: 'border-color 0.2s, box-shadow 0.2s, background-color 0.2s',

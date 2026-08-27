@@ -120,10 +120,10 @@ function ATSScoreCard({ analysisResult }) {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          gap: '50px',
+          gap: { xs: '20px', sm: '50px' },
           flexDirection: { xs: 'column', sm: 'row' },
           py: 0.5,
-          ml: '60px'
+          ml: { xs: 0, sm: '60px' }
         }}>
           {/* Score Circle */}
           <Box sx={{
@@ -1317,16 +1317,16 @@ function MainContent({ onViewChange }) {
     <Box sx={{ p: 0, flex: 1, display: 'flex', flexDirection: 'column', width: '100%', minHeight: 0 }}>
       <Box display="flex" gap={2} sx={{ width: '100%', flex: 1, alignItems: 'stretch', flexDirection: { xs: 'column', md: 'row' } }}>
         {/* Left Column */}
-        <Box sx={{ display: 'flex', flexDirection: 'column', width: { xs: '100%', md: '30%' }, height: '100%', flexShrink: 0 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', width: { xs: '100%', md: '30%' }, height: { xs: 'auto', md: '100%' }, flexShrink: 0 }}>
           <Paper
             elevation={3}
             sx={{
               width: '100%',
-              height: '100%',
-              flex: 1,
+              height: { xs: 'auto', md: '100%' },
+              flex: { xs: 'none', md: 1 },
               p: 2,
               pt: 2,
-              pb: 2,
+              pb: 2.5,
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
@@ -1342,7 +1342,7 @@ function MainContent({ onViewChange }) {
               '&:hover': { borderColor: '#2085f6' }
             }}
           >
-            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', mt: 0, flexGrow: 1 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', mt: 0, flexGrow: { xs: 0, md: 1 } }}>
               <img src={useMemo(() => studentData?.profilePicURL ? resolveProfileUrl(studentData.profilePicURL) : Adminicon, [studentData?.profilePicURL])} alt="Profile" style={{ width: 95, height: 95, borderRadius: '50%', marginBottom: 12, border: '3px solid rgba(255,255,255,0.3)', boxShadow: '0 4px 12px rgba(0,0,0,0.2)', objectFit: 'cover' }} />
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.8, width: '100%', flexGrow: 1, mb: 1, px: 1 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', width: '100%', gap: 0.5 }}><Typography variant="body1" color="#e3f2fd" fontSize="15px" sx={{ fontWeight: 'bold', minWidth: '75px' }}>Reg No</Typography><Typography variant="body1" color="#e3f2fd" fontSize="15px" sx={{ fontWeight: 'bold', minWidth: '15px', textAlign: 'center' }}>:</Typography><Typography variant="body1" color="#e3f2fd" fontSize="15px" sx={{ fontWeight: 'bold', flex: 1, wordBreak: 'break-word' }}>{studentData?.regNo || 'N/A'}</Typography></Box>
@@ -1520,69 +1520,124 @@ function MainContent({ onViewChange }) {
                     </Box>
                   )}
 
-                  <Box sx={{ width: '100%', mt: 'auto', pt: 1, display: 'flex', justifyContent: 'center' }}>
+                  <Box sx={{ width: '100%', mt: 'auto', pt: 2, pb: 1, px: { xs: 1, sm: 2 }, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 1.8 }}>
+                    {/* Top Button: Click to Build Resume */}
                     <Button
                       variant="contained"
                       size="large"
                       onClick={handleBuildResume}
                       disabled={isBuildLoading}
                       sx={{
+                        width: { xs: '100%', sm: '290px' },
+                        maxWidth: '290px',
+                        height: '46px',
                         background: isBuildLoading ? '#475569' : '#1e3a5f',
                         borderRadius: '8px',
                         fontWeight: 700,
-                        fontSize: '17px',
+                        fontSize: { xs: '13.5px', sm: '15px' },
                         textTransform: 'none',
-                        px: 4.5,
-                        py: 1.4,
+                        whiteSpace: 'nowrap',
+                        px: { xs: 1.5, sm: 2.5 },
                         boxShadow: '0 4px 15px rgba(30, 58, 95, 0.3)',
-                        mb: resumeFromDB ? 2 : 0,
                         '&:hover': { background: isBuildLoading ? '#475569' : '#2563eb', boxShadow: isBuildLoading ? 'none' : '0 6px 20px rgba(37, 99, 235, 0.4)' },
                         '&.Mui-disabled': { color: '#fff', background: '#475569' }
                       }}
                     >
-                      <Box display="flex" alignItems="center" gap={1}>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
+                      <Box display="flex" alignItems="center" justifyContent="center" gap={1}>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
                           <path fill="currentColor" d="m16.06 13.09l5.63 5.59l-3.32 3.28l-5.59-5.59v-.92l2.36-2.36zm.91-2.53L16 9.6l-4.79 4.8v1.97L5.58 22L2.3 18.68l5.59-5.59h1.97l.78-.78L6.8 8.46H5.5L2.69 5.62L5.31 3l2.8 2.8v1.31L12 10.95l2.66-2.66l-.96-1.01L15 5.97h-2.66l-.65-.65L15 2l.66.66v2.66L16.97 4l3.28 3.28c1.09 1.1 1.09 2.89 0 3.98l-1.97-2.01z" />
                         </svg>
-                        <span>{isBuildLoading ? 'Click to Build Resume ...' : 'Click to Build Resume →'}</span>
+                        <span>{isBuildLoading ? 'Click to Build Resume ...' : 'Click to Build Resume'}</span>
                       </Box>
                     </Button>
-                    {resumeFromDB && (
-                      <>
-                        <Box display="flex" gap={1.5} flexWrap="wrap" justifyContent="center" mb={2}>
-                          <Button variant="contained" size="small" startIcon={<Visibility />} onClick={handlePreview} sx={{ backgroundColor: '#8b5cf6', borderRadius: '8px', fontWeight: 600, fontSize: '15px', textTransform: 'none', px: 3.5, py: 1, boxShadow: '0 2px 8px rgba(139, 92, 246, 0.3)', '&:hover': { backgroundColor: '#7c3aed', boxShadow: '0 4px 12px rgba(139, 92, 246, 0.4)' } }}>Preview</Button>
-                          <Button variant="contained" size="small" startIcon={<Download />} onClick={handleDownload} sx={{ backgroundColor: '#22c55e', borderRadius: '8px', fontWeight: 600, fontSize: '15px', textTransform: 'none', px: 3.5, py: 1, boxShadow: '0 2px 8px rgba(34, 197, 94, 0.3)', '&:hover': { backgroundColor: '#16a34a', boxShadow: '0 4px 12px rgba(34, 197, 94, 0.4)' } }}>Download</Button>
-                        </Box>
-                        <Button
-                          variant="contained"
-                          onClick={handleCheckATS}
-                          sx={{
-                            background: 'linear-gradient(135deg, #2DBE7F 0%, #1a9e62 100%)',
-                            borderRadius: '8px',
-                            fontWeight: 700,
-                            fontSize: '15px',
-                            textTransform: 'none',
-                            px: 4,
-                            py: 1.3,
-                            boxShadow: '0 4px 15px rgba(45, 190, 127, 0.3)',
-                            '&:hover': { background: 'linear-gradient(135deg, #1a9e62 0%, #158f55 100%)', boxShadow: '0 6px 20px rgba(45, 190, 127, 0.4)' }
-                          }}
-                        >
-                          <Box display="flex" alignItems="center" gap={1}>
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
-                              <g fill="none">
-                                <path d="m12.594 23.258l-.012.002l-.071.035l-.02.004l-.014-.004l-.071-.036q-.016-.004-.024.006l-.004.01l-.017.428l.005.02l.01.013l.104.074l.015.004l.012-.004l.104-.074l.012-.016l.004-.017l-.017-.427q-.004-.016-.016-.018m.264-.113l-.014.002l-.184.093l-.01.01l-.003.011l.018.43l.005.012l.008.008l.201.092q.019.005.029-.008l.004-.014l-.034-.614q-.005-.019-.02-.022m-.715.002a.02.02 0 0 0-.027.006l-.006.014l-.034.614q.001.018.017.024l.015-.002l.201-.093l.01-.008l.003-.011l.018-.43l-.003-.012l-.01-.01z" />
-                                <path fill="currentColor" d="M10.5 2c1.251 0 2.44.27 3.509.756a3 3 0 0 0-.97 1.759A6.5 6.5 0 1 0 17 10.5l-.005-.269c.536.48 1.239.765 1.991.769a8.46 8.46 0 0 1-1.809 4.762l3.652 3.652a1 1 0 0 1-1.414 1.414l-3.652-3.652A8.5 8.5 0 1 1 10.5 2m0 3c.927 0 1.801.23 2.568.635a3 3 0 0 0 1.963 2.204l.348.119A5.5 5.5 0 1 1 10.5 5M19 1a1 1 0 0 1 .898.56l.048.117l.13.378a3 3 0 0 0 1.684 1.8l.185.07l.378.129a1 1 0 0 1 .118 1.844l-.118.048l-.378.13a3 3 0 0 0-1.8 1.684l-.07.185l-.129.378a1 1 0 0 1-1.844.117l-.048-.117l-.13-.378a3 3 0 0 0-1.684-1.8l-.185-.07l-.378-.129a1 1 0 0 1-.118-1.844l.118-.048l.378-.13a3 3 0 0 0 1.8-1.684l.07-.185l.129-.378A1 1 0 0 1 19 1" />
-                              </g>
-                            </svg>
-                            <span>Check ATS Score →</span>
-                          </Box>
-                        </Button>
-                      </>
-                    )}
+
+                    {/* Middle Row: Preview & Download side by side */}
+                    <Box sx={{ width: { xs: '100%', sm: '290px' }, maxWidth: '290px', display: 'flex', gap: 1.5, justifyContent: 'center', alignItems: 'center' }}>
+                      <Button
+                        variant="contained"
+                        startIcon={<Visibility />}
+                        onClick={handlePreview}
+                        disabled={!resumeFromDB}
+                        sx={{
+                          flex: { xs: 1, sm: 'none' },
+                          width: { xs: 'auto', sm: '137px' },
+                          height: '46px',
+                          backgroundColor: '#8b5cf6',
+                          borderRadius: '8px',
+                          fontWeight: 600,
+                          fontSize: { xs: '13.5px', sm: '15px' },
+                          textTransform: 'none',
+                          whiteSpace: 'nowrap',
+                          px: { xs: 1, sm: 2 },
+                          boxShadow: '0 2px 8px rgba(139, 92, 246, 0.3)',
+                          '&:hover': { backgroundColor: '#7c3aed', boxShadow: '0 4px 12px rgba(139, 92, 246, 0.4)' },
+                          '&.Mui-disabled': { opacity: 0.5, backgroundColor: '#8b5cf6', color: '#fff' }
+                        }}
+                      >
+                        Preview
+                      </Button>
+
+                      <Button
+                        variant="contained"
+                        startIcon={<Download />}
+                        onClick={handleDownload}
+                        disabled={!resumeFromDB}
+                        sx={{
+                          flex: { xs: 1, sm: 'none' },
+                          width: { xs: 'auto', sm: '137px' },
+                          height: '46px',
+                          backgroundColor: '#22c55e',
+                          borderRadius: '8px',
+                          fontWeight: 600,
+                          fontSize: { xs: '13.5px', sm: '15px' },
+                          textTransform: 'none',
+                          whiteSpace: 'nowrap',
+                          px: { xs: 1, sm: 2 },
+                          boxShadow: '0 2px 8px rgba(34, 197, 94, 0.3)',
+                          '&:hover': { backgroundColor: '#16a34a', boxShadow: '0 4px 12px rgba(34, 197, 94, 0.4)' },
+                          '&.Mui-disabled': { opacity: 0.5, backgroundColor: '#22c55e', color: '#fff' }
+                        }}
+                      >
+                        Download
+                      </Button>
+                    </Box>
+
+                    {/* Bottom Button: Check ATS Score */}
+                    <Button
+                      variant="contained"
+                      onClick={handleCheckATS}
+                      disabled={!resumeFromDB}
+                      sx={{
+                        width: { xs: '100%', sm: '290px' },
+                        maxWidth: '290px',
+                        height: '46px',
+                        background: 'linear-gradient(135deg, #2DBE7F 0%, #1a9e62 100%)',
+                        borderRadius: '8px',
+                        fontWeight: 700,
+                        fontSize: { xs: '13.5px', sm: '15px' },
+                        textTransform: 'none',
+                        whiteSpace: 'nowrap',
+                        px: { xs: 1.5, sm: 2.5 },
+                        boxShadow: '0 4px 15px rgba(45, 190, 127, 0.3)',
+                        '&:hover': { background: 'linear-gradient(135deg, #1a9e62 0%, #158f55 100%)', boxShadow: '0 6px 20px rgba(45, 190, 127, 0.4)' },
+                        '&.Mui-disabled': { opacity: 0.5, background: '#2DBE7F', color: '#fff', boxShadow: 'none' }
+                      }}
+                    >
+                      <Box display="flex" alignItems="center" justifyContent="center" gap={1}>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
+                          <g fill="none">
+                            <path d="m12.594 23.258l-.012.002l-.071.035l-.02.004l-.014-.004l-.071-.036q-.016-.004-.024.006l-.004.01l-.017.428l.005.02l.01.013l.104.074l.015.004l.012-.004l.104-.074l.012-.016l.004-.017l-.017-.427q-.004-.016-.016-.018m.264-.113l-.014.002l-.184.093l-.01.01-.003.011l.018.43l.005.012l.008.008l.201.092q.019.005.029-.008l.004-.014l-.034-.614q-.005-.019-.02-.022m-.715.002a.02.02 0 0 0-.027.006l-.006.014l-.034.614q.001.018.017.024l.015-.002l.201-.093l.01-.008l.003-.011l.018-.43l-.003-.012l-.01-.01z" />
+                            <path fill="currentColor" d="M10.5 2c1.251 0 2.44.27 3.509.756a3 3 0 0 0-.97 1.759A6.5 6.5 0 1 0 17 10.5l-.005-.269c.536.48 1.239.765 1.991.769a8.46 8.46 0 0 1-1.809 4.762l3.652 3.652a1 1 0 0 1-1.414 1.414l-3.652-3.652A8.5 8.5 0 1 1 10.5 2m0 3c.927 0 1.801.23 2.568.635a3 3 0 0 0 1.963 2.204l.348.119A5.5 5.5 0 1 1 10.5 5M19 1a1 1 0 0 1 .898.56l.048.117l.13.378a3 3 0 0 0 1.684 1.8l.185.07l.378.129a1 1 0 0 1 .118 1.844l-.118.048l-.378.13a3 3 0 0 0-1.8 1.684l-.07.185l-.129.378a1 1 0 0 1-1.844.117l-.048-.117l-.13-.378a3 3 0 0 0-1.684-1.8l-.185-.07l-.378-.129a1 1 0 0 1-.118-1.844l.118-.048l.378-.13a3 3 0 0 0 1.8-1.684l.07-.185l.129-.378A1 1 0 0 1 19 1" />
+                          </g>
+                        </svg>
+                        <span>Check ATS Score</span>
+                      </Box>
+                    </Button>
                   </Box>
+
                 </Paper>
               </Box>
+
 
               {/* Bottom Cards - ATS Score and Suggestions */}
               {resumeFromDB && (

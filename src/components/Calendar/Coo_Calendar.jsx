@@ -38,31 +38,31 @@ const Coo_Calendar = forwardRef(function Coo_Calendar({
   const [hoveredYear, setHoveredYear] = useState(null);
   const [hoveredMonthBtn, setHoveredMonthBtn] = useState(false);
   const [hoveredYearBtn, setHoveredYearBtn] = useState(false);
-  const triggerRef  = useRef(null);
+  const triggerRef = useRef(null);
   const calendarRef = useRef(null);
 
   useImperativeHandle(ref, () => triggerRef.current);
 
-  const MONTHS = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
-  const DAYS   = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+  const MONTHS = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+  const DAYS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 
-  const daysInMonth  = new Date(calYear, calMonth + 1, 0).getDate();
+  const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
   const firstWeekDay = new Date(calYear, calMonth, 1).getDay();
 
-  const selDay   = value ? parseInt(value.split('-')[2]) : null;
+  const selDay = value ? parseInt(value.split('-')[2]) : null;
   const selMonth = value ? parseInt(value.split('-')[1]) - 1 : null;
-  const selYear  = value ? parseInt(value.split('-')[0]) : null;
+  const selYear = value ? parseInt(value.split('-')[0]) : null;
   const isSelected = (d) => d === selDay && calMonth === selMonth && calYear === selYear;
   const isToday = (d) => d === today.getDate() && calMonth === today.getMonth() && calYear === today.getFullYear();
 
   const displayVal = value
-    ? (() => { const [y,m,d] = value.split('-'); return `${d}-${m}-${y}`; })()
+    ? (() => { const [y, m, d] = value.split('-'); return `${d}-${m}-${y}`; })()
     : '';
 
   const currentYearForPicker = (maxDateValue || today).getFullYear();
   const startYear = currentYearForPicker - 100;
   const years = Array.from({ length: 101 }, (_, i) => startYear + i);
-  const yearListRef    = useRef(null);
+  const yearListRef = useRef(null);
 
   useEffect(() => {
     if (viewMode === 'year' && yearListRef.current) {
@@ -78,12 +78,12 @@ const Coo_Calendar = forwardRef(function Coo_Calendar({
     if (disabled) return;
     setOpen(o => !o);
   };
-  const handleClose  = () => setOpen(false);
+  const handleClose = () => setOpen(false);
 
   useEffect(() => {
     if (!open) return;
     const handler = (e) => {
-      const inTrigger  = triggerRef.current  && triggerRef.current.contains(e.target);
+      const inTrigger = triggerRef.current && triggerRef.current.contains(e.target);
       const inCalendar = calendarRef.current && calendarRef.current.contains(e.target);
       if (!inTrigger && !inCalendar) setOpen(false);
     };
@@ -170,20 +170,20 @@ const Coo_Calendar = forwardRef(function Coo_Calendar({
                 const isSel = i === calMonth;
                 const isHov = hoveredMonth === i;
                 return (
-                <button
-                  key={m}
-                  onClick={() => { setCalMonth(i); setViewMode('day'); }}
-                  onMouseEnter={() => setHoveredMonth(i)}
-                  onMouseLeave={() => setHoveredMonth(null)}
-                  style={{
-                    padding: '12px 6px', borderRadius: '8px', border: 'none',
-                    cursor: 'pointer', fontWeight: 700, fontSize: '0.95rem',
-                    backgroundColor: isSel ? '#D23B42' : isHov ? '#fce8e9' : 'transparent',
-                    color: isSel ? '#fff' : '#333',
-                    fontFamily: "'Poppins', sans-serif",
-                    transition: 'background-color 0.15s'
-                  }}
-                >{m}</button>
+                  <button
+                    key={m}
+                    onClick={() => { setCalMonth(i); setViewMode('day'); }}
+                    onMouseEnter={() => setHoveredMonth(i)}
+                    onMouseLeave={() => setHoveredMonth(null)}
+                    style={{
+                      padding: '12px 6px', borderRadius: '8px', border: 'none',
+                      cursor: 'pointer', fontWeight: 700, fontSize: '0.95rem',
+                      backgroundColor: isSel ? '#D23B42' : isHov ? '#fce8e9' : 'transparent',
+                      color: isSel ? '#fff' : '#333',
+                      fontFamily: "'Poppins', sans-serif",
+                      transition: 'background-color 0.15s'
+                    }}
+                  >{m}</button>
                 );
               })}
             </div>
@@ -219,21 +219,21 @@ const Coo_Calendar = forwardRef(function Coo_Calendar({
                     const isSel = y === calYear;
                     const isHov = hoveredYear === y;
                     return (
-                    <div
-                      key={y}
-                      data-selected={y === calYear}
-                      onClick={() => { setCalYear(y); setViewMode('day'); }}
-                      onMouseEnter={() => setHoveredYear(y)}
-                      onMouseLeave={() => setHoveredYear(null)}
-                      style={{
-                        padding: '12px 20px', cursor: 'pointer',
-                        fontWeight: 700, fontSize: '1rem', textAlign: 'center',
-                        fontFamily: "'Poppins', sans-serif",
-                        backgroundColor: isSel ? '#D23B42' : isHov ? '#fce8e9' : 'transparent',
-                        color: isSel ? '#fff' : '#333',
-                        transition: 'background-color 0.15s'
-                      }}
-                    >{y}</div>
+                      <div
+                        key={y}
+                        data-selected={y === calYear}
+                        onClick={() => { setCalYear(y); setViewMode('day'); }}
+                        onMouseEnter={() => setHoveredYear(y)}
+                        onMouseLeave={() => setHoveredYear(null)}
+                        style={{
+                          padding: '12px 20px', cursor: 'pointer',
+                          fontWeight: 700, fontSize: '1rem', textAlign: 'center',
+                          fontFamily: "'Poppins', sans-serif",
+                          backgroundColor: isSel ? '#D23B42' : isHov ? '#fce8e9' : 'transparent',
+                          color: isSel ? '#fff' : '#333',
+                          transition: 'background-color 0.15s'
+                        }}
+                      >{y}</div>
                     );
                   })}
                 </div>
@@ -329,7 +329,7 @@ const Coo_Calendar = forwardRef(function Coo_Calendar({
         onMouseLeave={() => setHovered(false)}
         style={{
           display: 'flex', alignItems: 'center', gap: '8px',
-          border: isFilterVariant 
+          border: isFilterVariant
             ? (open || (hovered && !disabled) ? '3px solid #D23B42' : '3px solid #ccc')
             : (triggerHighlighted ? '2px solid #b32d34' : hovered && !disabled ? '1px solid #D23B42' : '1px solid #fce8e9'),
           boxShadow: isFilterVariant
@@ -357,8 +357,8 @@ const Coo_Calendar = forwardRef(function Coo_Calendar({
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="2" strokeLinecap="round">
           <rect x="3" y="4" width="18" height="18" rx="2" />
           <line x1="16" y1="2" x2="16" y2="6" />
-          <line x1="8"  y1="2" x2="8"  y2="6" />
-          <line x1="3"  y1="10" x2="21" y2="10" />
+          <line x1="8" y1="2" x2="8" y2="6" />
+          <line x1="3" y1="10" x2="21" y2="10" />
         </svg>
       </div>
       {calendarPortal}

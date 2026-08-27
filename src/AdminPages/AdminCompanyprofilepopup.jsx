@@ -437,6 +437,7 @@ function AdminCompanyprofilePopup({ onLogout }) {
                                     <AdCalendar
                                         value={formData.visitDate}
                                         onChange={handleVisitDateChange}
+                                        disabled={isReadOnly}
                                     />
                                 </div>
                             </div>

@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import Navbar from "../components/Navbar/Adnavbar";
 import Sidebar from "../components/Sidebar/Adsidebar";
 import styles from './AdminSemesterMarksheetView.module.css';
@@ -128,7 +130,7 @@ const AdminSemesterMarksheetView = ({ onLogout, onViewChange }) => {
     _id: studentSource._id || studentSource.id || '',
     name: studentSource.studentName || studentSource.name || '',
     regNo: studentSource.regNo || studentSource.registerNumber || '',
-    dob: studentSource.dob || '',
+    dob: studentSource.dob || studentData?.dob || '',
     year: studentSource.academicYear || studentSource.year || '',
     semester: studentSource.semester || targetSemester || '',
     programme: studentSource.programme || studentSource.department || '',
@@ -172,6 +174,103 @@ const AdminSemesterMarksheetView = ({ onLogout, onViewChange }) => {
     });
   };
 
+  const generatePDF = () => {
+    if (!student || !courses) return;
+
+    const doc = new jsPDF();
+    
+    // Add border
+    doc.setLineWidth(0.5);
+    doc.rect(5, 5, 200, 287);
+    
+    // College Header
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(16);
+    doc.text("K.S.R. COLLEGE OF ENGINEERING", 105, 18, { align: "center" });
+    
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    doc.text("(Autonomous, Affiliated to Anna University Chennai)", 105, 23, { align: "center" });
+    doc.text("Tiruchengode - 637 215, Tamil Nadu", 105, 27, { align: "center" });
+    
+    doc.setLineWidth(0.3);
+    doc.line(10, 31, 200, 31);
+    
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(12);
+    doc.text("OFFICE OF THE CONTROLLER OF EXAMINATIONS", 105, 38, { align: "center" });
+    doc.text(`SEMESTER MARKSHEET REPORT - SEMESTER ${student.semester || targetSemester || ''}`, 105, 44, { align: "center" });
+    
+    doc.line(10, 48, 200, 48);
+    
+    // Student Info
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    
+    doc.text("Register Number:", 15, 56);
+    doc.text("Student Name:", 15, 62);
+    doc.text("Programme/Branch:", 15, 68);
+    doc.text("Academic Year:", 15, 74);
+    
+    doc.text("Exam Month/Year:", 120, 56);
+    doc.text("Semester:", 120, 62);
+    doc.text("SGPA:", 120, 68);
+    doc.text("CGPA:", 120, 74);
+    
+    doc.setFont("helvetica", "normal");
+    doc.text(String(student.regNo || '--'), 50, 56);
+    doc.text(String(student.name || 'Student'), 50, 62);
+    doc.text(String(student.programme || '--'), 50, 68);
+    doc.text(String(semesterRecord?.academicYear || student.year || '--'), 50, 74);
+    
+    doc.text(String(student.examDate || '--'), 155, 56);
+    doc.text(String(student.semester || '--'), 155, 62);
+    doc.text(String(student.currentSgpa || '0.0'), 155, 68);
+    doc.text(String(student.overallCgpa || '0.0'), 155, 74);
+    
+    doc.line(10, 80, 200, 80);
+    
+    // Subjects Table
+    const tableBody = courses.map(s => {
+        const rawResult = (s.result || s.status || '').toString().trim().toUpperCase();
+        const resultValue = rawResult === 'PASS' || rawResult === 'CLEARED' ? 'PASS' : rawResult === 'FAIL' || rawResult === 'ARREAR' ? 'RA' : rawResult;
+        return [
+            s.courseCode || s.subjectCode || '--',
+            s.courseName || s.subjectName || '--',
+            String(s.credits || '0'),
+            s.grade || '--',
+            resultValue
+        ];
+    });
+    
+    autoTable(doc, {
+        startY: 85,
+        head: [['COURSE CODE', 'COURSE NAME', 'CREDITS', 'GRADE', 'RESULT']],
+        body: tableBody,
+        theme: 'grid',
+        headStyles: { fillColor: [78, 162, 78], textColor: [255, 255, 255], fontStyle: 'bold' }, // Admin Green header
+        styles: { fontSize: 9, cellPadding: 3 },
+        columnStyles: {
+            0: { cellWidth: 35 },
+            1: { cellWidth: 90 },
+            2: { cellWidth: 20, halign: 'center' },
+            3: { cellWidth: 20, halign: 'center' },
+            4: { cellWidth: 25, halign: 'center' }
+        }
+    });
+    
+    const finalY = doc.lastAutoTable.finalY + 15;
+    doc.setFont("helvetica", "italic");
+    doc.setFontSize(8);
+    doc.text(`Generated on ${new Date().toLocaleDateString('en-GB')} via Placement Portal (Admin Mode)`, 15, finalY);
+    
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    doc.text("Controller of Examinations", 150, finalY + 15);
+    
+    doc.save(`Marksheet_${student.regNo || 'Student'}_Sem${student.semester || 'Unknown'}.pdf`);
+  };
+
   const handleDownloadMarksheet = () => {
     console.log('Download marksheet');
     setExportType('Marksheet');
@@ -187,19 +286,25 @@ const AdminSemesterMarksheetView = ({ onLogout, onViewChange }) => {
         }
         return prev + 10; // Smaller increments for smoother animation
       });
-    }, 300); // Slower interval for smoother updates
+    }, 150); // Slower interval for smoother updates
     
     // Simulate download completion
     setTimeout(() => {
       setExportProgress(100);
       clearInterval(progressInterval);
       
+      try {
+        generatePDF();
+      } catch (err) {
+        console.error('PDF generation failed:', err);
+      }
+
       // Show success popup
       setTimeout(() => {
         setExportPopupState('success');
         setExportProgress(0);
-      }, 500); // Longer delay for smooth completion
-    }, 2000); // Longer duration for smoother experience
+      }, 300);
+    }, 1000);
   };
 
   // Preview Progress Popup Component

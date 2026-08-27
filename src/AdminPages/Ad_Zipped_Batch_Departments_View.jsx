@@ -153,10 +153,12 @@ const Ad_Zipped_Batch_Departments_View = () => {
         }
     }, [isAuthenticated, fetchDepartments]);
 
+    /*
     // Handle back navigation / discard
     const handleDiscard = () => {
         navigate('/admin/zipped-batches');
     };
+    */
 
     // Handle view department
     const handleViewDepartment = (dept) => {
@@ -175,6 +177,7 @@ const Ad_Zipped_Batch_Departments_View = () => {
         });
     };
 
+    /*
     // Handle unzip
     const handleUnzipClick = () => {
         setShowUnzipPopup(true);
@@ -213,11 +216,12 @@ const Ad_Zipped_Batch_Departments_View = () => {
         } catch (err) {
             console.error('Unzip error:', err);
             clearInterval(progressInterval);
-            setShowUnzippingProgress(false);
+            setShowZippignProgress(false);
             setExportFailed({ message: 'Failed to unzip batch' });
             setTimeout(() => setExportFailed(null), 3000);
         }
     };
+    */
 
     // Handle download
     const handleDownload = async () => {
@@ -572,19 +576,12 @@ const Ad_Zipped_Batch_Departments_View = () => {
                         </table>
                     </div>
 
-                    {/* Action Buttons */}
-                    <div className={styles['Ad-zbdv-action-buttons']}>
-                        <button className={styles['Ad-zbdv-discard-btn']} onClick={handleDiscard}>
-                            Discard
-                        </button>
-                        <button className={styles['Ad-zbdv-unzip-btn']} onClick={handleUnzipClick}>
-                            Unzip
-                        </button>
-                    </div>
+
                 </div>
             </main>
 
             {/* Unzip Popup */}
+            {/* Commented out unused UnzipConfirmationPopup
             {showUnzipPopup && (
                 <UnzipConfirmationPopup
                     onClose={() => setShowUnzipPopup(false)}
@@ -593,6 +590,7 @@ const Ad_Zipped_Batch_Departments_View = () => {
                     isUnzipping={isUnzipping}
                 />
             )}
+            */}
 
             {/* Export Alerts */}
             <ExportProgressAlert

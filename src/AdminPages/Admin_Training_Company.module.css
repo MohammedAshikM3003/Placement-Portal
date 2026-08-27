@@ -968,7 +968,7 @@
         position: relative;
         display: inline-block;
         z-index: 15;
-        margin-top: -90px;
+        margin-top: 0;
     }
 
     .Admin-tc-sidebar-wrapper {
@@ -1078,6 +1078,45 @@
         box-sizing: border-box !important;
     }
 
+    .Admin-tc-filter-header-container {
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        position: relative !important;
+        width: 100% !important;
+        margin-bottom: 12px !important;
+    }
+
+    .Admin-tc-filter-header {
+        margin: 0 auto !important;
+        width: auto !important;
+        min-width: 100px !important;
+        max-width: 160px !important;
+        height: 32px !important;
+        line-height: 32px !important;
+        font-size: 0.85rem !important;
+        padding: 0 14px !important;
+        white-space: nowrap !important;
+        font-weight: 600 !important;
+        display: block !important;
+        text-align: center !important;
+        flex-shrink: 0 !important;
+    }
+
+    .Admin-tc-clear-btn-header {
+        position: absolute !important;
+        right: -17px !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        height: 32px !important;
+        line-height: 32px !important;
+        padding: 0 14px !important;
+        font-size: 0.8rem !important;
+        border-radius: 20px !important;
+        flex-shrink: 0 !important;
+        margin: 0 !important;
+    }
+
     .Admin-tc-filter-content {
         grid-template-columns: 1fr !important;
         gap: 12px !important;
@@ -1098,14 +1137,40 @@
         height: auto !important;
         width: 100% !important;
         flex: none !important;
+        box-sizing: border-box !important;
     }
 
     .Admin-tc-action-card {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 8px !important;
+        padding: 12px 16px !important;
         flex: 1 1 auto !important;
         width: 100% !important;
-        min-height: 55px !important;
         height: auto !important;
         box-sizing: border-box !important;
+    }
+
+    .Admin-tc-action-header,
+    .Admin-tc-header-disabled,
+    .Admin-tc-header-edit-active,
+    .Admin-tc-header-delete-active {
+        align-self: flex-start !important;
+        text-align: left !important;
+        width: 100% !important;
+    }
+
+    .Admin-tc-action-description {
+        margin: 0 !important;
+        width: 100% !important;
+        text-align: left !important;
+    }
+
+    .Admin-tc-action-btn {
+        height: 40px !important;
+        width: 100% !important;
+        max-width: 100% !important;
     }
 
     /* Table Section Adjustments */
@@ -1121,14 +1186,32 @@
         flex-direction: row !important;
         align-items: center !important;
         justify-content: space-between !important;
-        gap: 15px !important;
-        flex-wrap: wrap !important;
+        gap: 8px !important;
+        flex-wrap: nowrap !important;
+    }
+
+    .Admin-tc-table-title {
+        font-size: 0.95rem !important;
+        margin: 0 !important;
+        white-space: nowrap !important;
+        flex-shrink: 0 !important;
     }
 
     .Admin-tc-table-actions {
-        width: 100% !important;
+        width: auto !important;
         justify-content: flex-end !important;
-        flex-wrap: wrap !important;
+        flex-wrap: nowrap !important;
+    }
+
+    .Admin-tc-print-button-container {
+        margin-top: 0 !important;
+    }
+
+    .Admin-tc-print-btn {
+        padding: 5px 14px !important;
+        font-size: 0.8rem !important;
+        height: 32px !important;
+        border-radius: 6px !important;
     }
 
     .Admin-tc-table-container {

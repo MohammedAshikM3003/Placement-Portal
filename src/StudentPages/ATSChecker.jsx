@@ -50,11 +50,6 @@ const CategoryBar = ({ name, score, color, issueCount, isExpanded, onToggle }) =
         </div>
         <div className={styles.categoryRight}>
           <span className={styles.categoryScore} style={{ color: barColor }}>({score}%)</span>
-          <span className={`${styles.categoryArrow} ${isExpanded ? styles.expanded : ''}`}>
-            <svg width="12" height="7" viewBox="0 0 12 7" fill="none">
-              <path d="M1 1L6 6L11 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </span>
         </div>
       </div>
       <div className={styles.categoryBar}>
@@ -700,35 +695,48 @@ function ATSCheckerContent({ onViewChange }) {
       {/* ===== SUGGESTIONS TAB ===== */}
       {activeTab === 'suggestions' && (
         <div className={styles.suggestionsTab}>
-          {/* Suggestions */}
-          {analysis.suggestions?.length > 0 && (
-            <div className={styles.suggestionsCard}>
-              <h3 className={styles.suggestionsTitle}>
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="#4A90D9" strokeWidth="1.5" fill="none"/><path d="M10 6v5M10 13v.5" stroke="#4A90D9" strokeWidth="1.5" strokeLinecap="round"/></svg>
-                Recommendations
-              </h3>
-              <div className={styles.suggestionsList}>
-                {analysis.suggestions.map((s, i) => (
-                  <div key={i} className={styles.suggestionItem}>
-                    <span className={styles.suggestionNumber}>{i + 1}</span>
-                    <span className={styles.suggestionText}>{s}</span>
+          {(!analysis.suggestions || analysis.suggestions.length === 0) && (!analysis.overallTips || analysis.overallTips.length === 0) ? (
+            <div className={styles.noSuggestionsCard}>
+              <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#2DBE7F" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M9 12l2 2 4-4"/>
+              </svg>
+              <h3 className={styles.noSuggestionsTitle}>No Suggestions</h3>
+              <p className={styles.noSuggestionsDesc}>Your resume meets all criteria. Great job!</p>
+            </div>
+          ) : (
+            <>
+              {/* Suggestions */}
+              {analysis.suggestions?.length > 0 && (
+                <div className={styles.suggestionsCard}>
+                  <h3 className={styles.suggestionsTitle}>
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="#4A90D9" strokeWidth="1.5" fill="none"/><path d="M10 6v5M10 13v.5" stroke="#4A90D9" strokeWidth="1.5" strokeLinecap="round"/></svg>
+                    Recommendations
+                  </h3>
+                  <div className={styles.suggestionsList}>
+                    {analysis.suggestions.map((s, i) => (
+                      <div key={i} className={styles.suggestionItem}>
+                        <span className={styles.suggestionNumber}>{i + 1}</span>
+                        <span className={styles.suggestionText}>{s}</span>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            </div>
-          )}
+                </div>
+              )}
 
-          {/* AI Tips */}
-          {analysis.overallTips?.length > 0 && (
-            <div className={styles.suggestionsCard}>
-              <h3 className={styles.suggestionsTitle}>
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 2a5 5 0 013 9v2a1 1 0 01-1 1H8a1 1 0 01-1-1v-2a5 5 0 013-9z" stroke="#F5A623" strokeWidth="1.5" fill="none"/><line x1="8" y1="16" x2="12" y2="16" stroke="#F5A623" strokeWidth="1.5" strokeLinecap="round"/><line x1="8.5" y1="18" x2="11.5" y2="18" stroke="#F5A623" strokeWidth="1.5" strokeLinecap="round"/></svg>
-                AI-Powered Tips
-              </h3>
-              <ul className={styles.aiTipsList}>
-                {analysis.overallTips.map((tip, i) => <li key={i}>{tip}</li>)}
-              </ul>
-            </div>
+              {/* AI Tips */}
+              {analysis.overallTips?.length > 0 && (
+                <div className={styles.suggestionsCard}>
+                  <h3 className={styles.suggestionsTitle}>
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 2a5 5 0 013 9v2a1 1 0 01-1 1H8a1 1 0 01-1-1v-2a5 5 0 013-9z" stroke="#F5A623" strokeWidth="1.5" fill="none"/><line x1="8" y1="16" x2="12" y2="16" stroke="#F5A623" strokeWidth="1.5" strokeLinecap="round"/><line x1="8.5" y1="18" x2="11.5" y2="18" stroke="#F5A623" strokeWidth="1.5" strokeLinecap="round"/></svg>
+                    AI-Powered Tips
+                  </h3>
+                  <ul className={styles.aiTipsList}>
+                    {analysis.overallTips.map((tip, i) => <li key={i}>{tip}</li>)}
+                  </ul>
+                </div>
+              )}
+            </>
           )}
         </div>
       )}

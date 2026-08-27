@@ -413,6 +413,25 @@
   box-shadow: 0 0 0 3px rgba(32, 133, 246, 0.2);
 }
 
+.suffixInputWrapper:has(input[readOnly]),
+.suffixInputWrapper:has(input:read-only) {
+  border-color: #dde6f4;
+  box-shadow: none;
+}
+
+.suffixInputWrapper:has(input[readOnly]):focus-within,
+.suffixInputWrapper:has(input:read-only):focus-within,
+.suffixInputWrapper:has(input[readOnly]):hover,
+.suffixInputWrapper:has(input:read-only):hover {
+  border-color: #dde6f4;
+  box-shadow: none;
+}
+
+.suffixInput[readOnly],
+.suffixInput:read-only {
+  cursor: default;
+}
+
 .suffixInput {
   flex: 1;
   height: 50.8px;
@@ -497,6 +516,24 @@
 .formInput:focus {
   border-color: #2085f6;
   box-shadow: 0 0 0 3px rgba(32, 133, 246, 0.2);
+}
+
+.formInput[readOnly],
+.formInput:read-only {
+  background-color: #f9fbff;
+  border-color: #dde6f4;
+  cursor: default;
+  outline: none;
+  box-shadow: none;
+}
+
+.formInput[readOnly]:hover,
+.formInput:read-only:hover,
+.formInput[readOnly]:focus,
+.formInput:read-only:focus {
+  border-color: #dde6f4;
+  box-shadow: none;
+  outline: none;
 }
 
 .formTextarea {
@@ -1078,6 +1115,196 @@
   background: #1976d2;
 }
 
+.popupSaveBtn:disabled {
+  background: #a0c7fa;
+  color: #ffffff;
+  cursor: not-allowed;
+  opacity: 0.6;
+  box-shadow: none;
+}
+
+/* =================================== */
+/* ===== DELETE POPUP STYLES ===== */
+/* =================================== */
+
+.deletePopupContainer {
+  background-color: #fff;
+  border-radius: 12px;
+  width: 400px;
+  max-width: 90vw;
+  text-align: center;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  font-family: 'Poppins', sans-serif;
+  animation: deletePopupEnter 0.3s ease-out forwards;
+}
+
+.deletePopupHeader {
+  background-color: #2085f6;
+  color: white;
+  padding: 1rem;
+  font-size: 1.75rem;
+  font-weight: 700;
+}
+
+.deletePopupBody {
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.deletePopupFooter {
+  padding: 1.5rem;
+  background-color: #f7f7f7;
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+}
+
+.deletePopupCancelBtn {
+  background-color: #e0e0e0;
+  color: #333;
+  border: none;
+  padding: 0.8rem 1.8rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.deletePopupCancelBtn:hover {
+  background-color: #d0d0d0;
+}
+
+.deletePopupDeleteBtn {
+  background-color: #D23B42;
+  color: white;
+  border: none;
+  padding: 0.8rem 1.8rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  box-shadow: 0 2px 8px rgba(210, 59, 66, 0.2);
+}
+
+.deletePopupDeleteBtn:hover {
+  background-color: #b53138;
+}
+
+.deletePopupCloseBtn {
+  background-color: #D23B42;
+  color: white;
+  border: none;
+  padding: 0.8rem 2rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  box-shadow: 0 2px 8px rgba(210, 59, 66, 0.2);
+}
+
+.deletePopupCloseBtn:hover {
+  background-color: #b53138;
+}
+
+/* Warning Icon (Confirmation Popup) */
+.warningIcon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: block;
+  stroke-width: 2;
+  stroke-miterlimit: 10;
+  margin: 0 auto;
+  box-shadow: inset 0 0 0 #FFA500;
+  animation: warningFill 0.4s ease-in-out 0.4s forwards, deleteIconScale 0.3s ease-in-out 0.9s both;
+}
+
+.warningIconCircle {
+  stroke-dasharray: 166;
+  stroke-dashoffset: 166;
+  stroke-width: 2;
+  stroke-miterlimit: 10;
+  stroke: #FFA500;
+  fill: none;
+  animation: deleteIconStroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}
+
+/* Delete Bin Icon (Success Popup) */
+.deleteIcon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: block;
+  stroke-width: 2;
+  stroke-miterlimit: 10;
+  margin: 0 auto;
+  box-shadow: inset 0 0 0 #D23B42;
+  animation: deleteFill 0.4s ease-in-out 0.4s forwards, deleteIconScale 0.3s ease-in-out 0.9s both;
+}
+
+.deleteIconCircle {
+  stroke-dasharray: 166;
+  stroke-dashoffset: 166;
+  stroke-width: 2;
+  stroke-miterlimit: 10;
+  stroke: #D23B42;
+  fill: none;
+  animation: deleteIconStroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}
+
+.deleteIconBin {
+  stroke: #ffffff;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Animations */
+@keyframes deleteIconStroke {
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes deleteIconScale {
+  0%, 100% {
+    transform: none;
+  }
+  50% {
+    transform: scale3d(1.1, 1.1, 1);
+  }
+}
+
+@keyframes warningFill {
+  100% {
+    box-shadow: inset 0 0 0 40px #FFA500;
+  }
+}
+
+@keyframes deleteFill {
+  100% {
+    box-shadow: inset 0 0 0 40px #D23B42;
+  }
+}
+
+@keyframes deletePopupEnter {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 /* ========== GENERATING POPUP ========== */
 .generatingPopup {
   background: #fff;
@@ -1227,6 +1454,180 @@
 }
 
 /* Creating/Created popups now use global AlertStyles.css classes */
+
+/* =================================== */
+/* ===== DELETE POPUP STYLES ===== */
+/* =================================== */
+
+.deletePopupContainer {
+  background-color: #fff;
+  border-radius: 12px;
+  width: 400px;
+  max-width: 90vw;
+  text-align: center;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  font-family: 'Poppins', sans-serif;
+  animation: deletePopupEnter 0.3s ease-out forwards;
+}
+
+.deletePopupHeader {
+  background-color: #2085f6;
+  color: #fff;
+  font-size: 22px;
+  font-weight: 700;
+  padding: 1rem;
+}
+
+.deletePopupBody {
+  padding: 2rem 1.5rem;
+}
+
+.deletePopupFooter {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  padding: 0 1.5rem 1.5rem 1.5rem;
+}
+
+.deletePopupCancelBtn {
+  background-color: #dcdcdc;
+  color: #333;
+  border: none;
+  padding: 0.6rem 1.5rem;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.deletePopupCancelBtn:hover {
+  background-color: #c8c8c8;
+}
+
+.deletePopupDeleteBtn {
+  background-color: #d9534f;
+  color: #fff;
+  border: none;
+  padding: 0.6rem 1.5rem;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.deletePopupDeleteBtn:hover {
+  background-color: #c9302c;
+}
+
+.deletePopupCloseBtn {
+  background-color: #2085f6;
+  color: #fff;
+  border: none;
+  padding: 0.6rem 2rem;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.deletePopupCloseBtn:hover {
+  background-color: #1976d2;
+}
+
+/* Delete Warning & Success Animated Icons */
+.warningIcon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: block;
+  stroke-width: 2;
+  stroke-miterlimit: 10;
+  margin: 0 auto;
+  box-shadow: inset 0 0 0 #FFA500;
+  animation: warningFill 0.4s ease-in-out 0.4s forwards, warningScale 0.3s ease-in-out 0.9s both;
+}
+
+.warningIconCircle {
+  stroke-dasharray: 166;
+  stroke-dashoffset: 166;
+  stroke-width: 2;
+  stroke-miterlimit: 10;
+  stroke: #FFA500;
+  fill: none;
+  animation: warningStroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}
+
+.deleteBinIcon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: block;
+  stroke-width: 2;
+  stroke-miterlimit: 10;
+  margin: 0 auto;
+  box-shadow: inset 0 0 0 #D23B42;
+  animation: deleteFill 0.4s ease-in-out 0.4s forwards, warningScale 0.3s ease-in-out 0.9s both;
+}
+
+.deleteBinIconCircle {
+  stroke-dasharray: 166;
+  stroke-dashoffset: 166;
+  stroke-width: 2;
+  stroke-miterlimit: 10;
+  stroke: #D23B42;
+  fill: none;
+  animation: warningStroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}
+
+.deleteBinIconBin {
+  stroke: #ffffff;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+@keyframes warningStroke {
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes warningScale {
+  0%, 100% {
+    transform: none;
+  }
+  50% {
+    transform: scale3d(1.1, 1.1, 1);
+  }
+}
+
+@keyframes warningFill {
+  100% {
+    box-shadow: inset 0 0 0 40px #FFA500;
+  }
+}
+
+@keyframes deleteFill {
+  100% {
+    box-shadow: inset 0 0 0 40px #D23B42;
+  }
+}
+
+@keyframes deletePopupEnter {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 
 /* ========== SCROLLBAR (popup only - dashboardArea handled above) ========== */
 .popupBody::-webkit-scrollbar {

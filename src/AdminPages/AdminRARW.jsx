@@ -620,6 +620,8 @@ function AdminRARW() {
                 onSelect={handleCompanySelect}
                 placeholder="Select Company"
                 role="admin"
+                className={styles['Admin-rarw-dropdown-wrapper']}
+                headerClassName={styles['Admin-rarw-dropdown-header']}
               />
 
               <Dropdown
@@ -629,6 +631,8 @@ function AdminRARW() {
                 placeholder="Job Role"
                 disabled={!selectedCompany}
                 role="admin"
+                className={styles['Admin-rarw-dropdown-wrapper']}
+                headerClassName={styles['Admin-rarw-dropdown-header']}
               />
 
               <Dropdown
@@ -643,6 +647,8 @@ function AdminRARW() {
                 placeholder="Start Date"
                 disabled={!selectedCompanyJob}
                 role="admin"
+                className={styles['Admin-rarw-dropdown-wrapper']}
+                headerClassName={styles['Admin-rarw-dropdown-header']}
               />
 
               <Dropdown
@@ -651,6 +657,8 @@ function AdminRARW() {
                 placeholder="End Date"
                 disabled={true}
                 role="admin"
+                className={styles['Admin-rarw-dropdown-wrapper']}
+                headerClassName={styles['Admin-rarw-dropdown-header']}
               />
             </div>
           </div>

@@ -196,6 +196,8 @@ export default function AdminAtt({ onLogout }) {
 
   const [selectedDrive, setSelectedDrive] = useState(null);
 
+  const [selectedRound, setSelectedRound] = useState("");
+
   const [startDate, setStartDate] = useState("");
 
   const [endDate, setEndDate] = useState("");
@@ -440,35 +442,30 @@ export default function AdminAtt({ onLogout }) {
 
 
 
-  // Format date to dd-mm-yyyy
-
+  // Format date to dd/mm/yyyy
   const formatDateDisplay = (dateString) => {
-
-    if (!dateString) return 'dd-mm-yyyy';
-
+    if (!dateString) return 'dd/mm/yyyy';
     const date = new Date(dateString);
-
+    if (isNaN(date.getTime())) return dateString;
     const day = date.getDate().toString().padStart(2, '0');
-
     const month = (date.getMonth() + 1).toString().padStart(2, '0');
-
     const year = date.getFullYear();
-
-    return `${day}-${month}-${year}`;
-
+    return `${day}/${month}/${year}`;
   };
 
 
 
   // Helper function to check if a drive has existing attendance
 
-  const hasExistingAttendance = (companyName, jobRole, date) => {
+  const hasExistingAttendance = (companyName, jobRole, date, roundNumber) => {
 
     return existingAttendances.some(
 
       att => att.companyName === companyName &&
 
         att.jobRole === jobRole &&
+
+        (!roundNumber || att.roundNumber === roundNumber || att.round === `Round ${roundNumber}`) &&
 
         new Date(att.startDate).toDateString() === new Date(date).toDateString()
 
@@ -581,12 +578,63 @@ export default function AdminAtt({ onLogout }) {
     });
   }, [groupedDrives, existingAttendances]);
 
+  const roundDropdownOptions = useMemo(() => {
+    if (!selectedCompanyJob || !selectedCompanyJob.drives || selectedCompanyJob.drives.length === 0) return [];
+    
+    let targetDrive = selectedDrive;
+    if (!targetDrive && startDate && selectedCompanyJob.drives.length > 0) {
+      targetDrive = selectedCompanyJob.drives.find(d => {
+        const dStart = d.startingDate || d.driveStartDate || d.companyDriveDate;
+        return dStart && new Date(dStart).toISOString().split('T')[0] === new Date(startDate).toISOString().split('T')[0];
+      });
+    }
+
+    let maxRounds = 1;
+    if (targetDrive) {
+      maxRounds = parseInt(targetDrive.rounds) || parseInt(targetDrive.numberOfRounds) || parseInt(targetDrive.round) || (targetDrive.roundDetails ? targetDrive.roundDetails.length : 1);
+    } else {
+      selectedCompanyJob.drives.forEach(drive => {
+        const r = parseInt(drive.rounds) || parseInt(drive.numberOfRounds) || parseInt(drive.round) || (drive.roundDetails ? drive.roundDetails.length : 0);
+        if (r > maxRounds) maxRounds = r;
+      });
+    }
+
+    const options = [];
+    const firstDrive = targetDrive || selectedCompanyJob.drives[0];
+    const roundDetails = firstDrive.roundDetails || [];
+
+    for (let i = 1; i <= maxRounds; i++) {
+      const detailName = roundDetails[i - 1];
+      const label = detailName ? `Round ${i} - ${detailName}` : `Round ${i}`;
+      const value = `Round ${i}`;
+      
+      const hasAttendance = selectedCompanyJob.drives.some(drive => {
+        const date = drive.roundDates && drive.roundDates[i - 1] ? drive.roundDates[i - 1] : (drive.startingDate || drive.driveStartDate || drive.companyDriveDate);
+        return date && hasExistingAttendance(selectedCompanyJob.companyName, selectedCompanyJob.jobRole, date, i);
+      });
+
+      options.push({
+        label: label,
+        value: value,
+        roundNumber: i,
+        style: {
+          color: hasAttendance ? '#4EA24E' : '#555',
+          fontWeight: hasAttendance ? '600' : 'bold'
+        }
+      });
+    }
+
+    return options;
+  }, [selectedCompanyJob, selectedDrive, startDate, existingAttendances]);
+
   const startDateDropdownOptions = useMemo(() => {
+    const roundNum = parseInt((selectedRound || 'Round 1').replace(/\D/g, '')) || 1;
     return availableDates.map(dateObj => {
       const hasAttendance = selectedCompanyJob && hasExistingAttendance(
         selectedCompanyJob.companyName,
         selectedCompanyJob.jobRole,
-        dateObj.date
+        dateObj.date,
+        roundNum
       );
       return {
         label: formatDateDisplay(dateObj.date),
@@ -597,152 +645,102 @@ export default function AdminAtt({ onLogout }) {
         }
       };
     });
-  }, [availableDates, selectedCompanyJob, existingAttendances]);
+  }, [availableDates, selectedCompanyJob, existingAttendances, selectedRound]);
+
+  const endDateDropdownOptions = useMemo(() => {
+    if (availableEndDates && availableEndDates.length > 0) {
+      return availableEndDates.map(dateObj => ({
+        label: formatDateDisplay(dateObj.date),
+        value: dateObj.date
+      }));
+    }
+    if (endDate) {
+      return [{
+        label: formatDateDisplay(endDate),
+        value: endDate
+      }];
+    }
+    return [];
+  }, [availableEndDates, endDate]);
 
 
 
   // Auto-fill form when company data is passed from Company Drive page
-
   useEffect(() => {
-
     if (location.state?.companyData && drives.length > 0 && groupedDrives.length > 0) {
-
       const companyData = location.state.companyData;
+      const navRoundNumber = location.state.roundNumber || location.state.round;
+      const navRoundStr = location.state.selectedRound || (navRoundNumber ? `Round ${navRoundNumber}` : null);
 
-      console.log('Auto-filling with company data:', companyData);
-
-
-
-      // Find matching drive group
+      console.log('Auto-filling with company data:', companyData, 'navRound:', navRoundStr);
 
       const matchingGroup = groupedDrives.find(
-
         group => group.companyName === companyData.companyName &&
-
           group.jobRole === companyData.jobRole
-
       );
 
-
-
       if (matchingGroup) {
-
-        // Set the company and job role
-
-        console.log('📌 Setting selectedCompanyJob:', matchingGroup);
-
-        console.log('📌 Matching group has _id?:', matchingGroup._id);
-
-        console.log('📌 Matching group drives:', matchingGroup.drives);
-
         setSelectedCompanyJob(matchingGroup);
 
-
-
-        // Extract and set dates (use startingDate/endingDate from companies.drives schema)
+        if (navRoundStr) {
+          setSelectedRound(navRoundStr);
+        }
 
         const dates = matchingGroup.drives
-
           .filter(drive => drive.startingDate || drive.driveStartDate || drive.companyDriveDate)
-
           .map(drive => ({
-
             date: drive.startingDate || drive.driveStartDate || drive.companyDriveDate,
-
             endDate: drive.endingDate || drive.driveEndDate || drive.startingDate || drive.driveStartDate || drive.companyDriveDate,
-
             drive: drive
-
           }))
-
           .sort((a, b) => new Date(a.date) - new Date(b.date));
-
-
 
         setAvailableDates(dates);
 
+        if (companyData.startingDate || companyData.endingDate) {
+          const startDateStr = companyData.startingDate ? new Date(companyData.startingDate).toISOString().split('T')[0] : '';
+          const endDateStr = companyData.endingDate ? new Date(companyData.endingDate).toISOString().split('T')[0] : startDateStr;
 
-
-        // Auto-select start and end dates from company data
-
-        if (companyData.startingDate && companyData.endingDate) {
-
-          const startDateStr = new Date(companyData.startingDate).toISOString().split('T')[0];
-
-          const endDateStr = new Date(companyData.endingDate).toISOString().split('T')[0];
-
-
-
-          // Find matching drive by date
-
-          const matchingDrive = dates.find(d => d.date === startDateStr);
-
-
+          const matchingDrive = dates.find(d => d.date === startDateStr)?.drive || matchingGroup.drives[0];
 
           if (matchingDrive) {
+            const roundNum = parseInt((navRoundStr || 'Round 1').replace(/\D/g, '')) || 1;
+            let roundStartDate = matchingDrive.startingDate || matchingDrive.driveStartDate || matchingDrive.companyDriveDate;
+            if (matchingDrive.roundDates && Array.isArray(matchingDrive.roundDates) && matchingDrive.roundDates[roundNum - 1]) {
+              roundStartDate = matchingDrive.roundDates[roundNum - 1];
+            }
+            const driveEndDate = matchingDrive.endingDate || matchingDrive.driveEndDate || matchingDrive.companyDriveEndDate || roundStartDate;
 
-            // Set all the date fields
+            const rStartStr = roundStartDate ? new Date(roundStartDate).toISOString().split('T')[0] : startDateStr;
+            const rEndStr = driveEndDate ? new Date(driveEndDate).toISOString().split('T')[0] : endDateStr;
 
-            setStartDate(startDateStr);
-
-            setEndDate(endDateStr);
-
-            setSelectedDrive(matchingDrive.drive);
-
-            setAvailableEndDates([{ date: endDateStr }]);
-
-
-
-            // Check if attendance already exists
+            setStartDate(rStartStr);
+            setEndDate(rEndStr);
+            setSelectedDrive(matchingDrive);
+            setAvailableEndDates([{ date: rEndStr }]);
 
             const existingAttendance = existingAttendances.find(
-
               att => att.companyName === companyData.companyName &&
-
                 att.jobRole === companyData.jobRole &&
-
-                new Date(att.startDate).toDateString() === new Date(startDateStr).toDateString()
-
+                (att.roundNumber === roundNum || att.round === navRoundStr || att.round === `Round ${roundNum}`) &&
+                new Date(att.startDate).toDateString() === new Date(rStartStr).toDateString()
             );
 
-
-
             if (existingAttendance) {
-
-              // Load existing attendance data
-
               setIsUpdateMode(true);
-
               setCurrentAttendanceId(existingAttendance._id);
-
               loadExistingAttendance(existingAttendance);
-
             } else {
-
-              // Load students for new attendance
-
               setIsUpdateMode(false);
-
               setCurrentAttendanceId(null);
-
-              loadStudentsForDrive(matchingDrive.drive);
-
+              loadStudentsForDrive(matchingDrive);
             }
-
           }
-
         }
-
       }
 
-
-
-      // Clear the state after using it
-
       window.history.replaceState({}, document.title);
-
     }
-
   }, [location.state, drives, groupedDrives, existingAttendances]);
 
 
@@ -755,35 +753,81 @@ export default function AdminAtt({ onLogout }) {
 
     setIsDriveOpen(false);
 
-
-
-    // Extract unique dates from drives in this group (use startingDate from companies.drives)
-
-    const dates = group.drives
-
-      .filter(drive => drive.startingDate || drive.driveStartDate || drive.companyDriveDate)
-
-      .map(drive => ({
-
-        date: drive.startingDate || drive.driveStartDate || drive.companyDriveDate,
-
-        endDate: drive.endingDate || drive.driveEndDate || drive.startingDate || drive.driveStartDate || drive.companyDriveDate,
-
-        drive: drive
-
-      }))
-
-      .sort((a, b) => new Date(a.date) - new Date(b.date));
-
-
-
-    setAvailableDates(dates);
+    setSelectedRound("");
 
     setStartDate("");
 
     setEndDate("");
 
+    setAvailableDates([]);
+
     setAvailableEndDates([]);
+
+    setStudents([]);
+
+    setSelectedDrive(null);
+
+  };
+
+
+
+  // Handle round selection
+
+  const handleRoundSelect = (roundValue) => {
+
+    setSelectedRound(roundValue);
+
+    const roundNum = parseInt(roundValue.replace(/\D/g, '')) || 1;
+
+
+
+    if (selectedCompanyJob && selectedCompanyJob.drives) {
+
+      const dates = selectedCompanyJob.drives
+
+        .map(drive => {
+
+          let dateStr = drive.startingDate || drive.driveStartDate || drive.companyDriveDate;
+
+          if (drive.roundDates && Array.isArray(drive.roundDates) && drive.roundDates[roundNum - 1]) {
+
+            dateStr = drive.roundDates[roundNum - 1];
+
+          }
+
+          return {
+
+            date: dateStr,
+
+            endDate: drive.endingDate || drive.driveEndDate || dateStr,
+
+            drive: drive,
+
+            roundNumber: roundNum
+
+          };
+
+        })
+
+        .filter(d => d.date)
+
+        .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+
+
+      setAvailableDates(dates);
+
+    } else {
+
+      setAvailableDates([]);
+
+    }
+
+
+
+    setStartDate("");
+
+    setEndDate("");
 
     setStudents([]);
 
@@ -813,13 +857,19 @@ export default function AdminAtt({ onLogout }) {
 
 
 
-    // Check if attendance already exists for this drive
+    const roundNum = parseInt((selectedRound || 'Round 1').replace(/\D/g, '')) || 1;
+
+
+
+    // Check if attendance already exists for this drive, round, and date
 
     const existingAttendance = existingAttendances.find(
 
       att => att.companyName === selectedCompanyJob.companyName &&
 
         att.jobRole === selectedCompanyJob.jobRole &&
+
+        (att.roundNumber === roundNum || att.round === selectedRound || att.round === `Round ${roundNum}`) &&
 
         new Date(att.startDate).toDateString() === new Date(dateObj.date).toDateString()
 
@@ -1097,7 +1147,7 @@ export default function AdminAtt({ onLogout }) {
 
             phoneNo: studentData?.mobileNo || studentData?.phoneNo || studentData?.phone || '-',
 
-            status: "-" // Default status
+            status: "Present" // Default status is Present as requested
 
           };
 
@@ -1125,7 +1175,7 @@ export default function AdminAtt({ onLogout }) {
 
             phoneNo: '-',
 
-            status: "-"
+            status: "Present"
 
           };
 
@@ -1412,6 +1462,8 @@ export default function AdminAtt({ onLogout }) {
 
 
 
+      const roundNum = parseInt((selectedRound || 'Round 1').replace(/\D/g, '')) || 1;
+
       const attendanceData = {
 
         driveId: driveId, // Include unique drive ID
@@ -1419,6 +1471,10 @@ export default function AdminAtt({ onLogout }) {
         companyName: selectedCompanyJob.companyName,
 
         jobRole: selectedCompanyJob.jobRole,
+
+        round: selectedRound || `Round ${roundNum}`,
+
+        roundNumber: roundNum,
 
         startDate: startDate,
 
@@ -1554,21 +1610,34 @@ export default function AdminAtt({ onLogout }) {
 
     setShowSuccessPopup(false);
 
+    // Find the target drive matching selectedCompanyJob / startDate
+    let targetDrive = selectedDrive;
+    if (!targetDrive && selectedCompanyJob?.drives?.length > 0) {
+      targetDrive = selectedCompanyJob.drives.find(d => {
+        const dStart = d.startingDate || d.driveStartDate;
+        const normalizedDriveStart = dStart ? new Date(dStart).toISOString().split('T')[0] : null;
+        return dStart && normalizedDriveStart === startDate;
+      }) || selectedCompanyJob.drives[0];
+    }
+
+    const roundNum = parseInt((selectedRound || 'Round 1').replace(/\D/g, '')) || 1;
+
     // Navigate to Company Drive Details page immediately after closing popup
-
-    // Pass the selected DRIVE data (not the grouped company data) so the details page can load correctly
-
-    if (selectedDrive) {
+    if (targetDrive) {
 
       navigate('/admin/company-drive/details', {
 
         state: {
 
-          company: selectedDrive,
+          company: targetDrive,
 
-          driveId: selectedDrive._id,
+          driveId: targetDrive._id,
 
-          startingDate: selectedDrive.startingDate
+          startingDate: targetDrive.startingDate,
+
+          roundNumber: roundNum,
+
+          round: roundNum
 
         }
 
@@ -1586,13 +1655,14 @@ export default function AdminAtt({ onLogout }) {
 
     }
 
-    // Reset form after successful submission (kept for safety if component remains mounted briefly)
-
+    // Reset form after successful submission
     setTimeout(() => {
 
       setSelectedCompanyJob(null);
 
       setSelectedDrive(null);
+
+      setSelectedRound("");
 
       setStartDate("");
 
@@ -1754,6 +1824,18 @@ export default function AdminAtt({ onLogout }) {
               headerClassName={styles['attendance-dropdown-header']}
             />
 
+            {/* Select Round Dropdown */}
+            <Dropdown
+              options={roundDropdownOptions}
+              selectedOption={selectedRound}
+              onSelect={(roundVal) => handleRoundSelect(roundVal)}
+              placeholder="Select Round"
+              disabled={!selectedCompanyJob}
+              role="admin"
+              className={styles['attendance-dropdown-wrapper']}
+              headerClassName={styles['attendance-dropdown-header']}
+            />
+
             {/* Start Date Dropdown */}
             <Dropdown
               options={startDateDropdownOptions}
@@ -1763,7 +1845,7 @@ export default function AdminAtt({ onLogout }) {
                 if (dateObj) handleStartDateSelect(dateObj);
               }}
               placeholder="Select Start Date"
-              disabled={!selectedCompanyJob}
+              disabled={!selectedCompanyJob || !selectedRound}
               role="admin"
               className={styles['attendance-dropdown-wrapper']}
               headerClassName={styles['attendance-dropdown-header']}
@@ -1771,43 +1853,24 @@ export default function AdminAtt({ onLogout }) {
 
 
 
-            {/* End Date Display (Read-only) */}
-
-            <div className={styles['Admin-at-filter-select']}>
-
-              <div
-
-                className={styles['Admin-at-filter-select-display']}
-
-                style={{
-
-                  cursor: 'default',
-
-                  backgroundColor: '#ffffff',
-
-                  color: endDate ? '#333' : '#999'
-
-                }}
-
-              >
-
-                {endDate ? formatDateDisplay(endDate) : "Select End Date"}
-
-              </div>
-
-              <span
-
-                className={styles['Admin-at-filter-select-arrow']}
-
-                style={{ cursor: 'default', opacity: 0.3 }}
-
-              >
-
-                <svg width="14" height="14" fill="none" stroke="#888" strokeWidth="2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="#888" strokeWidth="2" /></svg>
-
-              </span>
-
-            </div>
+            {/* End Date Dropdown */}
+            <Dropdown
+              options={endDateDropdownOptions}
+              selectedOption={endDate}
+              onSelect={(selectedDate) => {
+                const dateObj = availableEndDates.find(d => d.date === selectedDate);
+                if (dateObj) {
+                  handleEndDateSelect(dateObj);
+                } else {
+                  setEndDate(selectedDate);
+                }
+              }}
+              placeholder="Select End Date"
+              disabled={!selectedCompanyJob || !selectedRound || (!endDate && availableEndDates.length === 0)}
+              role="admin"
+              className={styles['attendance-dropdown-wrapper']}
+              headerClassName={styles['attendance-dropdown-header']}
+            />
 
 
 
@@ -1844,6 +1907,29 @@ export default function AdminAtt({ onLogout }) {
               {isSubmitting ? (isUpdateMode ? 'Updating...' : 'Submitting...') : (isUpdateMode ? 'Update' : 'Submit')}
 
             </button>
+
+            {/* Clear Button */}
+            <button
+              type="button"
+              className={styles['Admin-at-clear-btn']}
+              onClick={() => {
+                setSelectedCompanyJob(null);
+                setSelectedDrive(null);
+                setSelectedRound("");
+                setStartDate("");
+                setEndDate("");
+                setStudents([]);
+                setAvailableDates([]);
+                setAvailableEndDates([]);
+                setSubmitStatus(null);
+                setIsUpdateMode(false);
+                setCurrentAttendanceId(null);
+                setSearchTerm('');
+              }}
+            >
+              Clear
+            </button>
+
 
           </div>
 

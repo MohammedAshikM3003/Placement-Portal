@@ -8,11 +8,11 @@ import Adminicon from "../assets/Adminicon.png";
 import mongoDBService from '../services/mongoDBService.jsx';
 import gridfsService from '../services/gridfsService';
 import {
-  AdminDownloadFailedAlert,
-  AdminPreviewFailedAlert,
-  AdminPreviewProgressAlert,
-  AdminCertificateDownloadProgressAlert,
-  AdminCertificateDownloadSuccessAlert
+    AdminDownloadFailedAlert,
+    AdminPreviewFailedAlert,
+    AdminPreviewProgressAlert,
+    AdminCertificateDownloadProgressAlert,
+    AdminCertificateDownloadSuccessAlert
 } from '../components/alerts/AdminDownloadPreviewAlerts';
 
 const CertificateIcon = () => (
@@ -65,7 +65,7 @@ function AdStuDBCertificateView() {
     const [searchQuery, setSearchQuery] = useState('');
     const [scrollPercent, setScrollPercent] = useState(0);
     const [showScrollIndicator, setShowScrollIndicator] = useState(false);
-    
+
     // Download/Preview popup states
     const [downloadPopupState, setDownloadPopupState] = useState('none'); // 'none', 'progress', 'success', 'failed'
     const [previewPopupState, setPreviewPopupState] = useState('none'); // 'none', 'progress', 'failed'
@@ -109,26 +109,26 @@ function AdStuDBCertificateView() {
             }
 
             setIsLoadingCertificates(true);
-            
+
             // Use navigation state as immediate data source
             if (location.state?.studentData && !studentData) {
                 setStudentData(location.state.studentData);
             }
-            
+
             try {
                 // Fetch complete student data including certificates with timeout handling
                 const fastDataService = (await import('../services/fastDataService.jsx')).default;
-                
+
                 // Add timeout wrapper with longer duration for slow connections
                 const completeData = await Promise.race([
                     fastDataService.getCompleteStudentData(studentId, false),
-                    new Promise((_, reject) => 
+                    new Promise((_, reject) =>
                         setTimeout(() => reject(new Error('Request timeout - using fallback data')), 25000)
                     )
                 ]);
-                
+
                 const student = completeData?.student;
-                
+
                 // Always update student data to ensure we have the latest info
                 if (student) {
                     console.log('✅ Student data from API:', student);
@@ -140,7 +140,7 @@ function AdStuDBCertificateView() {
 
                 // Extract certificates from the complete data response
                 const certificatesData = completeData?.certificates || [];
-                
+
                 // Format certificates for display - using real database fields
                 // Filter to show only approved certificates
                 const formattedCertificates = certificatesData
@@ -151,7 +151,7 @@ function AdStuDBCertificateView() {
                     .map(cert => {
                         // Get the proper certificate name from comp/competition field
                         const certName = cert.comp || cert.competition || cert.certificateName || cert.achievementTitle || 'Untitled Certificate';
-                        
+
                         // Use the event date (cert.date) not uploadDate
                         let formattedDate = 'N/A';
                         const dateToUse = cert.date || cert.uploadDate;
@@ -163,17 +163,17 @@ function AdStuDBCertificateView() {
                                     formattedDate = dateStr;
                                 } else {
                                     const dateObj = new Date(dateToUse);
-                                    formattedDate = dateObj.toLocaleDateString('en-GB', { 
-                                        day: '2-digit', 
-                                        month: '2-digit', 
-                                        year: 'numeric' 
+                                    formattedDate = dateObj.toLocaleDateString('en-GB', {
+                                        day: '2-digit',
+                                        month: '2-digit',
+                                        year: 'numeric'
                                     }).replace(/\//g, '-');
                                 }
                             } catch (e) {
                                 formattedDate = dateToUse.toString();
                             }
                         }
-                        
+
                         return {
                             name: certName,
                             date: formattedDate,
@@ -187,7 +187,7 @@ function AdStuDBCertificateView() {
                     });
 
                 setCertificates(formattedCertificates);
-                
+
                 console.log('✅ Certificate data loaded:', {
                     studentName: student?.name || studentData?.name,
                     studentRegNo: student?.regNo || studentData?.regNo,
@@ -196,34 +196,34 @@ function AdStuDBCertificateView() {
                 });
             } catch (error) {
                 console.error('❌ Failed to load student data:', error);
-                
+
                 // Keep using existing student data if available
                 if (!studentData && location.state?.studentData) {
                     setStudentData(location.state.studentData);
                 }
-                
+
                 // Try fallback with mongoDBService to fetch certificates directly
                 try {
                     console.log('🔄 Attempting fallback certificate fetch...');
-                    
+
                     // Use shorter timeout for fallback
                     const certificatesResponse = await Promise.race([
                         mongoDBService.getCertificatesByStudentId(studentId),
-                        new Promise((_, reject) => 
+                        new Promise((_, reject) =>
                             setTimeout(() => reject(new Error('Fallback timeout')), 10000)
                         )
                     ]).catch((err) => {
                         console.warn('⚠️ Fallback fetch failed:', err.message);
                         return [];
                     });
-                    
+
                     // Handle both array and object response formats
-                    const studentCertificates = Array.isArray(certificatesResponse) 
-                        ? certificatesResponse 
+                    const studentCertificates = Array.isArray(certificatesResponse)
+                        ? certificatesResponse
                         : (certificatesResponse?.certificates || []);
-                    
+
                     console.log('📋 Fallback certificates fetched:', studentCertificates.length);
-                    
+
                     // Debug: Log raw certificate data
                     if (studentCertificates.length > 0) {
                         console.log('🔍 Raw certificate sample:', {
@@ -234,7 +234,7 @@ function AdStuDBCertificateView() {
                             keys: Object.keys(studentCertificates[0])
                         });
                     }
-                    
+
                     // Filter to show only approved certificates
                     const formattedCertificates = studentCertificates
                         .filter(cert => {
@@ -244,7 +244,7 @@ function AdStuDBCertificateView() {
                         .map(cert => {
                             // Get the proper certificate name from comp/competition field
                             const certName = cert.comp || cert.competition || cert.certificateName || cert.achievementTitle || 'Untitled Certificate';
-                            
+
                             // Use the event date (cert.date) not uploadDate
                             let formattedDate = 'N/A';
                             const dateToUse = cert.date || cert.uploadDate;
@@ -256,17 +256,17 @@ function AdStuDBCertificateView() {
                                         formattedDate = dateStr;
                                     } else {
                                         const dateObj = new Date(dateToUse);
-                                        formattedDate = dateObj.toLocaleDateString('en-GB', { 
-                                            day: '2-digit', 
-                                            month: '2-digit', 
-                                            year: 'numeric' 
+                                        formattedDate = dateObj.toLocaleDateString('en-GB', {
+                                            day: '2-digit',
+                                            month: '2-digit',
+                                            year: 'numeric'
                                         }).replace(/\//g, '-');
                                     }
                                 } catch (e) {
                                     formattedDate = dateToUse.toString();
                                 }
                             }
-                            
+
                             return {
                                 name: certName,
                                 date: formattedDate,
@@ -310,9 +310,9 @@ function AdStuDBCertificateView() {
 
     const handleViewCertificate = async (certificateUrl, certificateId, achievementId) => {
         console.log('🔍 Preview certificate:', certificateUrl?.substring(0, 50));
-        
+
         let progressInterval;
-        
+
         try {
             // Show preview progress popup FIRST
             console.log('✅ Showing preview progress popup');
@@ -330,16 +330,16 @@ function AdStuDBCertificateView() {
             }, 150);
 
             let fileData = certificateUrl;
-            
+
             // If URL is invalid or '#', fetch from database
             if (!certificateUrl || certificateUrl === '#' || certificateUrl === 'null') {
                 console.log('🔄 Certificate URL invalid, fetching from database...');
-                
+
                 try {
                     // Try achievementId first, then certificateId as fallback
                     let idToUse = achievementId;
                     const lookupId = achievementId || certificateId;
-                    
+
                     if (!lookupId) {
                         throw new Error('No certificate ID available. Both achievementId and certificateId are missing.');
                     }
@@ -348,44 +348,44 @@ function AdStuDBCertificateView() {
 
                     // Use the mongoDBService to fetch the certificate document
                     let certificateDoc = null;
-                    
+
                     // Try with achievementId first
                     if (achievementId) {
                         certificateDoc = await Promise.race([
                             mongoDBService.getCertificateFileByAchievementId(studentId, achievementId),
-                            new Promise((_, reject) => 
+                            new Promise((_, reject) =>
                                 setTimeout(() => reject(new Error('Fetch timeout')), 15000)
                             )
                         ]);
                     }
-                    
+
                     // If not found and certificateId is different, try as fallback
                     if (!certificateDoc && certificateId && certificateId !== achievementId) {
                         console.log('⚠️ Achievement ID lookup failed, trying with certificate ID:', certificateId);
                         certificateDoc = await Promise.race([
                             mongoDBService.getCertificateFileByAchievementId(studentId, certificateId),
-                            new Promise((_, reject) => 
+                            new Promise((_, reject) =>
                                 setTimeout(() => reject(new Error('Fetch timeout')), 15000)
                             )
                         ]);
                     }
 
                     console.log('🔍 Certificate document received:', certificateDoc ? 'YES' : 'NO');
-                    
+
                     if (!certificateDoc) {
                         throw new Error(`Certificate not found with IDs: achievementId=${achievementId}, certificateId=${certificateId}`);
                     }
-                    
+
                     console.log('🔍 Certificate document properties:', Object.keys(certificateDoc));
-                    
+
                     // Extract fileData - check gridfsFileUrl first, then fileData, then fileContent
                     fileData = certificateDoc.gridfsFileUrl || certificateDoc.fileData || certificateDoc.fileContent;
-                    
+
                     if (!fileData) {
                         console.error('❌ Certificate has no file data:', JSON.stringify(certificateDoc, null, 2));
                         throw new Error('Certificate has no file data available');
                     }
-                    
+
                     console.log('✅ Certificate file data fetched from database, type:', fileData.substring(0, 50));
                 } catch (fetchError) {
                     console.error('❌ Failed to fetch certificate from database:', fetchError);
@@ -405,16 +405,16 @@ function AdStuDBCertificateView() {
                             headers: token ? { Authorization: `Bearer ${token}` } : undefined,
                             credentials: 'include'
                         });
-                        
+
                         if (!response.ok) {
                             throw new Error(`Failed to fetch from GridFS: ${response.status}`);
                         }
-                        
+
                         const blob = await response.blob();
                         if (blob.size === 0 || blob.type.includes('html')) {
                             throw new Error('Invalid file from GridFS, falling back to database');
                         }
-                        
+
                         fileData = URL.createObjectURL(blob);
                         console.log('✅ Certificate fetched from GridFS');
                     } catch (gridfsError) {
@@ -438,22 +438,22 @@ function AdStuDBCertificateView() {
 
             // Convert base64 to blob URL for preview
             let previewUrl = fileData;
-            
+
             // Check if it's base64 data (without or with data URI prefix)
             if (fileData && !fileData.startsWith('http') && !fileData.startsWith('blob:')) {
                 console.log('🔄 Converting base64 to blob URL');
-                
+
                 // Add data URI prefix if missing
                 let base64String = fileData;
                 if (!fileData.startsWith('data:')) {
                     base64String = `data:application/pdf;base64,${fileData}`;
                 }
-                
+
                 // Extract base64 data
-                const base64Data = base64String.includes('base64,') 
-                    ? base64String.split('base64,')[1] 
+                const base64Data = base64String.includes('base64,')
+                    ? base64String.split('base64,')[1]
                     : base64String;
-                    
+
                 const byteCharacters = atob(base64Data);
                 const byteNumbers = new Array(byteCharacters.length);
                 for (let i = 0; i < byteCharacters.length; i++) {
@@ -471,11 +471,11 @@ function AdStuDBCertificateView() {
             console.log('🚀 Opening certificate with URL:', previewUrl?.substring(0, 50));
             // Open certificate in new tab
             const newWindow = window.open(previewUrl, '_blank');
-            
+
             // Immediately complete progress and close popup
             clearInterval(progressInterval);
             setPreviewProgress(100);
-            
+
             if (newWindow) {
                 console.log('✅ Certificate opened successfully');
                 // Close popup immediately when file opens
@@ -495,9 +495,9 @@ function AdStuDBCertificateView() {
 
     const handleDownloadCertificate = async (certificateUrl, certificateName, certificateId, achievementId) => {
         console.log('🔍 Download certificate:', certificateName, certificateUrl?.substring(0, 50));
-        
+
         let progressInterval;
-        
+
         try {
             // Show download progress popup
             console.log('✅ Showing download progress popup');
@@ -515,16 +515,16 @@ function AdStuDBCertificateView() {
             }, 150);
 
             let fileData = certificateUrl;
-            
+
             // If URL is invalid or '#', fetch from database
             if (!certificateUrl || certificateUrl === '#' || certificateUrl === 'null') {
                 console.log('🔄 Certificate URL invalid, fetching from database...');
-                
+
                 try {
                     // Try achievementId first, then certificateId as fallback
                     let idToUse = achievementId;
                     const lookupId = achievementId || certificateId;
-                    
+
                     if (!lookupId) {
                         throw new Error('No certificate ID available. Both achievementId and certificateId are missing.');
                     }
@@ -533,44 +533,44 @@ function AdStuDBCertificateView() {
 
                     // Use the mongoDBService to fetch the certificate document
                     let certificateDoc = null;
-                    
+
                     // Try with achievementId first
                     if (achievementId) {
                         certificateDoc = await Promise.race([
                             mongoDBService.getCertificateFileByAchievementId(studentId, achievementId),
-                            new Promise((_, reject) => 
+                            new Promise((_, reject) =>
                                 setTimeout(() => reject(new Error('Fetch timeout')), 15000)
                             )
                         ]);
                     }
-                    
+
                     // If not found and certificateId is different, try as fallback
                     if (!certificateDoc && certificateId && certificateId !== achievementId) {
                         console.log('⚠️ Achievement ID lookup failed, trying with certificate ID:', certificateId);
                         certificateDoc = await Promise.race([
                             mongoDBService.getCertificateFileByAchievementId(studentId, certificateId),
-                            new Promise((_, reject) => 
+                            new Promise((_, reject) =>
                                 setTimeout(() => reject(new Error('Fetch timeout')), 15000)
                             )
                         ]);
                     }
 
                     console.log('🔍 Certificate document received:', certificateDoc ? 'YES' : 'NO');
-                    
+
                     if (!certificateDoc) {
                         throw new Error(`Certificate not found with IDs: achievementId=${achievementId}, certificateId=${certificateId}`);
                     }
-                    
+
                     console.log('🔍 Certificate document properties:', Object.keys(certificateDoc));
-                    
+
                     // Extract fileData - check gridfsFileUrl first, then fileData, then fileContent
                     fileData = certificateDoc.gridfsFileUrl || certificateDoc.fileData || certificateDoc.fileContent;
-                    
+
                     if (!fileData) {
                         console.error('❌ Certificate has no file data:', JSON.stringify(certificateDoc, null, 2));
                         throw new Error('Certificate has no file data available');
                     }
-                    
+
                     console.log('✅ Certificate file data fetched from database, type:', fileData.substring(0, 50));
                 } catch (fetchError) {
                     console.error('❌ Failed to fetch certificate from database:', fetchError);
@@ -590,16 +590,16 @@ function AdStuDBCertificateView() {
                             headers: token ? { Authorization: `Bearer ${token}` } : undefined,
                             credentials: 'include'
                         });
-                        
+
                         if (!response.ok) {
                             throw new Error(`Failed to fetch from GridFS: ${response.status}`);
                         }
-                        
+
                         const blob = await response.blob();
                         if (blob.size === 0 || blob.type.includes('html')) {
                             throw new Error('Invalid file from GridFS, falling back to database');
                         }
-                        
+
                         fileData = URL.createObjectURL(blob);
                         console.log('✅ Certificate fetched from GridFS');
                     } catch (gridfsError) {
@@ -627,21 +627,21 @@ function AdStuDBCertificateView() {
             // Convert base64 to blob URL for download
             let downloadUrl = fileData;
             let shouldRevoke = false;
-            
+
             // Check if it's base64 data (without or with data URI prefix)
             if (fileData && !fileData.startsWith('http') && !fileData.startsWith('blob:')) {
                 console.log('🔄 Converting base64 to blob URL for download');
-                
+
                 // Add data URI prefix if missing
                 let base64String = fileData;
                 if (!fileData.startsWith('data:')) {
                     base64String = `data:application/pdf;base64,${fileData}`;
                 }
-                
-                const base64Data = base64String.includes('base64,') 
-                    ? base64String.split('base64,')[1] 
+
+                const base64Data = base64String.includes('base64,')
+                    ? base64String.split('base64,')[1]
                     : base64String;
-                    
+
                 const byteCharacters = atob(base64Data);
                 const byteNumbers = new Array(byteCharacters.length);
                 for (let i = 0; i < byteCharacters.length; i++) {
@@ -668,15 +668,15 @@ function AdStuDBCertificateView() {
             document.body.removeChild(link);
 
             console.log('✅ Download completed successfully');
-            
+
             // Show success popup
             setDownloadPopupState('success');
-            
+
             // Clean up blob URL if created
             if (shouldRevoke) {
                 setTimeout(() => URL.revokeObjectURL(downloadUrl), 500);
             }
-            
+
             // Auto-close success popup after showing it
             setTimeout(() => setDownloadPopupState('none'), 2500);
         } catch (error) {
@@ -716,75 +716,75 @@ function AdStuDBCertificateView() {
             <div className={styles['certificate-layout']}>
                 <Adsidebar isOpen={isSidebarOpen} onLogout={handleLogout} />
                 <div className={styles['certificate-main-content']}>
-                    
+
                     {/* Top Info Cards - Always visible */}
                     <div className={styles['certificate-stats-container']}>
-                                <div className={`${styles['certificate-card']} ${styles['certificate-card-student']}`}>
-                                    <div className={styles['certificate-card-content']}>
-                                        <h2 className={styles['certificate-card-title']}>Student Info</h2>
-                                        {/* Profile Picture */}
-                                        <div className={styles['certificate-profile-pic-container']}>
-                                            {studentData?.profilePicURL ? (
-                                                <img 
-                                                    src={gridfsService.resolveImageUrl(studentData.profilePicURL)} 
-                                                    alt="Profile" 
-                                                    className={styles['certificate-profile-pic']}
-                                                    onError={(e) => {
-                                                        console.error('❌ Profile image failed to load:', studentData.profilePicURL);
-                                                        e.target.style.display = 'none';
-                                                        const defaultContainer = e.target.parentElement?.querySelector('[style*="display: none"]')?.nextElementSibling;
-                                                        if (defaultContainer) defaultContainer.style.display = 'flex';
-                                                    }}
-                                                />
-                                            ) : (
-                                                <div className={styles['certificate-default-profile']}>
-                                                    <DefaultProfileIcon />
-                                                </div>
-                                            )}
+                        <div className={`${styles['certificate-card']} ${styles['certificate-card-student']}`}>
+                            <div className={styles['certificate-card-content']}>
+                                <h2 className={styles['certificate-card-title']}>Student Info</h2>
+                                {/* Profile Picture */}
+                                <div className={styles['certificate-profile-pic-container']}>
+                                    {studentData?.profilePicURL ? (
+                                        <img
+                                            src={gridfsService.resolveImageUrl(studentData.profilePicURL)}
+                                            alt="Profile"
+                                            className={styles['certificate-profile-pic']}
+                                            onError={(e) => {
+                                                console.error('❌ Profile image failed to load:', studentData.profilePicURL);
+                                                e.target.style.display = 'none';
+                                                const defaultContainer = e.target.parentElement?.querySelector('[style*="display: none"]')?.nextElementSibling;
+                                                if (defaultContainer) defaultContainer.style.display = 'flex';
+                                            }}
+                                        />
+                                    ) : (
+                                        <div className={styles['certificate-default-profile']}>
+                                            <DefaultProfileIcon />
                                         </div>
-                                        <div className={styles['certificate-student-info']}>
-                                            <p className={styles['certificate-student-name']}>
-                                                {studentData?.name || studentData?.firstName && studentData?.lastName 
-                                                    ? `${studentData.firstName} ${studentData.lastName}`.trim() 
-                                                    : 'N/A'}
-                                            </p>
-                                            <p className={styles['certificate-student-regno']}>
-                                                {studentData?.regNo || studentData?.regno || studentData?.reg || 'N/A'}
-                                            </p>
-                                        </div>
-                                    </div>
+                                    )}
                                 </div>
-
-                                <div className={`${styles['certificate-card']} ${styles['certificate-card-blue']}`}>
-                                    <div className={styles['certificate-card-content']}>
-                                        <h2 className={styles['certificate-card-title']}>Total<br/>Certificates</h2>
-                                        <div className={styles['certificate-card-number']}>{totalCertificates}</div>
-                                    </div>
-                                </div>
-
-                                <div className={`${styles['certificate-card']} ${styles['certificate-card-rating']}`}>
-                                    <h2 className={styles['certificate-card-title']}>Student Details</h2>
-                                    <div className={styles['certificate-student-details']}>
-                                        <p className={styles['certificate-detail-item']}>
-                                            <span className={styles['certificate-detail-label']}>Year:</span> {studentData?.currentYear || studentData?.year || 'N/A'} - {studentData?.section || 'N/A'}
-                                        </p>
-                                        <p className={styles['certificate-detail-item']}>
-                                            <span className={styles['certificate-detail-label']}>Semester:</span> {studentData?.currentSemester || studentData?.semester || 'N/A'}
-                                        </p>
-                                        <p className={styles['certificate-detail-item']}>
-                                            <span className={styles['certificate-detail-label']}>Batch:</span> {studentData?.batch || studentData?.yearOfJoining || 'N/A'}
-                                        </p> 
-                                        <p className={styles['certificate-detail-item']}>
-                                            <span className={styles['certificate-detail-label']}>Degree:</span> {studentData?.degree || 'N/A'}
-                                        </p>
-                                        <p className={styles['certificate-detail-item']}>
-                                            <span className={styles['certificate-detail-label']}>Department:</span> {studentData?.department || studentData?.branch || 'N/A'}
-                                        </p>
-                                       
-                                        
-                                    </div>
+                                <div className={styles['certificate-student-info']}>
+                                    <p className={styles['certificate-student-name']}>
+                                        {studentData?.name || studentData?.firstName && studentData?.lastName
+                                            ? `${studentData.firstName} ${studentData.lastName}`.trim()
+                                            : 'N/A'}
+                                    </p>
+                                    <p className={styles['certificate-student-regno']}>
+                                        {studentData?.regNo || studentData?.regno || studentData?.reg || 'N/A'}
+                                    </p>
                                 </div>
                             </div>
+                        </div>
+
+                        <div className={`${styles['certificate-card']} ${styles['certificate-card-blue']}`}>
+                            <div className={styles['certificate-card-content']}>
+                                <h2 className={styles['certificate-card-title']}>Total<br />Certificates</h2>
+                                <div className={styles['certificate-card-number']}>{totalCertificates}</div>
+                            </div>
+                        </div>
+
+                        <div className={`${styles['certificate-card']} ${styles['certificate-card-rating']}`}>
+                            <h2 className={styles['certificate-card-title']}>Student Details</h2>
+                            <div className={styles['certificate-student-details']}>
+                                <p className={styles['certificate-detail-item']}>
+                                    <span className={styles['certificate-detail-label']}>Year:</span> {studentData?.currentYear || studentData?.year || 'N/A'} - {studentData?.section || 'N/A'}
+                                </p>
+                                <p className={styles['certificate-detail-item']}>
+                                    <span className={styles['certificate-detail-label']}>Semester:</span> {studentData?.currentSemester || studentData?.semester || 'N/A'}
+                                </p>
+                                <p className={styles['certificate-detail-item']}>
+                                    <span className={styles['certificate-detail-label']}>Batch:</span> {studentData?.batch || studentData?.yearOfJoining || 'N/A'}
+                                </p>
+                                <p className={styles['certificate-detail-item']}>
+                                    <span className={styles['certificate-detail-label']}>Degree:</span> {studentData?.degree || 'N/A'}
+                                </p>
+                                <p className={styles['certificate-detail-item']}>
+                                    <span className={styles['certificate-detail-label']}>Department:</span> {studentData?.department || studentData?.branch || 'N/A'}
+                                </p>
+
+
+                            </div>
+                        </div>
+                    </div>
 
                     {/* Dark Blue Certificates Section */}
                     <div className={styles['certificate-section']}>
@@ -800,7 +800,7 @@ function AdStuDBCertificateView() {
                                         className={styles['certificate-search-input']}
                                     />
                                     <svg className={styles['certificate-search-icon']} width="20" height="20" viewBox="0 0 24 24" fill="none">
-                                        <path d="M21 21L15 15M17 10C17 13.866 13.866 17 10 17C6.13401 17 3 13.866 3 10C3 6.13401 6.13401 3 10 3C13.866 3 17 6.13401 17 10Z" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                        <path d="M21 21L15 15M17 10C17 13.866 13.866 17 10 17C6.13401 17 3 13.866 3 10C3 6.13401 6.13401 3 10 3C13.866 3 17 6.13401 17 10Z" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                                     </svg>
                                 </div>
                                 <button className={styles['certificate-back-btn']} onClick={handleBackToProfile}>
@@ -846,21 +846,21 @@ function AdStuDBCertificateView() {
                                                 </p>
                                             </div>
                                             <div className={styles['certificate-item-actions']}>
-                                                <button 
+                                                <button
                                                     className={`${styles['certificate-action-btn']} ${styles['certificate-view-btn']}`}
                                                     onClick={() => handleViewCertificate(
-                                                        cert.url || cert.certificateUrl, 
-                                                        cert.certificateId, 
+                                                        cert.url || cert.certificateUrl,
+                                                        cert.certificateId,
                                                         cert.achievementId
                                                     )}
                                                 >
                                                     <ViewIcon />
                                                     View
                                                 </button>
-                                                <button 
+                                                <button
                                                     className={`${styles['certificate-action-btn']} ${styles['certificate-download-btn']}`}
                                                     onClick={() => handleDownloadCertificate(
-                                                        cert.url || cert.certificateUrl, 
+                                                        cert.url || cert.certificateUrl,
                                                         cert.name || cert.certificateName,
                                                         cert.certificateId,
                                                         cert.achievementId
@@ -878,7 +878,7 @@ function AdStuDBCertificateView() {
 
                         {showScrollIndicator && filteredCertificates.length > 0 && !isLoadingCertificates && (
                             <div className={styles['certificate-scroll-indicator']}>
-                                <div 
+                                <div
                                     className={styles['certificate-scroll-indicator-thumb']}
                                     style={{ top: `calc(${scrollPercent}% - ${(scrollPercent / 100) * 34}px)` }}
                                 ></div>
@@ -889,31 +889,31 @@ function AdStuDBCertificateView() {
             </div>
 
             {/* Download/Preview Popups - Admin Green Theme */}
-            <AdminCertificateDownloadProgressAlert 
-                isOpen={downloadPopupState === 'progress'} 
+            <AdminCertificateDownloadProgressAlert
+                isOpen={downloadPopupState === 'progress'}
                 progress={downloadProgress}
                 fileLabel="certificate"
             />
-            
-            <AdminCertificateDownloadSuccessAlert 
-                isOpen={downloadPopupState === 'success'} 
+
+            <AdminCertificateDownloadSuccessAlert
+                isOpen={downloadPopupState === 'success'}
                 onClose={closeDownloadPopup}
                 fileLabel="certificate"
             />
-            
-            <AdminDownloadFailedAlert 
-                isOpen={downloadPopupState === 'failed'} 
+
+            <AdminDownloadFailedAlert
+                isOpen={downloadPopupState === 'failed'}
                 onClose={closeDownloadPopup}
             />
-            
-            <AdminPreviewProgressAlert 
-                isOpen={previewPopupState === 'progress'} 
-                progress={previewProgress} 
+
+            <AdminPreviewProgressAlert
+                isOpen={previewPopupState === 'progress'}
+                progress={previewProgress}
                 fileLabel="certificate"
             />
-            
-            <AdminPreviewFailedAlert 
-                isOpen={previewPopupState === 'failed'} 
+
+            <AdminPreviewFailedAlert
+                isOpen={previewPopupState === 'failed'}
                 onClose={closePreviewPopup}
             />
         </>

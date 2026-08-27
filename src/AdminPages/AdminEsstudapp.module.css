@@ -146,7 +146,7 @@
 
     margin: 0 auto 15px auto;
 
-    background: #f8f9fa;
+    background: #ffffff;
 
     border-radius: 10px;
 
@@ -158,6 +158,10 @@
 
     margin-top: 4px;
 
+}
+
+.Admin-es-apk-icon-bg-white {
+    background: #ffffff !important;
 }
 
 
@@ -1217,7 +1221,7 @@
     .Admin-es-apk-main-content {
         margin-top: 65px !important;
         width: 100% !important;
-        padding: 10px 10px calc(env(safe-area-inset-bottom, 0px) + 25px) 20px !important;
+        padding: 10px 10px calc(env(safe-area-inset-bottom, 0px) + 80px) 20px !important;
         overflow-y: auto !important;
         overflow-x: hidden !important;
         height: calc(100vh - 65px) !important;
@@ -1271,6 +1275,30 @@
         flex-shrink: 0 !important;
     }
 
+    .Admin-es-apk-eligible-students-search .Admin-es-apk-search-tab {
+        top: 15px !important;
+        margin-top: 0 !important;
+        width: 145px !important;
+        height: 28px !important;
+        line-height: 28px !important;
+        font-size: 0.78rem !important;
+        font-weight: 600 !important;
+        padding: 0 8px !important;
+        white-space: nowrap !important;
+        margin-left:-5px;
+    }
+
+    .Admin-es-apk-clear-btn-header {
+        position: absolute !important;
+        right: 15px !important;
+        top: 16px !important;
+        height: 26px !important;
+        line-height: 26px !important;
+        padding: 0 10px !important;
+        font-size: 0.75rem !important;
+        font-weight: 600 !important;
+    }
+
     .Admin-es-apk-eligible-inputs {
         grid-template-columns: 1fr !important;
         gap: 12px !important;
@@ -1295,7 +1323,6 @@
     /* Buttons Container */
     .Admin-es-apk-bottom-button-container {
         display: flex !important;
-        flex-direction: column !important;
         gap: 1rem !important;
         width: 100% !important;
         margin-bottom: env(safe-area-inset-bottom, 20px) !important;

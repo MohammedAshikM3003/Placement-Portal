@@ -132,7 +132,7 @@ export const AdminFailedPopup = ({
   const [isGenerating, setIsGenerating] = useState(false);
   const [generateError, setGenerateError] = useState('');
   const [aiGenerated, setAiGenerated] = useState(false);
-  const FIELD_HEIGHT = '50px';
+  const FIELD_HEIGHT = isPopupMobile ? '42px' : '50px';
 
   const [isPopupMobile, setIsPopupMobile] = useState(() => {
     if (typeof window === 'undefined') return false;
@@ -206,7 +206,7 @@ export const AdminFailedPopup = ({
         overflow: 'hidden'
       }}
     >
-      <div style={{ display: 'flex', flexDirection: 'column', lineHeight: '1.1', fontSize: isPopupMobile ? '0.78rem' : '0.82rem', color: '#1a1a1a', fontWeight: 700 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', lineHeight: '1.1', fontSize: isPopupMobile ? '0.75rem' : '0.82rem', color: '#1a1a1a', fontWeight: 700 }}>
         <span>Failed</span>
         <span>Students</span>
       </div>
@@ -220,8 +220,8 @@ export const AdminFailedPopup = ({
           justifyContent: 'center',
           padding: '0 1.2rem',
           fontWeight: 700,
-          fontSize: '1rem',
-          minWidth: '50px',
+          fontSize: isPopupMobile ? '0.9rem' : '1rem',
+          minWidth: isPopupMobile ? '40px' : '50px',
           boxSizing: 'border-box'
         }}
       >
@@ -299,8 +299,8 @@ export const AdminFailedPopup = ({
           style={{
             backgroundColor: color.header,
             color: '#fff',
-            padding: '1.1rem',
-            fontSize: '1.5rem',
+            padding: isPopupMobile ? '0.8rem' : '1.1rem',
+            fontSize: isPopupMobile ? '1.2rem' : '1.5rem',
             fontWeight: 700,
             textAlign: 'center',
             letterSpacing: '0.02em'
@@ -309,15 +309,15 @@ export const AdminFailedPopup = ({
           Admin Feedback
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'center', padding: '14px 16px 0' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', padding: isPopupMobile ? '10px 12px 0' : '14px 16px 0' }}>
           <div
             style={{
               backgroundColor: color.badgeBg,
               color: color.badgeText,
               borderRadius: '20px',
-              padding: '6px 32px',
+              padding: isPopupMobile ? '4px 20px' : '6px 32px',
               fontWeight: 700,
-              fontSize: '1rem'
+              fontSize: isPopupMobile ? '0.85rem' : '1rem'
             }}
           >
             {roundBadgeText}
@@ -326,7 +326,7 @@ export const AdminFailedPopup = ({
 
         <div
           style={{
-            padding: '12px 20px 8px',
+            padding: isPopupMobile ? '10px 14px 6px' : '12px 20px 8px',
             flex: 1,
             overflowY: 'auto',
             overflowX: 'hidden',
@@ -337,36 +337,36 @@ export const AdminFailedPopup = ({
           {isPopupMobile ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '14px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span style={{ fontWeight: 700, fontSize: '0.9rem', whiteSpace: 'nowrap' }}>AI - Integration :</span>
+                <span style={{ fontWeight: 700, fontSize: '0.82rem', whiteSpace: 'nowrap' }}>AI - Integration :</span>
                 <div
                   style={{
                     flex: 1,
                     display: 'flex',
                     gap: '0.35rem',
                     alignItems: 'center',
-                    padding: '0.32rem',
+                    padding: '0.25rem',
                     backgroundColor: 'rgb(249, 249, 249)',
                     borderRadius: '8px',
                     border: '1px solid rgb(218, 218, 218)',
-                    height: '53.6px',
+                    height: '42px',
                     boxSizing: 'border-box',
                     minWidth: 0
                   }}
                 >
                   <input type="radio" id="afp-failed-ai-enable-mobile" name="afp-failed-ai-mobile" checked={aiEnabled} onChange={() => setAiEnabled(true)} style={{ display: 'none' }} />
-                  <label htmlFor="afp-failed-ai-enable-mobile" style={{ flex: 1, textAlign: 'center', padding: '6px 10px', borderRadius: '6px', cursor: 'pointer', color: aiEnabled ? '#fff' : '#666', backgroundColor: aiEnabled ? color.primary : 'transparent', fontWeight: aiEnabled ? 700 : 400, fontSize: '0.86rem', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: aiEnabled ? `0 2px 8px ${color.primaryShadow}` : 'none', whiteSpace: 'nowrap', fontFamily: "'Poppins', sans-serif" }}>Enable</label>
+                  <label htmlFor="afp-failed-ai-enable-mobile" style={{ flex: 1, textAlign: 'center', padding: '4px 8px', borderRadius: '6px', cursor: 'pointer', color: aiEnabled ? '#fff' : '#666', backgroundColor: aiEnabled ? color.primary : 'transparent', fontWeight: aiEnabled ? 700 : 400, fontSize: '0.8rem', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: aiEnabled ? `0 2px 8px ${color.primaryShadow}` : 'none', whiteSpace: 'nowrap', fontFamily: "'Poppins', sans-serif" }}>Enable</label>
                   <input type="radio" id="afp-failed-ai-disable-mobile" name="afp-failed-ai-mobile" checked={!aiEnabled} onChange={() => setAiEnabled(false)} style={{ display: 'none' }} />
-                  <label htmlFor="afp-failed-ai-disable-mobile" style={{ flex: 1, textAlign: 'center', padding: '6px 10px', borderRadius: '6px', cursor: 'pointer', color: !aiEnabled ? '#fff' : '#666', backgroundColor: !aiEnabled ? color.primary : 'transparent', fontWeight: !aiEnabled ? 700 : 400, fontSize: '0.86rem', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: !aiEnabled ? `0 2px 8px ${color.primaryShadow}` : 'none', whiteSpace: 'nowrap', fontFamily: "'Poppins', sans-serif" }}>Disable</label>
+                  <label htmlFor="afp-failed-ai-disable-mobile" style={{ flex: 1, textAlign: 'center', padding: '4px 8px', borderRadius: '6px', cursor: 'pointer', color: !aiEnabled ? '#fff' : '#666', backgroundColor: !aiEnabled ? color.primary : 'transparent', fontWeight: !aiEnabled ? 700 : 400, fontSize: '0.8rem', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: !aiEnabled ? `0 2px 8px ${color.primaryShadow}` : 'none', whiteSpace: 'nowrap', fontFamily: "'Poppins', sans-serif" }}>Disable</label>
                 </div>
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <div style={{ backgroundColor: color.assessment, color: '#fff', borderRadius: '8px', padding: '0 8px', fontWeight: 700, fontSize: '0.95rem', textAlign: 'center', flex: 1, boxSizing: 'border-box', height: '50px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ backgroundColor: color.assessment, color: '#fff', borderRadius: '8px', padding: '0 6px', fontWeight: 700, fontSize: '0.82rem', textAlign: 'center', flex: 1, boxSizing: 'border-box', height: '42px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   Overall Assessment
                 </div>
-                <div style={{ display: 'flex', gap: '3px', flexWrap: 'nowrap', flexShrink: 0 }}>
+                <div style={{ display: 'flex', gap: '2px', flexWrap: 'nowrap', flexShrink: 0 }}>
                   {[1, 2, 3, 4, 5].map((star) => (
-                    <span key={star} style={{ cursor: 'pointer', fontSize: '2.5rem', lineHeight: 1 }} onMouseEnter={() => setHoverRating(star)} onMouseLeave={() => setHoverRating(0)} onClick={() => setRating(star)}>
+                    <span key={star} style={{ cursor: 'pointer', fontSize: '1.8rem', lineHeight: 1 }} onMouseEnter={() => setHoverRating(star)} onMouseLeave={() => setHoverRating(0)} onClick={() => setRating(star)}>
                       {(hoverRating || rating) >= star ? <FaStar color="#FFE817" /> : <FaRegStar color="#ccc" />}
                     </span>
                   ))}
@@ -379,12 +379,12 @@ export const AdminFailedPopup = ({
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{
-                    display: 'flex', alignItems: 'center', gap: '8px',
+                    display: 'flex', alignItems: 'center', gap: '6px',
                     border: '1px solid rgb(218, 218, 218)',
                     borderRadius: '8px',
                     height: FIELD_HEIGHT,
-                    padding: '0.9rem', backgroundColor: 'rgb(249, 249, 249)',
-                    fontSize: '0.84rem',
+                    padding: '0.6rem 0.7rem', backgroundColor: 'rgb(249, 249, 249)',
+                    fontSize: '0.78rem',
                     lineHeight: 1.2,
                     userSelect: 'none', boxSizing: 'border-box', width: '100%',
                   }}>
@@ -399,7 +399,7 @@ export const AdminFailedPopup = ({
                     }}>
                       {selectedDate ? (() => { const [y,m,d] = selectedDate.split('-'); return `${d}-${m}-${y}`; })() : 'DD-MM-YYYY'}
                     </span>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="2" strokeLinecap="round" style={{ flexShrink: 0 }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="2" strokeLinecap="round" style={{ flexShrink: 0 }}>
                       <rect x="3" y="4" width="18" height="18" rx="2" />
                       <line x1="16" y1="2" x2="16" y2="6" />
                       <line x1="8" y1="2" x2="8" y2="6" />
@@ -475,29 +475,29 @@ export const AdminFailedPopup = ({
           )}
 
           {isPopupMobile ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', paddingBottom: '20px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', paddingBottom: '10px' }}>
               <div>
-                <div style={{ fontWeight: 700, fontSize: '0.95rem', marginBottom: '6px' }}>Feedback :</div>
+                <div style={{ fontWeight: 700, fontSize: '0.85rem', marginBottom: '4px' }}>Feedback :</div>
                 <div style={{ position: 'relative' }}>
-                  <SFPScrollTextarea value={feedback} onChange={(e) => { setFeedback(e.target.value); setAiGenerated(false); }} readOnly={isGenerating} height={112} placeholder="Write your feedback here..." />
+                  <SFPScrollTextarea value={feedback} onChange={(e) => { setFeedback(e.target.value); setAiGenerated(false); }} readOnly={isGenerating} height={100} placeholder="Write your feedback here..." />
                   {isGenerating && (
                     <div style={{ position: 'absolute', inset: 0, background: 'rgba(240, 240, 240, 0.95)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', borderRadius: '10px', zIndex: 2 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
                         <div style={{ width: '16px', height: '16px', border: `2px solid ${color.focusRing || 'rgba(0,0,0,0.1)'}`, borderTop: `2px solid ${color.primary}`, borderRadius: '50%', animation: 'afpFailedSpin 0.85s linear infinite' }} />
-                        <span style={{ fontSize: '0.88rem', fontWeight: 700, color: '#333' }}>Generating feedback...</span>
+                        <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#333' }}>Generating feedback...</span>
                       </div>
-                      <div style={{ fontSize: '0.78rem', color: '#666' }}>Please wait while AI improves the feedback.</div>
+                      <div style={{ fontSize: '0.72rem', color: '#666' }}>Please wait while AI improves the feedback.</div>
                       <style>{`@keyframes afpFailedSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
                     </div>
                   )}
                   {aiEnabled && (
                     <div style={{ position: 'absolute', bottom: '8px', right: '18px', display: 'flex', gap: '6px', zIndex: 1 }}>
-                      <button onClick={() => { setFeedback(''); setGenerateError(''); setAiGenerated(false); }} style={{ backgroundColor: '#ef4444', color: '#fff', border: 'none', borderRadius: '6px', padding: '4px 12px', fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer', fontFamily: "'Poppins', sans-serif", boxShadow: '0 2px 6px rgba(239,68,68,0.35)' }}>Clear</button>
-                      <button onClick={handleGenerateFeedback} disabled={isGenerating} style={{ backgroundColor: color.primary, opacity: isGenerating ? 0.7 : 1, color: '#fff', border: 'none', borderRadius: '6px', padding: '4px 12px', fontSize: '0.78rem', fontWeight: 600, cursor: isGenerating ? 'not-allowed' : 'pointer', fontFamily: "'Poppins', sans-serif", boxShadow: `0 2px 6px ${color.primaryShadow}` }}>{isGenerating ? 'Generating...' : 'Generate'}</button>
+                      <button onClick={() => { setFeedback(''); setGenerateError(''); setAiGenerated(false); }} style={{ backgroundColor: '#ef4444', color: '#fff', border: 'none', borderRadius: '6px', padding: '3px 10px', fontSize: '0.74rem', fontWeight: 600, cursor: 'pointer', fontFamily: "'Poppins', sans-serif", boxShadow: '0 2px 6px rgba(239,68,68,0.35)' }}>Clear</button>
+                      <button onClick={handleGenerateFeedback} disabled={isGenerating} style={{ backgroundColor: color.primary, opacity: isGenerating ? 0.7 : 1, color: '#fff', border: 'none', borderRadius: '6px', padding: '3px 10px', fontSize: '0.74rem', fontWeight: 600, cursor: isGenerating ? 'not-allowed' : 'pointer', fontFamily: "'Poppins', sans-serif", boxShadow: `0 2px 6px ${color.primaryShadow}` }}>{isGenerating ? 'Generating...' : 'Generate'}</button>
                     </div>
                   )}
                 </div>
-                {generateError && <div style={{ color: '#d32f2f', fontSize: '0.78rem', marginTop: '6px' }}>{generateError}</div>}
+                {generateError && <div style={{ color: '#d32f2f', fontSize: '0.75rem', marginTop: '4px' }}>{generateError}</div>}
               </div>
             </div>
           ) : (
@@ -529,9 +529,9 @@ export const AdminFailedPopup = ({
           )}
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', padding: isPopupMobile ? '14px 24px calc(env(safe-area-inset-bottom, 20px) + 25px)' : '14px 24px 20px', background: '#fff', borderTop: '1px solid #eef1f7' }}>
-          <button onClick={onClose} disabled={isGenerating} style={{ backgroundColor: '#7C7C7C', opacity: isGenerating ? 0.6 : 1, color: '#fff', border: 'none', borderRadius: '12px', padding: '10px 40px', fontWeight: 600, fontSize: '1rem', cursor: isGenerating ? 'not-allowed' : 'pointer', fontFamily: "'Poppins', sans-serif" }}>Discard</button>
-          <button onClick={() => (onSubmit ? onSubmit({ feedback, selectedDate, rating, aiEnabled, aiGenerated }) : onClose())} disabled={isGenerating || !feedback.trim()} style={{ backgroundColor: color.primary, opacity: (isGenerating || !feedback.trim()) ? 0.7 : 1, color: '#fff', border: 'none', borderRadius: '12px', padding: '10px 40px', fontWeight: 600, fontSize: '1rem', cursor: (isGenerating || !feedback.trim()) ? 'not-allowed' : 'pointer', fontFamily: "'Poppins', sans-serif" }}>Submit</button>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: isPopupMobile ? '12px' : '16px', padding: isPopupMobile ? '10px 16px calc(env(safe-area-inset-bottom, 12px) + 15px)' : '14px 24px 20px', background: '#fff', borderTop: '1px solid #eef1f7' }}>
+          <button onClick={onClose} disabled={isGenerating} style={{ backgroundColor: '#7C7C7C', opacity: isGenerating ? 0.6 : 1, color: '#fff', border: 'none', borderRadius: isPopupMobile ? '8px' : '12px', padding: isPopupMobile ? '8px 24px' : '10px 40px', fontWeight: 600, fontSize: isPopupMobile ? '0.88rem' : '1rem', minWidth: isPopupMobile ? '100px' : 'auto', cursor: isGenerating ? 'not-allowed' : 'pointer', fontFamily: "'Poppins', sans-serif" }}>Discard</button>
+          <button onClick={() => (onSubmit ? onSubmit({ feedback, selectedDate, rating, aiEnabled, aiGenerated }) : onClose())} disabled={isGenerating || !feedback.trim()} style={{ backgroundColor: color.primary, opacity: (isGenerating || !feedback.trim()) ? 0.7 : 1, color: '#fff', border: 'none', borderRadius: isPopupMobile ? '8px' : '12px', padding: isPopupMobile ? '8px 24px' : '10px 40px', fontWeight: 600, fontSize: isPopupMobile ? '0.88rem' : '1rem', minWidth: isPopupMobile ? '100px' : 'auto', cursor: (isGenerating || !feedback.trim()) ? 'not-allowed' : 'pointer', fontFamily: "'Poppins', sans-serif" }}>Submit</button>
         </div>
       </div>
     </div>

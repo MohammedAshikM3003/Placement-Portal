@@ -16,7 +16,7 @@ const safeDescription = (desc) => {
   return String(desc);
 };
 
-export default function PopupExperience({ title = 'Software Engineer', data, onSave, onDiscard, enableAI = true }) {
+export default function PopupExperience({ title = 'Software Engineer', data, onSave, onDiscard, enableAI = true, onDelete }) {
   const [formData, setFormData] = useState({
     title: data?.title || data?.label || title,
     companyName: data?.companyName || '',
@@ -88,9 +88,26 @@ export default function PopupExperience({ title = 'Software Engineer', data, onS
     }
   };
 
+  const hasTechnologies = formData.technologies.length > 0 || techInput.trim().length > 0;
+  const isFormValid = Boolean(
+    formData.companyName?.trim() &&
+    formData.location?.trim() &&
+    formData.fromDate?.trim() &&
+    formData.toDate?.trim() &&
+    formData.mode?.trim() &&
+    hasTechnologies &&
+    formData.description?.trim()
+  );
+
   const handleSave = () => {
-    console.log('PopupExperience - Saving data:', formData);
-    onSave(formData);
+    if (!isFormValid) return;
+    let finalTech = [...formData.technologies];
+    if (techInput.trim() && !finalTech.includes(techInput.trim())) {
+      finalTech.push(techInput.trim());
+    }
+    const saveData = { ...formData, technologies: finalTech };
+    console.log('PopupExperience - Saving data:', saveData);
+    onSave(saveData);
   };
 
   return (
@@ -215,7 +232,10 @@ export default function PopupExperience({ title = 'Software Engineer', data, onS
 
         <div className={styles.popupFooter}>
           <button type="button" className={styles.popupDiscardBtn} onClick={onDiscard}>Back</button>
-          <button type="button" className={styles.popupSaveBtn} onClick={handleSave}>Save</button>
+          {onDelete && (
+            <button type="button" className={styles.popupDiscardBtn} style={{ color: '#d9534f', borderColor: '#d9534f' }} onClick={onDelete}>Delete</button>
+          )}
+          <button type="button" className={styles.popupSaveBtn} onClick={handleSave} disabled={!isFormValid}>Save</button>
         </div>
       </div>
     </div>

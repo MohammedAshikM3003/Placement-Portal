@@ -5,7 +5,7 @@ import styles from './ResumeBuilder.module.css';
  * Achievement Popup
  * Achievement Details textarea with AI support
  */
-export default function PopupAchievementBuilder({ data, onSave, onDiscard, enableAI = true }) {
+export default function PopupAchievementBuilder({ data, onSave, onDiscard, enableAI = true, onDelete }) {
   const [details, setDetails] = useState(data?.details || '');
   const textareaRef = useRef(null);
 
@@ -25,6 +25,13 @@ export default function PopupAchievementBuilder({ data, onSave, onDiscard, enabl
       textarea.style.height = `${newHeight}px`;
     }
   }, [details]);
+
+  const isFormValid = Boolean(details?.trim());
+
+  const handleSave = () => {
+    if (!isFormValid) return;
+    onSave({ details });
+  };
 
   return (
     <div className={styles.overlay}>
@@ -54,7 +61,10 @@ export default function PopupAchievementBuilder({ data, onSave, onDiscard, enabl
 
         <div className={styles.popupFooter}>
           <button className={styles.popupDiscardBtn} onClick={onDiscard}>Back</button>
-          <button className={styles.popupSaveBtn} onClick={() => onSave({ details })}>Save</button>
+          {onDelete && (
+            <button className={styles.popupDiscardBtn} style={{ color: '#d9534f', borderColor: '#d9534f' }} onClick={onDelete}>Delete</button>
+          )}
+          <button className={styles.popupSaveBtn} onClick={handleSave} disabled={!isFormValid}>Save</button>
         </div>
       </div>
     </div>

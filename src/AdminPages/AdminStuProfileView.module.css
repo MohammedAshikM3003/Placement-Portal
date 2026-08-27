@@ -2534,8 +2534,9 @@
         line-height: 1.35;
     }
 
-    /* Stack pie and right panel vertically */
+    /* Stack stats grid, pie and legend vertically in specific order */
     .anlsGrid {
+        display: grid;
         grid-template-columns: 1fr;
         gap: 12px;
         width: 100%;
@@ -2545,25 +2546,25 @@
         margin-right: 0;
     }
 
-    /* Pie col: full width, shrink chart */
+    /* Pie col: full width, shrink chart, placed in middle */
     .anlsPieCol {
         width: 100%;
         overflow: hidden;
         box-sizing: border-box;
+        order: 2;
     }
 
-    /* Right col takes full width below pie */
+    /* Right col displays contents to let children be direct grid items for ordering */
     .anlsRightCol {
-        width: 100%;
-        max-width: 100%;
-        box-sizing: border-box;
+        display: contents;
     }
 
-    /* Stack stats and achievement column vertically */
+    /* Stack stats and achievement column vertically, placed at top */
     .anlsRightTop {
         grid-template-columns: 1fr;
         gap: 10px;
         width: 100%;
+        order: 1;
     }
 
     /* Stats: 2 columns on mobile */
@@ -2598,6 +2599,7 @@
 
     .anlsLegendBox {
         overflow: hidden;
+        order: 3;
     }
 
     .anlsLegendItem {
@@ -3044,6 +3046,7 @@
     box-sizing: border-box;
     transition: all 0.2s ease;
     width: 100%;
+    
 }
 
 .inputWithSuffix:focus-within {
@@ -3062,6 +3065,8 @@
     font-size: 0.95rem;
     font-family: 'Poppins', sans-serif;
     color: #1f2933;
+    position:relative;
+    top:12px;
 }
 
 .suffixChip {

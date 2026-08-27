@@ -46,6 +46,63 @@ const writeArchivedTrainings = (cards) => {
   window.localStorage.setItem(TRAINING_ARCHIVE_STORAGE_KEY, JSON.stringify(cards));
 };
 
+function getYearTheme(yearTokens = []) {
+  const tokens = Array.isArray(yearTokens) ? yearTokens : [];
+  if (tokens.includes('I')) {
+    return {
+      cardBg: '#DBEAFE',
+      textColor: '#1E3A8A',
+      metaColor: '#1E40AF',
+      badgeBg: '#1D4ED8',
+      logoBg: '#FFFFFF',
+      logoText: '#1D4ED8',
+      borderColor: '#93C5FD'
+    };
+  }
+  if (tokens.includes('II')) {
+    return {
+      cardBg: '#FFE4E6',
+      textColor: '#881337',
+      metaColor: '#9F1239',
+      badgeBg: '#E11D48',
+      logoBg: '#FFFFFF',
+      logoText: '#E11D48',
+      borderColor: '#FCA5A5'
+    };
+  }
+  if (tokens.includes('III')) {
+    return {
+      cardBg: '#FED7AA',
+      textColor: '#7C2D12',
+      metaColor: '#9A3412',
+      badgeBg: '#EA580C',
+      logoBg: '#FFFFFF',
+      logoText: '#EA580C',
+      borderColor: '#FDBA74'
+    };
+  }
+  if (tokens.includes('IV')) {
+    return {
+      cardBg: '#E9D5FF',
+      textColor: '#581C87',
+      metaColor: '#6B21A8',
+      badgeBg: '#9333EA',
+      logoBg: '#FFFFFF',
+      logoText: '#9333EA',
+      borderColor: '#D8B4FE'
+    };
+  }
+  return {
+    cardBg: '#DCFCE7',
+    textColor: '#14532D',
+    metaColor: '#15803D',
+    badgeBg: '#16A34A',
+    logoBg: '#FFFFFF',
+    logoText: '#16A34A',
+    borderColor: '#86EFAC'
+  };
+}
+
 function AdminTraining({ onLogout }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const navigate = useNavigate();
@@ -57,6 +114,7 @@ function AdminTraining({ onLogout }) {
   const [activePopup, setActivePopup] = useState(null);
   const [deleteInProgress, setDeleteInProgress] = useState(false);
   const [cardToDelete, setCardToDelete] = useState(null);
+  const [selectedCompanyModalCard, setSelectedCompanyModalCard] = useState(null);
 
   const [selectedCompany, setSelectedCompany] = useState('');
   const [selectedYear, setSelectedYear] = useState('');
@@ -130,7 +188,7 @@ function AdminTraining({ onLogout }) {
           }
         });
 
-        const cards = normalizedSchedules.map((schedule) => {
+        const rawCards = normalizedSchedules.map((schedule) => {
           const companyName = (schedule?.companyName || '').toString().trim() || 'Training';
           const phases = Array.isArray(schedule?.phases) ? schedule.phases : [];
           const phaseNumbers = [...new Set(
@@ -172,7 +230,7 @@ function AdminTraining({ onLogout }) {
             id: schedule?._id || `${companyName}-${schedule?.startDate || ''}`,
             scheduleId: schedule?._id || '',
             companyName,
-            logoText: companyName.charAt(0).toUpperCase() || 'T',
+            logoText: (companyName.charAt(0) || 'T').toUpperCase(),
             startDate: schedule?.startDate || '',
             endDate: schedule?.endDate || '',
             yearText,
@@ -185,7 +243,6 @@ function AdminTraining({ onLogout }) {
                 const ed = new Date(schedule?.endDate);
                 if (Number.isNaN(ed.getTime())) return false;
                 const today = new Date();
-                // compare date-only (ignore time)
                 const edDateOnly = new Date(ed.getFullYear(), ed.getMonth(), ed.getDate());
                 const todayDateOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
                 return edDateOnly < todayDateOnly;
@@ -194,6 +251,51 @@ function AdminTraining({ onLogout }) {
               }
             })()
           };
+        });
+
+        // Group cards sharing the same phase, start date, end date, and year text
+        const groupedMap = new Map();
+        rawCards.forEach((card) => {
+          const startKey = normalizeDateKey(card.startDate);
+          const endKey = normalizeDateKey(card.endDate);
+          const groupKey = `${card.yearText}_${card.phaseText}_${startKey}_${endKey}`;
+
+          if (!groupedMap.has(groupKey)) {
+            groupedMap.set(groupKey, []);
+          }
+          groupedMap.get(groupKey).push(card);
+        });
+
+        const cards = [];
+        groupedMap.forEach((groupItems) => {
+          if (groupItems.length === 1) {
+            const item = groupItems[0];
+            cards.push({
+              ...item,
+              companies: [{ companyName: item.companyName, scheduleId: item.scheduleId }]
+            });
+          } else {
+            const companyNames = [...new Set(groupItems.map((i) => i.companyName))];
+            const combinedName = companyNames.join('/');
+            const logoLetters = companyNames.map((c) => c.charAt(0).toUpperCase()).join('/');
+            const totalStudents = groupItems.reduce((sum, i) => sum + (i.studentCount || 0), 0);
+
+            cards.push({
+              id: groupItems.map((i) => i.id).join('_'),
+              scheduleId: groupItems[0].scheduleId,
+              companyName: combinedName,
+              companies: groupItems.map((i) => ({ companyName: i.companyName, scheduleId: i.scheduleId })),
+              logoText: logoLetters,
+              startDate: groupItems[0].startDate,
+              endDate: groupItems[0].endDate,
+              yearText: groupItems[0].yearText,
+              yearTokens: groupItems[0].yearTokens,
+              phaseText: groupItems[0].phaseText,
+              durationText: groupItems[0].durationText,
+              studentCount: totalStudents,
+              isEnded: groupItems[0].isEnded
+            });
+          }
         });
 
         setTrainingCards(cards.filter((card) => !archivedKeys.has(getTrainingArchiveKey(card))));
@@ -209,9 +311,24 @@ function AdminTraining({ onLogout }) {
     loadTrainingDashboardData();
   }, []);
 
+  const matchesCompanyFilter = (card, targetCompany) => {
+    if (!targetCompany) return true;
+    const target = targetCompany.trim().toLowerCase();
+    const names = [];
+    if (card.companyName) {
+      names.push(...card.companyName.split('/'));
+    }
+    if (Array.isArray(card.companies)) {
+      card.companies.forEach((c) => {
+        if (c.companyName) names.push(...c.companyName.split('/'));
+      });
+    }
+    return names.some((n) => n.trim().toLowerCase() === target);
+  };
+
   const filteredTrainingCards = useMemo(() => {
     return trainingCards.filter((card) => {
-      if (selectedCompany && card.companyName !== selectedCompany) {
+      if (selectedCompany && !matchesCompanyFilter(card, selectedCompany)) {
         return false;
       }
 
@@ -255,7 +372,7 @@ function AdminTraining({ onLogout }) {
 
   const baseCardsForDateOptions = useMemo(() => {
     return trainingCards.filter((card) => {
-      if (selectedCompany && card.companyName !== selectedCompany) return false;
+      if (selectedCompany && !matchesCompanyFilter(card, selectedCompany)) return false;
       if (selectedYear) {
         const cardYears = Array.isArray(card.yearTokens) ? card.yearTokens : [];
         if (!cardYears.includes(selectedYear)) return false;
@@ -286,8 +403,24 @@ function AdminTraining({ onLogout }) {
   }, [baseCardsForDateOptions, selectedStartDate]);
 
   const companyDropdownOptions = useMemo(() => {
-    return companies.map(c => ({ label: c, value: c }));
-  }, [companies]);
+    const activeCompanies = [...new Set(
+      trainingCards
+        .flatMap((card) => {
+          const names = [];
+          if (card.companyName) names.push(...card.companyName.split('/'));
+          if (Array.isArray(card.companies)) {
+            card.companies.forEach((c) => {
+              if (c.companyName) names.push(...c.companyName.split('/'));
+            });
+          }
+          return names;
+        })
+        .map((c) => (c || '').toString().trim())
+        .filter(Boolean)
+    )].sort((a, b) => a.localeCompare(b));
+
+    return activeCompanies.map((c) => ({ label: c, value: c }));
+  }, [trainingCards]);
 
   const yearDropdownOptions = useMemo(() => {
     return yearOptions.map(y => ({ label: y, value: y }));
@@ -972,26 +1105,42 @@ function AdminTraining({ onLogout }) {
             <div className={styles['ad-tr-training-empty']}>No scheduled trainings found.</div>
           ) : (
             filteredTrainingCards.map((card, index) => {
-              const baseCardClass = index % 2 === 0 ? styles['ad-tr-training-card'] : styles['ad-tr-training-card-alt'];
-              const logoClass = index % 2 === 0 ? styles['ad-tr-training-logo'] : styles['ad-tr-training-logo-alt'];
+              const theme = getYearTheme(card.yearTokens);
               const ended = Boolean(card.isEnded);
-              const cardClass = ended ? `${baseCardClass} ${styles['ad-tr-training-card-ended']}` : baseCardClass;
 
               const handleCardClick = () => {
-                const query = new URLSearchParams({
-                  mode: 'edit',
-                  company: card.companyName
-                });
+                const companiesList = card.companies || [{ companyName: card.companyName, scheduleId: card.scheduleId }];
+                if (companiesList.length > 1) {
+                  setSelectedCompanyModalCard(card);
+                } else {
+                  const comp = companiesList[0];
+                  const query = new URLSearchParams({
+                    mode: 'edit',
+                    company: comp.companyName
+                  });
 
-                if (card.scheduleId) {
-                  query.set('scheduleId', card.scheduleId);
+                  if (comp.scheduleId) {
+                    query.set('scheduleId', comp.scheduleId);
+                  }
+
+                  navigate(`/admin-preferred-training-students?${query.toString()}`);
                 }
-
-                navigate(`/admin-preferred-training-students?${query.toString()}`);
               };
 
               return (
-                <div key={card.id} className={cardClass} onClick={handleCardClick} style={{ cursor: 'pointer' }}>
+                <div
+                  key={card.id}
+                  className={styles['ad-tr-training-card']}
+                  onClick={handleCardClick}
+                  style={{
+                    cursor: 'pointer',
+                    backgroundColor: theme.cardBg,
+                    borderColor: theme.borderColor,
+                    borderWidth: '2px',
+                    borderStyle: 'solid',
+                    color: theme.textColor
+                  }}
+                >
                   <div className={styles['ad-tr-training-card-menu']} data-training-card-menu="true">
                     <button
                       type="button"
@@ -1001,11 +1150,12 @@ function AdminTraining({ onLogout }) {
                         setOpenCardMenuId((current) => (current === card.id ? '' : card.id));
                       }}
                       aria-label="Open card actions"
+                      style={{ color: theme.textColor }}
                     >
                       <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
-                        <circle cx="8" cy="3" r="1.4" />
-                        <circle cx="8" cy="8" r="1.4" />
-                        <circle cx="8" cy="13" r="1.4" />
+                        <circle cx="8" cy="3" r="1.4" fill="currentColor" />
+                        <circle cx="8" cy="8" r="1.4" fill="currentColor" />
+                        <circle cx="8" cy="13" r="1.4" fill="currentColor" />
                       </svg>
                     </button>
 
@@ -1034,17 +1184,32 @@ function AdminTraining({ onLogout }) {
                       </div>
                     )}
                   </div>
-                  <div className={logoClass}>{card.logoText}</div>
-                  <div className={ended ? styles['ad-tr-ended-badge'] : styles['ad-tr-active-badge']}>
+                  <div
+                    className={styles['ad-tr-training-logo']}
+                    style={{
+                      backgroundColor: theme.logoBg,
+                      color: theme.logoText,
+                      fontWeight: '800'
+                    }}
+                  >
+                    {card.logoText}
+                  </div>
+                  <div
+                    className={ended ? styles['ad-tr-ended-badge'] : styles['ad-tr-active-badge']}
+                    style={{
+                      backgroundColor: ended ? '#64748B' : theme.badgeBg,
+                      color: '#FFFFFF'
+                    }}
+                  >
                     {ended ? 'ENDED' : 'ACTIVE'}
                   </div>
-                  <div className={styles['ad-tr-training-name']}>{card.companyName}</div>
-                  <div className={styles['ad-tr-training-meta']}>Year: {card.yearText}</div>
-                  <div className={styles['ad-tr-training-meta']}>Phase: {card.phaseText}</div>
-                  <div className={styles['ad-tr-training-meta']}>Students: {card.studentCount}</div>
-                  <div className={styles['ad-tr-training-meta']}>Start Date: {formatDateForDisplay(card.startDate)}</div>
-                  <div className={styles['ad-tr-training-meta']}>End Date: {formatDateForDisplay(card.endDate)}</div>
-                  <div className={styles['ad-tr-training-meta']}>Duration: {card.durationText}</div>
+                  <div className={styles['ad-tr-training-name']} style={{ color: theme.textColor }}>{card.companyName}</div>
+                  <div className={styles['ad-tr-training-meta']} style={{ color: theme.metaColor }}>Year: {card.yearText}</div>
+                  <div className={styles['ad-tr-training-meta']} style={{ color: theme.metaColor }}>Phase: {card.phaseText}</div>
+                  <div className={styles['ad-tr-training-meta']} style={{ color: theme.metaColor }}>Students: {card.studentCount}</div>
+                  <div className={styles['ad-tr-training-meta']} style={{ color: theme.metaColor }}>Start Date: {formatDateForDisplay(card.startDate)}</div>
+                  <div className={styles['ad-tr-training-meta']} style={{ color: theme.metaColor }}>End Date: {formatDateForDisplay(card.endDate)}</div>
+                  <div className={styles['ad-tr-training-meta']} style={{ color: theme.metaColor }}>Duration: {card.durationText}</div>
                 </div>
               );
             })
@@ -1172,6 +1337,52 @@ function AdminTraining({ onLogout }) {
                 disabled={attendanceSearchLoading}
               >
                 {attendanceSearchLoading ? 'Search...' : 'Search'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {selectedCompanyModalCard && (
+        <div className={styles['ad-tr-popup-overlay']} onClick={() => setSelectedCompanyModalCard(null)}>
+          <div className={styles['ad-tr-company-select-popup-container']} onClick={(e) => e.stopPropagation()}>
+            <div className={styles['ad-tr-company-select-popup-header']}>
+              Select Company Training
+            </div>
+            <div className={styles['ad-tr-company-select-popup-body']}>
+              <p className={styles['ad-tr-company-select-popup-desc']}>
+                Select a company to view training details:
+              </p>
+              <div className={styles['ad-tr-company-select-list']}>
+                {(selectedCompanyModalCard.companies || []).map((comp, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    className={styles['ad-tr-company-select-item-btn']}
+                    onClick={() => {
+                      const query = new URLSearchParams({
+                        mode: 'edit',
+                        company: comp.companyName
+                      });
+                      if (comp.scheduleId) {
+                        query.set('scheduleId', comp.scheduleId);
+                      }
+                      setSelectedCompanyModalCard(null);
+                      navigate(`/admin-preferred-training-students?${query.toString()}`);
+                    }}
+                  >
+                    <span>{comp.companyName}</span>
+                    <span className={styles['ad-tr-company-select-item-arrow']}>→</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className={styles['ad-tr-company-select-popup-footer']}>
+              <button
+                type="button"
+                className={styles['ad-tr-company-select-close-btn']}
+                onClick={() => setSelectedCompanyModalCard(null)}
+              >
+                Close
               </button>
             </div>
           </div>

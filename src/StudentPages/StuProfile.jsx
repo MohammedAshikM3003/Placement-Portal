@@ -368,12 +368,31 @@ const ImagePreviewModal = ({ src, isOpen, onClose }) => {
     );
 };
 
+const rotateSize = (width, height, rotation) => {
+    const rotRad = (rotation * Math.PI) / 180;
+    return {
+        width: Math.abs(Math.cos(rotRad) * width) + Math.abs(Math.sin(rotRad) * height),
+        height: Math.abs(Math.sin(rotRad) * width) + Math.abs(Math.cos(rotRad) * height),
+    };
+};
+
 const CropImageModal = ({ isOpen, imageSrc, onCrop, onClose, onDiscard }) => {
     const [crop, setCrop] = useState({ x: 0, y: 0 });
     const [zoom, setZoom] = useState(1);
     const [rotation, setRotation] = useState(0);
-    const [aspect, setAspect] = useState(1); // 1:1
+    const [mediaAspect, setMediaAspect] = useState(1);
+    const [isCustom, setIsCustom] = useState(true);
+    const [aspect, setAspect] = useState(1);
     const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
+
+    useEffect(() => {
+        if (isOpen) {
+            setCrop({ x: 0, y: 0 });
+            setZoom(1);
+            setRotation(0);
+            setIsCustom(true);
+        }
+    }, [isOpen, imageSrc]);
 
     const onCropComplete = useCallback((croppedArea, croppedAreaPixels) => {
         setCroppedAreaPixels(croppedAreaPixels);
@@ -387,6 +406,11 @@ const CropImageModal = ({ isOpen, imageSrc, onCrop, onClose, onDiscard }) => {
 
         try {
             const image = await createImage(imageSrc);
+            const rotRad = (rotation * Math.PI) / 180;
+
+            // Calculate bounding box of the rotated image
+            const { width: bBoxWidth, height: bBoxHeight } = rotateSize(image.width, image.height, rotation);
+
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
 
@@ -395,40 +419,33 @@ const CropImageModal = ({ isOpen, imageSrc, onCrop, onClose, onDiscard }) => {
                 return;
             }
 
-            // Calculate the canvas size based on the cropped area
-            const { width, height, x, y } = croppedAreaPixels;
+            // Set canvas size to match bounding box
+            canvas.width = bBoxWidth;
+            canvas.height = bBoxHeight;
 
-            // Set canvas dimensions to the crop size
-            canvas.width = width;
-            canvas.height = height;
+            // Translate canvas center to image center, then rotate
+            ctx.translate(bBoxWidth / 2, bBoxHeight / 2);
+            ctx.rotate(rotRad);
+            ctx.translate(-image.width / 2, -image.height / 2);
 
-            // Draw the image on canvas
-            ctx.save();
+            // Draw rotated image
+            ctx.drawImage(image, 0, 0);
 
-            // If there's rotation, apply it
-            if (rotation !== 0) {
-                const centerX = width / 2;
-                const centerY = height / 2;
-                ctx.translate(centerX, centerY);
-                ctx.rotate((rotation * Math.PI) / 180);
-                ctx.translate(-centerX, -centerY);
-            }
-
-            ctx.drawImage(
-                image,
-                x,
-                y,
-                width,
-                height,
-                0,
-                0,
-                width,
-                height
+            // Extract pixel crop
+            const data = ctx.getImageData(
+                croppedAreaPixels.x,
+                croppedAreaPixels.y,
+                croppedAreaPixels.width,
+                croppedAreaPixels.height
             );
 
-            ctx.restore();
+            // Set final canvas size to cropped dimensions
+            canvas.width = croppedAreaPixels.width;
+            canvas.height = croppedAreaPixels.height;
 
-            // Convert canvas to blob
+            // Paste cropped pixel data at (0, 0)
+            ctx.putImageData(data, 0, 0);
+
             return new Promise((resolve) => {
                 canvas.toBlob((blob) => {
                     if (!blob) {
@@ -474,11 +491,19 @@ const CropImageModal = ({ isOpen, imageSrc, onCrop, onClose, onDiscard }) => {
                                 crop={crop}
                                 zoom={zoom}
                                 rotation={rotation}
-                                aspect={aspect}
+                                aspect={isCustom ? mediaAspect : aspect}
                                 onCropChange={setCrop}
                                 onZoomChange={setZoom}
                                 onRotationChange={setRotation}
                                 onCropComplete={onCropComplete}
+                                onMediaLoaded={(mediaSize) => {
+                                    const naturalAspect = (mediaSize.naturalWidth && mediaSize.naturalHeight)
+                                        ? mediaSize.naturalWidth / mediaSize.naturalHeight
+                                        : mediaSize.width / mediaSize.height;
+                                    if (naturalAspect) {
+                                        setMediaAspect(naturalAspect);
+                                    }
+                                }}
                                 cropShape="rect"
                                 restrictPosition={true}
                                 showGrid={true}
@@ -491,30 +516,34 @@ const CropImageModal = ({ isOpen, imageSrc, onCrop, onClose, onDiscard }) => {
                             <label className={styles.controlLabel}>Rotate</label>
                             <div className={styles.rotateControl}>
                                 <button
-                                    onClick={() => setRotation((r) => (r - 10 + 360) % 360)}
+                                    type="button"
+                                    onClick={() => setRotation((r) => (r - 90 + 360) % 360)}
                                     className={styles.rotateBtn}
-                                    title="Rotate left"
+                                    title="Rotate left 90°"
                                 >
                                     ↺
                                 </button>
                                 <span className={styles.angleValue}>{rotation}°</span>
                                 <button
-                                    onClick={() => setRotation((r) => (r + 10) % 360)}
+                                    type="button"
+                                    onClick={() => setRotation((r) => (r + 90) % 360)}
                                     className={styles.rotateBtn}
-                                    title="Rotate right"
+                                    title="Rotate right 90°"
                                 >
                                     ↻
                                 </button>
                             </div>
                             <input
                                 type="range"
-                                min="-180"
-                                max="180"
+                                min="0"
+                                max="360"
+                                step="1"
                                 value={rotation}
                                 onChange={(e) => setRotation(Number(e.target.value))}
                                 className={styles.angleSlider}
                             />
                             <button
+                                type="button"
                                 onClick={() => setRotation(0)}
                                 className={styles.resetBtn}
                             >
@@ -526,29 +555,42 @@ const CropImageModal = ({ isOpen, imageSrc, onCrop, onClose, onDiscard }) => {
                             <label className={styles.controlLabel}>Aspect Ratio</label>
                             <div className={styles.aspectRatioButtons}>
                                 <button
-                                    onClick={() => setAspect(null)}
-                                    className={`${styles.aspectBtn} ${aspect === null ? styles.active : ''}`}
+                                    type="button"
+                                    onClick={() => setIsCustom(true)}
+                                    className={`${styles.aspectBtn} ${isCustom ? styles.active : ''}`}
                                     title="Custom"
                                 >
                                     Custom
                                 </button>
                                 <button
-                                    onClick={() => setAspect(1)}
-                                    className={`${styles.aspectBtn} ${aspect === 1 ? styles.active : ''}`}
+                                    type="button"
+                                    onClick={() => {
+                                        setIsCustom(false);
+                                        setAspect(1);
+                                    }}
+                                    className={`${styles.aspectBtn} ${!isCustom && aspect === 1 ? styles.active : ''}`}
                                     title="1:1"
                                 >
                                     1:1
                                 </button>
                                 <button
-                                    onClick={() => setAspect(4 / 3)}
-                                    className={`${styles.aspectBtn} ${aspect === 4 / 3 ? styles.active : ''}`}
+                                    type="button"
+                                    onClick={() => {
+                                        setIsCustom(false);
+                                        setAspect(4 / 3);
+                                    }}
+                                    className={`${styles.aspectBtn} ${!isCustom && aspect === 4 / 3 ? styles.active : ''}`}
                                     title="4:3"
                                 >
                                     4:3
                                 </button>
                                 <button
-                                    onClick={() => setAspect(3 / 4)}
-                                    className={`${styles.aspectBtn} ${aspect === 3 / 4 ? styles.active : ''}`}
+                                    type="button"
+                                    onClick={() => {
+                                        setIsCustom(false);
+                                        setAspect(3 / 4);
+                                    }}
+                                    className={`${styles.aspectBtn} ${!isCustom && aspect === 3 / 4 ? styles.active : ''}`}
                                     title="3:4"
                                 >
                                     3:4
@@ -2204,7 +2246,26 @@ function StuProfile({ onLogout, onViewChange }) {
             URL.revokeObjectURL(imageToCrop);
         }
         setImageToCrop(null);
-        // DON'T reset profilePhotoFile here - it should keep the cropped file
+
+        // If user closes modal without completing a crop, restore existing saved photo if not already updated
+        if (!hasNewProfilePhoto) {
+            setProfilePhotoFile(null);
+            if (fileInputRef.current) {
+                fileInputRef.current.value = "";
+            }
+            const savedPicPath = originalFormData?.profilePicURL || studentData?.profilePicURL;
+            if (savedPicPath) {
+                const resolvedUrl = gridfsService.getFileUrl(savedPicPath);
+                setProfileImage(resolvedUrl);
+                setUploadInfo({
+                    name: 'profile.jpg',
+                    date: originalFormData?.profileUploadDate || studentData?.profileUploadDate || new Date().toLocaleDateString('en-GB')
+                });
+            } else {
+                setProfileImage(null);
+                setUploadInfo({ name: '', date: '' });
+            }
+        }
     };
 
     const handleCropDiscard = () => {
@@ -2214,14 +2275,27 @@ function StuProfile({ onLogout, onViewChange }) {
             URL.revokeObjectURL(imageToCrop);
         }
         setImageToCrop(null);
-        // Reset everything when discarding
+        // Reset crop attempt
         setProfilePhotoFile(null);
-        setProfileImage(null);
-        setUploadInfo({ name: '', date: '' });
         setUploadSuccess(false);
         setHasNewProfilePhoto(false); // Reset profile photo change flag
+
         if (fileInputRef.current) {
             fileInputRef.current.value = "";
+        }
+
+        // Restore existing saved profile image if available instead of removing it
+        const savedPicPath = originalFormData?.profilePicURL || studentData?.profilePicURL;
+        if (savedPicPath) {
+            const resolvedUrl = gridfsService.getFileUrl(savedPicPath);
+            setProfileImage(resolvedUrl);
+            setUploadInfo({
+                name: 'profile.jpg',
+                date: originalFormData?.profileUploadDate || studentData?.profileUploadDate || new Date().toLocaleDateString('en-GB')
+            });
+        } else {
+            setProfileImage(null);
+            setUploadInfo({ name: '', date: '' });
         }
     };
 
@@ -2231,7 +2305,7 @@ function StuProfile({ onLogout, onViewChange }) {
         setProfilePhotoFile(null);
         setUploadInfo({ name: '', date: '' });
         setUploadSuccess(false);
-        setHasNewProfilePhoto(false); // Reset profile photo change flag
+        setHasNewProfilePhoto(true); // Mark that profile photo state was explicitly changed (removed)
         if (fileInputRef.current) fileInputRef.current.value = "";
     };
 

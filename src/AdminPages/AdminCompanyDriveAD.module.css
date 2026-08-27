@@ -142,7 +142,7 @@
 /* Form Grid */
 .Admin-Drive-AD-form-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 12px 15px;
     margin-bottom: 15px;
     flex-shrink: 0;
@@ -152,6 +152,7 @@
     display: flex;
     flex-direction: column;
     position: relative;
+    min-width: 0;
 }
 
 .Admin-Drive-AD-input {
@@ -163,7 +164,7 @@
     font-size: 0.95rem;
     font-weight: 600;
     color: #333333;
-    background-color: #f9fff9;
+    background-color: #f9fff9 !important;
     transition: all 0.3s ease;
     font-family: inherit;
     box-sizing: border-box;
@@ -353,6 +354,71 @@ button.Admin-Drive-AD-input {
     line-height: 1;
     padding: 0 12px;
     white-space: nowrap;
+    user-select: none;
+}
+
+/* Batch Input Styling */
+.Admin-Drive-AD-batch-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    height: 53.6px;
+}
+
+.Admin-Drive-AD-batch-input {
+    width: 165px;
+    flex: 0 0 90px;
+    height: 53.6px;
+    padding: 0 0.5rem;
+    border: 1px solid #def4dd;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #333333;
+    background-color: #f9fff9 !important;
+    transition: all 0.3s ease;
+    font-family: inherit;
+    box-sizing: border-box;
+    text-align: center;
+}
+
+.Admin-Drive-AD-batch-input:hover {
+    border-color: #4EA24E;
+    box-shadow: 0 0 0 3px rgba(78, 162, 78, 0.2);
+}
+
+.Admin-Drive-AD-batch-input:focus {
+    outline: none;
+    border-color: #4EA24E;
+    box-shadow: 0 0 0 3px rgba(78, 162, 78, 0.2);
+    background-color: #f9fff9 !important;
+    color: #333333;
+}
+
+/* Override Browser Autofill Blue Background to match Green Theme */
+.Admin-Drive-AD-input:-webkit-autofill,
+.Admin-Drive-AD-input:-webkit-autofill:hover,
+.Admin-Drive-AD-input:-webkit-autofill:focus,
+.Admin-Drive-AD-input:-webkit-autofill:active,
+.Admin-Drive-AD-batch-input:-webkit-autofill,
+.Admin-Drive-AD-batch-input:-webkit-autofill:hover,
+.Admin-Drive-AD-batch-input:-webkit-autofill:focus,
+.Admin-Drive-AD-batch-input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 1000px #f9fff9 inset !important;
+    -webkit-text-fill-color: #333333 !important;
+    background-color: #f9fff9 !important;
+    transition: background-color 5000s ease-in-out 0s;
+}
+
+.Admin-Drive-AD-batch-input::placeholder {
+    color: #aaaaaa;
+}
+
+.Admin-Drive-AD-batch-separator {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #555555;
     user-select: none;
 }
 
@@ -713,7 +779,7 @@ button.Admin-Drive-AD-input {
     font-size: 0.95rem;
     font-weight: 600;
     color: #333333;
-    background-color: #f9fff9;
+    background-color: #f9fff9 !important;
     transition: all 0.3s ease;
     box-sizing: border-box;
     min-width: 0;
@@ -734,8 +800,18 @@ button.Admin-Drive-AD-input {
     outline: none;
     border-color: #4EA24E;
     box-shadow: 0 0 0 3px rgba(78, 162, 78, 0.2);
-    background-color: #f9fff9;
+    background-color: #f9fff9 !important;
     color: #333333;
+}
+
+.Admin-Drive-AD-round-input:-webkit-autofill,
+.Admin-Drive-AD-round-input:-webkit-autofill:hover,
+.Admin-Drive-AD-round-input:-webkit-autofill:focus,
+.Admin-Drive-AD-round-input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 1000px #f9fff9 inset !important;
+    -webkit-text-fill-color: #333333 !important;
+    background-color: #f9fff9 !important;
+    transition: background-color 5000s ease-in-out 0s;
 }
 
 /* Action Buttons */
@@ -842,7 +918,7 @@ button.Admin-Drive-AD-input {
 /* Details Container */
 .Admin-Drive-AD-details-container {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 12px 15px;
     overflow-y: auto;
     flex: 1;
@@ -1002,6 +1078,20 @@ button.Admin-Drive-AD-input {
         box-sizing: border-box;
     }
 
+    .Admin-Drive-AD-batch-wrapper {
+        width: 100% !important;
+        box-sizing: border-box !important;
+        gap: 8px !important;
+    }
+
+    .Admin-Drive-AD-batch-input {
+        flex: 1 !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: calc(50% - 12px) !important;
+        box-sizing: border-box !important;
+    }
+
     .Admin-Drive-AD-round-input {
         width: 100%;
         box-sizing: border-box;
@@ -1078,6 +1168,14 @@ button.Admin-Drive-AD-input {
     .Admin-Drive-AD-section-title {
         font-size: 1.3rem;
         margin-bottom: 15px;
+    }
+
+    .Admin-Drive-AD-back-button {
+        height: 32px !important;
+        min-width: 70px !important;
+        padding: 0 12px !important;
+        font-size: 0.8rem !important;
+        border-radius: 6px !important;
     }
 
     .Admin-Drive-AD-mobile-br {
@@ -1786,5 +1884,254 @@ button.Admin-Drive-AD-input {
 @media (max-width: 1024px) {
     .Admin-Drive-AD-details-container {
         grid-template-columns: 1fr !important;
+    }
+}
+
+/* --- CORE SKILLS CARD (GREEN THEME) --- */
+.Admin-Drive-AD-skills-section {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 18px 22px;
+    margin-bottom: 15px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.Admin-Drive-AD-skills-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #333333;
+    margin: 0 0 15px 0;
+    padding-bottom: 0.5rem;
+    position: relative;
+    letter-spacing: 0.3px;
+}
+
+.Admin-Drive-AD-skills-title::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 40px;
+    height: 3px;
+    background-color: #4EA24E;
+    border-radius: 2px;
+}
+
+.Admin-Drive-AD-skills-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    width: 100%;
+}
+
+.Admin-Drive-AD-skills-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.Admin-Drive-AD-skill-category-field {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.Admin-Drive-AD-skill-label-box {
+    width: 180px;
+    padding: 0.75rem 1rem;
+    border: 1px solid #def4dd;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #333333;
+    background-color: #f9fff9;
+    text-align: center;
+    box-sizing: border-box;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 50.8px;
+    font-family: inherit;
+}
+
+.Admin-Drive-AD-category-remove-btn {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: #ef4444;
+    color: #fff;
+    border: none;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    transition: background 0.2s ease, transform 0.2s ease;
+    padding: 0;
+    flex-shrink: 0;
+}
+
+.Admin-Drive-AD-category-remove-btn:hover {
+    background: #dc2626;
+    transform: scale(1.1);
+}
+
+.Admin-Drive-AD-skills-chips-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    flex: 1;
+}
+
+.Admin-Drive-AD-skill-chip {
+    background: #f9fff9;
+    border: 1px solid #def4dd;
+    border-radius: 25px;
+    padding: 8px 16px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #333333;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 38px;
+    box-sizing: border-box;
+    transition: all 0.2s ease;
+    font-family: inherit;
+}
+
+.Admin-Drive-AD-skill-chip:hover {
+    border-color: #4EA24E;
+    background: #eef9ee;
+}
+
+.Admin-Drive-AD-skill-chip-remove {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #94a3b8;
+    color: #fff;
+    border: none;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    padding: 0;
+    transition: background 0.2s ease;
+}
+
+.Admin-Drive-AD-skill-chip-remove:hover {
+    background: #ef4444;
+}
+
+.Admin-Drive-AD-skill-name-input {
+    border: 1px solid #def4dd;
+    border-radius: 25px;
+    padding: 8px 16px;
+    font-size: 0.9rem;
+    font-family: inherit;
+    color: #333333;
+    outline: none;
+    min-width: 120px;
+    max-width: 250px;
+    height: 38px;
+    background: #f9fff9;
+    box-sizing: border-box;
+}
+
+.Admin-Drive-AD-skill-name-input:focus {
+    border-color: #4EA24E;
+    box-shadow: 0 0 0 3px rgba(78, 162, 78, 0.2);
+}
+
+.Admin-Drive-AD-add-chip-btn {
+    background: #4EA24E;
+    color: #fff;
+    border: none;
+    padding: 8px 18px;
+    border-radius: 25px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 38px;
+    box-sizing: border-box;
+    transition: all 0.2s ease;
+    font-family: inherit;
+    box-shadow: 0 2px 8px rgba(78, 162, 78, 0.25);
+}
+
+.Admin-Drive-AD-add-chip-btn:hover {
+    background: #3d8a3d;
+    transform: translateY(-1px);
+}
+
+.Admin-Drive-AD-add-chip-btn-icon {
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+.Admin-Drive-AD-add-category-btn {
+    background: #4EA24E;
+    color: #fff;
+    border: none;
+    padding: 10px 22px;
+    border-radius: 25px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 2px 8px rgba(78, 162, 78, 0.25);
+    transition: all 0.2s ease;
+    font-family: inherit;
+    margin-top: 10px;
+}
+
+.Admin-Drive-AD-add-category-btn:hover {
+    background: #3d8a3d;
+    transform: translateY(-1px);
+}
+
+@media screen and (max-width: 768px) {
+    .Admin-Drive-AD-skills-row {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+        border-bottom: 1px dashed #def4dd;
+        padding-bottom: 14px;
+        margin-bottom: 14px;
+    }
+
+    .Admin-Drive-AD-skill-category-field {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+    }
+
+    .Admin-Drive-AD-skill-label-box {
+        flex: 1;
+        width: auto;
+    }
+
+    .Admin-Drive-AD-skills-chips-container {
+        width: 100%;
+        margin-top: 4px;
     }
 }

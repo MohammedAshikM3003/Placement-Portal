@@ -516,13 +516,13 @@
 /* Mobile Portrait View */
 @media screen and (max-width: 480px) {
     .Ad-zh-main-content {
-        margin: 55px 0px 0 2px;
+        margin: 75px 0px 0 2px;
         padding: 10px 10px 10px 20px;
         width: calc(100% - 24px);
     }
 
     .Ad-zh-tab-btn {
-        padding: 8px 8px;
+        padding: 8px 9px;
         font-size: 0.75rem;
     }
 

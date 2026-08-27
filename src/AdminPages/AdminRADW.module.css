@@ -451,9 +451,13 @@
   .Admin-radw-tab-inactive,
   .Admin-radw-tab-active-green,
   .Admin-radw-filter-select,
-  .Admin-radw-filter-date-input {
+  .Admin-radw-filter-date-input,
+  .Admin-radw-dropdown-wrapper,
+  .Admin-radw-dropdown-header {
     min-width: 0 !important;
-    max-width: none !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
   }
 
   .Admin-radw-department-select {
@@ -482,11 +486,17 @@
   .Admin-radw-tab-inactive,
   .Admin-radw-tab-active-green,
   .Admin-radw-filter-select,
-  .Admin-radw-filter-date-input {
+  .Admin-radw-filter-date-input,
+  .Admin-radw-dropdown-wrapper,
+  .Admin-radw-dropdown-header,
+  .Admin-radw-department-select {
+    width: 100% !important;
+    min-width: 0 !important;
     max-width: 100% !important;
     font-size: 0.95rem !important;
     padding: 8px 12px !important;
     height: 45px !important;
+    box-sizing: border-box !important;
   }
 
   .Admin-radw-tab-container,
@@ -499,11 +509,20 @@
     flex-direction: column !important;
     align-items: stretch !important;
     gap: 10px !important;
+    width: 100% !important;
   }
 
   .Admin-radw-department-select {
     width: 100% !important;
     max-width: 100% !important;
+  }
+
+  .Admin-radw-search-btn-blue {
+    width: 100% !important;
+    height: 45px !important;
+    font-size: 0.95rem !important;
+    margin-left: 0 !important;
+    box-sizing: border-box !important;
   }
 
   .Admin-radw-table-header-row {
@@ -611,7 +630,10 @@
 /* Dropdown styles */
 .Admin-radw-dropdown-wrapper {
   position: relative;
-  width: 100%;
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
 }
 
 .Admin-radw-dropdown-header {
@@ -628,6 +650,8 @@
     align-items: center;
     justify-content: space-between;
     transition: all 0.2s ease;
+    width: 100% !important;
+    box-sizing: border-box !important;
 }
 
 .Admin-radw-dropdown-header:hover {

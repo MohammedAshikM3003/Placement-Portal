@@ -49,6 +49,10 @@
     padding: 12px 20px;
     font-size: 1rem;
     font-weight: 600;
+    width: 200px;
+    max-height: 46px;
+    position: relative;
+    left: 119px;
     text-align: center;
     border-radius: 30px;
     margin: 15px;
@@ -156,6 +160,22 @@
     background-color: #5a6268;
 }
 
+.Ad-zbds-filter-btn:disabled,
+.Ad-zbds-discard-btn:disabled {
+    opacity: 0.6;
+    background-color: #cccccc;
+    color: #888888;
+    cursor: not-allowed;
+    border: none;
+    box-shadow: none;
+}
+
+.Ad-zbds-filter-btn:disabled:hover,
+.Ad-zbds-discard-btn:disabled:hover {
+    background-color: #cccccc;
+    color: #888888;
+}
+
 /* Stats Card */
 .Ad-zbds-stats-card {
     flex: 0 0 350px;
@@ -164,7 +184,7 @@
     color: white;
     padding: 20px 25px;
     display: flex;
-    height:260px;
+    height: 278px;
     flex-direction: column;
 }
 
@@ -229,6 +249,10 @@
     margin: 0;
 }
 
+.Ad-zbds-dept-name {
+    word-break: break-word;
+}
+
 /* Print Button */
 .Ad-zbds-print-button-container {
     position: relative;
@@ -289,7 +313,7 @@
 
 /* Table Container */
 .Ad-zbds-table-container {
-    height: 300px;
+    height: 209px;
     overflow-y: scroll;
     overflow-x: auto;
     border: none;
@@ -431,9 +455,9 @@
     flex-direction: column;
     align-items: center;
     gap: 10px;
-    position:relative;
-    left:400px;
-    top:50px;
+    position: relative;
+    left: 400px;
+    top: 50px;
 }
 
 .Ad-zbds-spinner {
@@ -449,6 +473,51 @@
     to {
         transform: rotate(360deg);
     }
+}
+
+/* Active Zip / Back Card styling */
+.Ad-zbds-active-zip-card {
+    flex: 0 0 280px;
+    background-color: #ffffff;
+    border-radius: 15px;
+    padding: 30px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
+    border: 3px solid #e0e0e0;
+    height: 278px;
+    box-sizing: border-box;
+}
+
+.Ad-zbds-active-zip-card:hover {
+    border-color: #4ea24e;
+    box-shadow: 0 4px 12px rgba(0, 128, 0, 0.15);
+    transform: translateY(-5px);
+}
+
+.Ad-zbds-active-zip-icon {
+    width: 60px;
+    height: 60px;
+    margin-bottom: 20px;
+}
+
+.Ad-zbds-active-zip-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #333333;
+    margin: 0 0 8px 0;
+}
+
+.Ad-zbds-active-zip-desc {
+    font-size: 0.85rem;
+    color: #777777;
+    margin: 0;
+    line-height: 1.4;
 }
 
 /* Back Button Container */
@@ -483,7 +552,7 @@
     .Ad-zbds-main-content {
         max-height: calc(100vh - 65px);
         overflow-y: auto;
-       
+
     }
 
     .Ad-zbds-main-content::-webkit-scrollbar {
@@ -523,13 +592,22 @@
 
     .Ad-zbds-stats-card {
         flex: 1;
+        width: 100%;
+        height: auto;
+    }
+
+    .Ad-zbds-active-zip-card {
+        flex: 1;
+        width: 100%;
+        height: auto;
+        min-height: 200px;
     }
 }
 
 /* Mobile View */
 @media screen and (max-width: 768px) {
     .Ad-zbds-main-content {
-        margin: 70px 0px 0 2px;
+        margin: 70px 0px 0 2px !important;
         padding: 10px 10px 10px 20px;
         padding-bottom: 30px;
         gap: 10px;
@@ -538,11 +616,19 @@
         overflow-y: auto;
         overflow-x: hidden;
     }
-.Ad-zbds-stats-card {
-   
-    margin-left: 20px;
-   
-}
+
+    .Ad-zbds-stats-card {
+        margin-left: 0px;
+        width: 100%;
+        height: auto;
+    }
+
+    .Ad-zbds-active-zip-card {
+        width: 100%;
+        height: auto;
+        padding: 20px 15px;
+    }
+
     .Ad-zbds-main-content::-webkit-scrollbar {
         width: 10px;
     }
@@ -570,19 +656,42 @@
 
     .Ad-zbds-filter-buttons {
         width: 100%;
-        justify-content: center;
-        flex-wrap: wrap;
+        display: flex;
+        flex-direction: row;
+        gap: 10px;
+        margin-top: 5px;
     }
 
     .Ad-zbds-filter-btn,
     .Ad-zbds-discard-btn {
-        flex: 1 1 100%;
-        width: 100%;
+        flex: 1;
+        width: auto !important;
     }
 
     .Ad-zbds-table-header {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
         align-items: flex-start;
-        gap: 15px;
+        gap: 12px;
+        width: 100%;
+    }
+
+    .Ad-zbds-table-title {
+        font-size: 1rem;
+        flex: 1;
+        min-width: 0;
+        text-align: left;
+    }
+
+    .Ad-zbds-dept-name {
+        word-break: break-word;
+        white-space: normal;
+    }
+
+    .Ad-zbds-print-button-container {
+        flex-shrink: 0;
+        width: auto;
     }
 
     .Ad-zbds-th,
@@ -604,7 +713,7 @@
 /* Mobile Portrait View */
 @media screen and (max-width: 480px) {
     .Ad-zbds-main-content {
-        margin: 55px 0px 0 2px;
+        margin: 70px 0px 0 2px !important;
         padding: 10px 10px 10px 20px;
         width: calc(100% - 24px);
     }
@@ -612,6 +721,7 @@
     .Ad-zbds-filter-header {
         font-size: 0.9rem;
         padding: 10px 15px;
+        margin-left: -68px;
     }
 
     .Ad-zbds-filter-content {
@@ -632,11 +742,13 @@
     .Ad-zbds-discard-btn {
         padding: 10px 20px;
         font-size: 0.9rem;
-        width: 100%;
+        width: auto !important;
+        flex: 1;
     }
 
     .Ad-zbds-stats-card {
         padding: 15px 20px;
+
     }
 
     .Ad-zbds-stats-title {

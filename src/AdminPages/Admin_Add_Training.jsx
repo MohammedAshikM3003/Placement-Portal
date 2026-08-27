@@ -48,8 +48,9 @@ const Admin_Add_Training = () => {
   useAdminAuth(); // JWT authentication verification
   const location = useLocation();
   const navigate = useNavigate();
-  const editingTraining = location?.state?.editMode ? (location?.state?.editingTraining || null) : null;
-  const isEditMode = Boolean(editingTraining?._id);
+  const isViewOnly = Boolean(location?.state?.viewMode);
+  const editingTraining = (location?.state?.editMode || location?.state?.viewMode) ? (location?.state?.editingTraining || null) : null;
+  const isEditMode = Boolean(editingTraining?._id) && !isViewOnly;
 
   const [companyName, setCompanyName] = useState('');
   const [companyLocation, setCompanyLocation] = useState('');
@@ -352,6 +353,7 @@ const Admin_Add_Training = () => {
               placeholder="Enter company name"
               value={companyName}
               onChange={e => setCompanyName(e.target.value)}
+              disabled={isViewOnly}
             />
           </div>
           <div className={styles['Admin-aat-field']}>
@@ -362,6 +364,7 @@ const Admin_Add_Training = () => {
               placeholder="Enter HR name"
               value={companyHRName}
               onChange={e => setCompanyHRName(e.target.value)}
+              disabled={isViewOnly}
             />
           </div>
           <div className={styles['Admin-aat-field']}>
@@ -372,6 +375,7 @@ const Admin_Add_Training = () => {
               placeholder="Enter location"
               value={companyLocation}
               onChange={e => setCompanyLocation(e.target.value)}
+              disabled={isViewOnly}
             />
           </div>
         </div>
@@ -382,15 +386,17 @@ const Admin_Add_Training = () => {
         <h2 className={styles['Admin-aat-section-header']}>Course Details</h2>
         <div className={styles['Admin-aat-form-grid']}>
           {courses.length === 0 ? (
-            <div className={styles['Admin-aat-add-btn-wrapper']}>
-              <button
-                ref={registerFieldRef('courses')}
-                className={`${styles['Admin-aat-add-btn']} ${highlightedField === 'courses' ? styles.fieldHighlight : ''}`}
-                onClick={handleAddCourseClick}
-              >
-                <span className={styles['Admin-aat-plus']}>+</span> Click to Add Course
-              </button>
-            </div>
+            !isViewOnly && (
+              <div className={styles['Admin-aat-add-btn-wrapper']}>
+                <button
+                  ref={registerFieldRef('courses')}
+                  className={`${styles['Admin-aat-add-btn']} ${highlightedField === 'courses' ? styles.fieldHighlight : ''}`}
+                  onClick={handleAddCourseClick}
+                >
+                  <span className={styles['Admin-aat-plus']}>+</span> Click to Add Course
+                </button>
+              </div>
+            )
           ) : (
             <>
               {courses.map((course, idx) => (
@@ -403,22 +409,27 @@ const Admin_Add_Training = () => {
                       placeholder="Enter course name"
                       value={course.name}
                       onChange={(e) => handleCourseNameChange(idx, e.target.value)}
+                      disabled={isViewOnly}
                     />
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveCourse(idx)}
-                      className={styles['Admin-aat-remove-btn']}
-                    >
-                      ×
-                    </button>
+                    {!isViewOnly && (
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveCourse(idx)}
+                        className={styles['Admin-aat-remove-btn']}
+                      >
+                        ×
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}
-              <div className={styles['Admin-aat-add-btn-wrapper']}>
-                <button className={styles['Admin-aat-add-btn']} onClick={handleAddCourseClick}>
-                  <span className={styles['Admin-aat-plus']}>+</span> Add More
-                </button>
-              </div>
+              {!isViewOnly && (
+                <div className={styles['Admin-aat-add-btn-wrapper']}>
+                  <button className={styles['Admin-aat-add-btn']} onClick={handleAddCourseClick}>
+                    <span className={styles['Admin-aat-plus']}>+</span> Add More
+                  </button>
+                </div>
+              )}
             </>
           )}
         </div>
@@ -429,15 +440,17 @@ const Admin_Add_Training = () => {
         <h2 className={styles['Admin-aat-section-header']}>Trainer Details</h2>
         <div className={styles['Admin-aat-form-grid']}>
           {trainers.length === 0 ? (
-            <div className={styles['Admin-aat-add-btn-wrapper']}>
-              <button
-                ref={registerFieldRef('trainers')}
-                className={`${styles['Admin-aat-add-btn']} ${highlightedField === 'trainers' ? styles.fieldHighlight : ''}`}
-                onClick={handleAddTrainerClick}
-              >
-                <span className={styles['Admin-aat-plus']}>+</span> Click to Add Trainer
-              </button>
-            </div>
+            !isViewOnly && (
+              <div className={styles['Admin-aat-add-btn-wrapper']}>
+                <button
+                  ref={registerFieldRef('trainers')}
+                  className={`${styles['Admin-aat-add-btn']} ${highlightedField === 'trainers' ? styles.fieldHighlight : ''}`}
+                  onClick={handleAddTrainerClick}
+                >
+                  <span className={styles['Admin-aat-plus']}>+</span> Click to Add Trainer
+                </button>
+              </div>
+            )
           ) : (
             <>
               {trainers.map((trainer, idx) => (
@@ -450,39 +463,44 @@ const Admin_Add_Training = () => {
                       placeholder="Trainer name"
                       value={trainer.name}
                       readOnly
+                      disabled={isViewOnly}
                       className={styles['Admin-aat-static-input']}
-                      onClick={() => handleEditTrainerClick(idx)}
+                      onClick={isViewOnly ? undefined : () => handleEditTrainerClick(idx)}
                       onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
+                        if (!isViewOnly && (e.key === 'Enter' || e.key === ' ')) {
                           e.preventDefault();
                           handleEditTrainerClick(idx);
                         }
                       }}
                       role="button"
-                      tabIndex={0}
-                      title="Click to edit trainer"
+                      tabIndex={isViewOnly ? -1 : 0}
+                      title={isViewOnly ? undefined : "Click to edit trainer"}
                     />
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveTrainer(idx)}
-                      className={styles['Admin-aat-remove-btn']}
-                    >
-                      ×
-                    </button>
+                    {!isViewOnly && (
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveTrainer(idx)}
+                        className={styles['Admin-aat-remove-btn']}
+                      >
+                        ×
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}
-              <div className={styles['Admin-aat-add-btn-wrapper']}>
-                <button className={styles['Admin-aat-add-btn']} onClick={handleAddTrainerClick}>
-                  <span className={styles['Admin-aat-plus']}>+</span> Add More
-                </button>
-              </div>
+              {!isViewOnly && (
+                <div className={styles['Admin-aat-add-btn-wrapper']}>
+                  <button className={styles['Admin-aat-add-btn']} onClick={handleAddTrainerClick}>
+                    <span className={styles['Admin-aat-plus']}>+</span> Add More
+                  </button>
+                </div>
+              )}
             </>
           )}
         </div>
       </div>
 
-      {missingFields.length > 0 && (
+      {missingFields.length > 0 && !isViewOnly && (
         <div className={styles['Admin-aat-validation-box']}>
           <h4 className={styles['Admin-aat-validation-heading']}>
             <span className={styles['Admin-aat-validation-icon']} aria-hidden="true">
@@ -513,10 +531,18 @@ const Admin_Add_Training = () => {
       )}
 
       <div className={styles['Admin-aat-actions']}>
-        <button className={styles['Admin-aat-discard-btn']} onClick={handleDiscard}>Discard</button>
-        <button className={styles['Admin-aat-save-btn']} onClick={handleSave} disabled={isSaving || missingFields.length > 0}>
-          {isSaving ? (isEditMode ? 'Updating...' : 'Saving...') : (isEditMode ? 'Update' : 'Save')}
-        </button>
+        {isViewOnly ? (
+          <button className={styles['Admin-aat-save-btn']} onClick={() => navigate('/admin-training-company')}>
+            Back
+          </button>
+        ) : (
+          <>
+            <button className={styles['Admin-aat-discard-btn']} onClick={handleDiscard}>Discard</button>
+            <button className={styles['Admin-aat-save-btn']} onClick={handleSave} disabled={isSaving || missingFields.length > 0}>
+              {isSaving ? (isEditMode ? 'Updating...' : 'Saving...') : (isEditMode ? 'Update' : 'Save')}
+            </button>
+          </>
+        )}
       </div>
 
       {/* Popup Components */}

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * SuccessPopup.module.css
  * Shared success/save confirmation popup used across all portals.
  * Colors auto-adapt to the active role theme via var(--primary).
@@ -119,3 +119,26 @@
 .closeBtn:hover {
   filter: brightness(0.9);
 }
+
+/* Animations locally scoped to the CSS module */
+@keyframes successStroke {
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes successFill {
+  100% {
+    box-shadow: inset 0 0 0 30px #22C55E;
+  }
+}
+
+@keyframes successScale {
+  0%, 100% {
+    transform: none;
+  }
+  50% {
+    transform: scale3d(1.1, 1.1, 1);
+  }
+}
+

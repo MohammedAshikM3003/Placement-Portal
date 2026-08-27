@@ -155,7 +155,8 @@ const Ad_ActiveZip = () => {
         navigate(`/admin/active-zip/department/${encodeURIComponent(dept.name)}`, {
             state: {
                 departmentData: dept,
-                batchData: selectedBatch
+                batchData: selectedBatch,
+                driveId: driveId
             }
         });
     };
@@ -491,17 +492,18 @@ const Ad_ActiveZip = () => {
                     </div>
 
                     {/* Action Buttons */}
-                    <div className={styles['Ad-az-action-buttons']}>
+                    <div className={styles['Ad-az-actions-container']}>
                         <button
                             className={styles['Ad-az-discard-btn']}
                             onClick={handleDiscard}
+                            disabled={!selectedBatch && !zipArchiveName}
                         >
                             Discard
                         </button>
                         <button
                             className={styles['Ad-az-archive-btn']}
                             onClick={handleArchiveZip}
-                            disabled={!selectedBatch}
+                            disabled={!selectedBatch || !zipArchiveName || departments.length === 0}
                         >
                             Archive Zip
                         </button>

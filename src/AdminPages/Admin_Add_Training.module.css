@@ -282,7 +282,6 @@ body, html {
 
   .Admin-aat-actions {
     display: flex;
-    flex-direction: column;
     gap: 1rem;
     margin-top: 1rem;
     margin-bottom: env(safe-area-inset-bottom, 20px);

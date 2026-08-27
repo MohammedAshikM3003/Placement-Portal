@@ -570,23 +570,40 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 15px;
+    flex-shrink: 0 !important;
+    padding: 15px;
   }
 
   .certificate-item-actions {
     width: 100%;
     justify-content: space-between;
+    gap: 10px;
+  }
+
+  .certificate-action-btn {
+    padding: 8px 12px;
+    font-size: 0.85rem;
+    gap: 6px;
+    flex: 1;
+    justify-content: center;
   }
 
   .certificate-section {
-    overflow: visible !important;
-    height: auto !important;
+    overflow: hidden !important;
+    height: 520px !important;
     flex-grow: 0 !important;
+    flex-shrink: 0 !important;
     padding: 15px !important;
   }
 
   .certificate-list {
-    overflow: visible !important;
-    height: auto !important;
+    overflow-y: auto !important;
+    height: 320px !important;
     flex-grow: 0 !important;
+  }
+
+  .certificate-scroll-indicator {
+    top: 165px !important;
+    bottom: 35px !important;
   }
 }

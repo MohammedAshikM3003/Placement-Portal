@@ -14,7 +14,7 @@ const safeDescription = (desc) => {
   return String(desc);
 };
 
-export default function PopupProject({ title = '', data, onSave, onDiscard, enableAI = true }) {
+export default function PopupProject({ title = '', data, onSave, onDiscard, enableAI = true, onDelete }) {
   const [formData, setFormData] = useState({
     name: data?.name || title,
     technologies: Array.isArray(data?.technologies) ? [...data.technologies] : [],
@@ -51,6 +51,26 @@ export default function PopupProject({ title = '', data, onSave, onDiscard, enab
       e.preventDefault();
       action();
     }
+  };
+
+  const hasTechnologies = formData.technologies.length > 0 || techInput.trim().length > 0;
+  const isFormValid = Boolean(
+    formData.name?.trim() &&
+    hasTechnologies &&
+    formData.description?.trim() &&
+    formData.githubRepo?.trim() &&
+    formData.hostingLink?.trim()
+  );
+
+  const handleSave = () => {
+    if (!isFormValid) return;
+    let finalTech = [...formData.technologies];
+    if (techInput.trim() && !finalTech.includes(techInput.trim())) {
+      finalTech.push(techInput.trim());
+    }
+    const saveData = { ...formData, technologies: finalTech };
+    console.log('PopupProject - Saving data:', saveData);
+    onSave(saveData);
   };
 
   return (
@@ -153,10 +173,10 @@ export default function PopupProject({ title = '', data, onSave, onDiscard, enab
 
         <div className={styles.popupFooter}>
           <button type="button" className={styles.popupDiscardBtn} onClick={onDiscard}>Back</button>
-          <button type="button" className={styles.popupSaveBtn} onClick={() => {
-            console.log('PopupProject - Saving data:', formData);
-            onSave(formData);
-          }}>Save</button>
+          {onDelete && (
+            <button type="button" className={styles.popupDiscardBtn} style={{ color: '#d9534f', borderColor: '#d9534f' }} onClick={onDelete}>Delete</button>
+          )}
+          <button type="button" className={styles.popupSaveBtn} onClick={handleSave} disabled={!isFormValid}>Save</button>
         </div>
       </div>
     </div>

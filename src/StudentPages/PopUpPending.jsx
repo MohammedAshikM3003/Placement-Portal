@@ -14,39 +14,73 @@ import DOBDatePicker from '../components/Calendar/DOBDatePicker.jsx';
 import mongoDBService from '../services/mongoDBService';
 
 // â”€â”€ Custom volume-bar scrollbox (no native browser arrows) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-function FeedbackScrollBox({ text }) {
+function FeedbackScrollBox({ text, isPassed = true }) {
   const contentRef = React.useRef(null);
-  const [thumb, setThumb] = React.useState({ height: 40, top: 0 });
+  const trackRef = React.useRef(null);
+  const [thumb, setThumb] = React.useState({ height: 30, top: 0 });
   const [showBar, setShowBar] = React.useState(false);
 
-  const updateThumb = () => {
+  const thumbBgColor = isPassed ? '#2085f6' : '#707070';
+  const thumbHoverColor = isPassed ? '#1667e8' : '#555555';
+  const trackBgColor = isPassed ? '#e6f0fd' : '#e5e5e5';
+
+  const updateThumb = React.useCallback(() => {
     const el = contentRef.current;
     if (!el) return;
-    const canScroll = el.scrollHeight > el.clientHeight;
+    const canScroll = el.scrollHeight > el.clientHeight + 1;
     setShowBar(canScroll);
     if (!canScroll) return;
+
+    const trackH = trackRef.current ? trackRef.current.clientHeight : (el.clientHeight - 12);
     const ratio = el.clientHeight / el.scrollHeight;
-    const thumbH = Math.max(ratio * el.clientHeight, 30);
+    const thumbH = Math.max(Math.min(ratio * trackH, trackH), 24);
     const maxScrollTop = el.scrollHeight - el.clientHeight;
-    const maxThumbTop = el.clientHeight - thumbH;
+    const maxThumbTop = Math.max(0, trackH - thumbH);
+    const calculatedTop = maxScrollTop > 0 ? (el.scrollTop / maxScrollTop) * maxThumbTop : 0;
+    const safeTop = Math.max(0, Math.min(maxThumbTop, calculatedTop));
+
     setThumb({
       height: thumbH,
-      top: maxScrollTop > 0 ? (el.scrollTop / maxScrollTop) * maxThumbTop : 0
+      top: safeTop
     });
-  };
+  }, []);
 
-  React.useEffect(() => { updateThumb(); }, [text]);
+  React.useEffect(() => {
+    updateThumb();
+    const el = contentRef.current;
+    if (!el) return;
+
+    let resizeObserver = null;
+    if (typeof ResizeObserver !== 'undefined') {
+      resizeObserver = new ResizeObserver(() => {
+        updateThumb();
+      });
+      resizeObserver.observe(el);
+      if (trackRef.current) resizeObserver.observe(trackRef.current);
+    }
+
+    window.addEventListener('resize', updateThumb);
+    return () => {
+      if (resizeObserver) resizeObserver.disconnect();
+      window.removeEventListener('resize', updateThumb);
+    };
+  }, [text, updateThumb]);
 
   const onThumbMouseDown = (e) => {
     e.preventDefault();
     const startY = e.clientY;
     const startTop = thumb.top;
     const el = contentRef.current;
+    if (!el) return;
+
+    const trackH = trackRef.current ? trackRef.current.clientHeight : (el.clientHeight - 12);
     const thumbH = thumb.height;
-    const maxThumbTop = el.clientHeight - thumbH;
+    const maxThumbTop = Math.max(0, trackH - thumbH);
     const maxScrollTop = el.scrollHeight - el.clientHeight;
+
     const onMove = (mv) => {
-      const newTop = Math.max(0, Math.min(maxThumbTop, startTop + mv.clientY - startY));
+      const delta = mv.clientY - startY;
+      const newTop = Math.max(0, Math.min(maxThumbTop, startTop + delta));
       el.scrollTop = maxThumbTop > 0 ? (newTop / maxThumbTop) * maxScrollTop : 0;
       updateThumb();
     };
@@ -59,7 +93,7 @@ function FeedbackScrollBox({ text }) {
   };
 
   return (
-    <div style={{ display: 'flex', gap: '6px', maxHeight: '180px', borderRadius: '10px', overflow: 'hidden', border: '1px solid #e0e0e0' }}>
+    <div style={{ display: 'flex', gap: '6px', minHeight: '80px', maxHeight: '150px', borderRadius: '10px', overflow: 'hidden', border: '1px solid #e0e0e0' }}>
       <div
         ref={contentRef}
         onScroll={updateThumb}
@@ -70,8 +104,11 @@ function FeedbackScrollBox({ text }) {
           fontSize: '0.88rem',
           color: '#333',
           lineHeight: 1.6,
-          overflowY: 'scroll',
-          whiteSpace: 'pre-line',
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          whiteSpace: 'pre-wrap',
+          wordBreak: 'break-word',
+          overflowWrap: 'anywhere',
           msOverflowStyle: 'none',
           scrollbarWidth: 'none',
           boxSizing: 'border-box'
@@ -82,21 +119,24 @@ function FeedbackScrollBox({ text }) {
       </div>
       {/* Custom volume-bar track */}
       {showBar && (
-        <div style={{
-          width: '6px', flexShrink: 0, position: 'relative',
-          backgroundColor: '#e0e0e0', borderRadius: '20px',
-          margin: '6px 4px 6px 0'
-        }}>
+        <div
+          ref={trackRef}
+          style={{
+            width: '6px', flexShrink: 0, position: 'relative',
+            backgroundColor: trackBgColor, borderRadius: '20px',
+            margin: '6px 4px 6px 0'
+          }}
+        >
           <div
             onMouseDown={onThumbMouseDown}
             style={{
               position: 'absolute', left: 0, width: '100%',
               height: `${thumb.height}px`, top: `${thumb.top}px`,
-              backgroundColor: '#B5B5B5', borderRadius: '20px',
+              backgroundColor: thumbBgColor, borderRadius: '20px',
               cursor: 'grab', transition: 'background 0.2s'
             }}
-            onMouseEnter={e => e.currentTarget.style.backgroundColor = '#909090'}
-            onMouseLeave={e => e.currentTarget.style.backgroundColor = '#B5B5B5'}
+            onMouseEnter={e => e.currentTarget.style.backgroundColor = thumbHoverColor}
+            onMouseLeave={e => e.currentTarget.style.backgroundColor = thumbBgColor}
           />
         </div>
       )}
@@ -105,7 +145,7 @@ function FeedbackScrollBox({ text }) {
 }
 
 // â”€â”€ Admin Feedback Popup â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-function AdminFeedbackPopup({ feedbackRecord, roundLabel, feedbackType = 'passed', onClose }) {
+function AdminFeedbackPopup({ feedbackRecord, roundLabel, nextRoundLabel, feedbackType = 'passed', onClose }) {
   const parsedRating = Number(feedbackRecord?.rating);
   const rating = Number.isFinite(parsedRating) && parsedRating > 0 ? Math.min(5, parsedRating) : 0;
   const isMobileView = typeof window !== 'undefined' && window.innerWidth <= 480;
@@ -133,6 +173,9 @@ function AdminFeedbackPopup({ feedbackRecord, roundLabel, feedbackType = 'passed
   const studentCount = Number(feedbackRecord?.studentCount) || 0;
   const countLabel = isPassed ? 'Passed Students' : 'Failed Students';
   const scheduledOn = formatDisplayDate(feedbackRecord?.selectedDate);
+
+  const displayNextRound = nextRoundLabel || feedbackRecord?.nextRound || feedbackRecord?.nextRoundName || null;
+  const hasNextRound = Boolean(displayNextRound);
 
   return (
     <div style={{
@@ -175,51 +218,75 @@ function AdminFeedbackPopup({ feedbackRecord, roundLabel, feedbackType = 'passed
               white-space: nowrap;
               animation: afp-marquee 8s linear infinite;
             }
-            .afp-hide-native::-webkit-scrollbar { display: none; }
+            .afp-hide-native::-webkit-scrollbar {
+              display: none !important;
+              width: 0 !important;
+              height: 0 !important;
+            }
           `}</style>
           <div style={{ display: 'flex', gap: isMobileView ? '12px' : '16px', alignItems: 'flex-start', marginBottom: '14px', flexDirection: isMobileView ? 'column' : 'row' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', minWidth: isMobileView ? '100%' : '170px', width: isMobileView ? '100%' : 'auto' }}>
-              <div style={{ backgroundColor: assessBg, color: '#fff', borderRadius: '8px', padding: '8px 14px', fontWeight: 700, fontSize: '0.95rem', textAlign: 'center' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', minWidth: isMobileView ? '100%' : '190px', width: isMobileView ? '100%' : 'auto' }}>
+              <div style={{ height: '35px', backgroundColor: assessBg, color: '#fff', borderRadius: '8px', padding: '0 14px', fontWeight: 700, fontSize: '0.92rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 Overall Assessment
               </div>
-              <div style={{ display: 'flex', gap: '4px', paddingLeft: '4px' }}>
+              <div style={{ height: '35px', display: 'flex', alignItems: 'center', gap: '4px', paddingLeft: '4px' }}>
                 {[1,2,3,4,5].map(star => (
-                  <span key={star} style={{ cursor: 'default', fontSize: '1.3rem' }}>
+                  <span key={star} style={{ cursor: 'default', fontSize: '1.3rem', display: 'inline-flex', alignItems: 'center' }}>
                     {rating >= star ? <FaStar color="#FFE817" /> : <FaRegStar color="#ccc" />}
                   </span>
                 ))}
               </div>
+
+              {hasNextRound && (
+                <div style={{ height: '35px', display: 'flex', alignItems: 'center', gap: isMobileView ? '4px' : '6px', width: '100%' }}>
+                  <span style={{ fontWeight: 700, fontSize: isMobileView ? '0.78rem' : '0.78rem', whiteSpace: 'nowrap', flexShrink: 0 }}>Scheduled On</span>
+                  <span style={{ fontWeight: 700, flexShrink: 0 }}>:</span>
+                  <div style={{ flex: 1, minWidth: 0, height: '35px', display: 'flex', alignItems: 'center', padding: '0 0.6rem', border: '1px solid #dde6f4', borderRadius: '8px', backgroundColor: '#f9fbff', fontSize: isMobileView ? '0.76rem' : '0.78rem', fontFamily: "'Poppins', sans-serif", color: '#555', boxSizing: 'border-box', overflowWrap: 'anywhere' }}>
+                    {scheduledOn}
+                  </div>
+                </div>
+              )}
             </div>
 
             <div style={{ flex: 1, minWidth: 0, width: '100%', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: isMobileView ? '6px' : '8px', width: '100%' }}>
-                <span style={{ fontWeight: 700, fontSize: isMobileView ? '0.78rem' : '0.8rem', whiteSpace: 'nowrap', minWidth: isMobileView ? '86px' : '92px', flexShrink: 0 }}>Round</span>
+              <div style={{ height: '35px', display: 'flex', alignItems: 'center', gap: isMobileView ? '6px' : '8px', width: '100%' }}>
+                <span style={{ fontWeight: 700, fontSize: isMobileView ? '0.78rem' : '0.8rem', whiteSpace: 'nowrap', minWidth: isMobileView ? '82px' : '86px', flexShrink: 0 }}>Round</span>
                 <span style={{ fontWeight: 700, flexShrink: 0 }}>:</span>
-                <div style={{ flex: 1, minWidth: 0, padding: '0.5rem 0.75rem', border: '1px solid #dde6f4', borderRadius: '8px', backgroundColor: '#f9fbff', fontSize: isMobileView ? '0.76rem' : '0.8rem', fontFamily: "'Poppins', sans-serif", color: '#555', boxSizing: 'border-box', overflowWrap: 'anywhere' }}>
+                <div style={{ flex: 1, minWidth: 0, height: '35px', display: 'flex', alignItems: 'center', padding: '0 0.75rem', border: '1px solid #dde6f4', borderRadius: '8px', backgroundColor: '#f9fbff', fontSize: isMobileView ? '0.76rem' : '0.8rem', fontFamily: "'Poppins', sans-serif", color: '#555', boxSizing: 'border-box', overflowWrap: 'anywhere' }}>
                   {roundLabel || feedbackRecord?.roundName || 'Round'}
                 </div>
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: isMobileView ? '6px' : '8px', width: '100%' }}>
-                <span style={{ fontWeight: 700, fontSize: isMobileView ? '0.78rem' : '0.8rem', whiteSpace: 'nowrap', minWidth: isMobileView ? '86px' : '92px', flexShrink: 0 }}>{countLabel}</span>
+              <div style={{ height: '35px', display: 'flex', alignItems: 'center', gap: isMobileView ? '6px' : '8px', width: '100%' }}>
+                <span style={{ fontWeight: 700, fontSize: isMobileView ? '0.78rem' : '0.8rem', whiteSpace: 'nowrap', minWidth: isMobileView ? '82px' : '86px', flexShrink: 0 }}>{countLabel}</span>
                 <span style={{ fontWeight: 700, flexShrink: 0 }}>:</span>
-                <div style={{ flex: 1, minWidth: 0, padding: '0.5rem 0.75rem', border: '1px solid #dde6f4', borderRadius: '8px', backgroundColor: '#f9fbff', fontSize: isMobileView ? '0.76rem' : '0.8rem', fontFamily: "'Poppins', sans-serif", color: '#555', boxSizing: 'border-box', overflowWrap: 'anywhere' }}>
+                <div style={{ flex: 1, minWidth: 0, height: '35px', display: 'flex', alignItems: 'center', padding: '0 0.75rem', border: '1px solid #dde6f4', borderRadius: '8px', backgroundColor: '#f9fbff', fontSize: isMobileView ? '0.76rem' : '0.8rem', fontFamily: "'Poppins', sans-serif", color: '#555', boxSizing: 'border-box', overflowWrap: 'anywhere' }}>
                   {studentCount}
                 </div>
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: isMobileView ? '6px' : '8px', width: '100%' }}>
-                <span style={{ fontWeight: 700, fontSize: isMobileView ? '0.78rem' : '0.8rem', whiteSpace: 'nowrap', minWidth: isMobileView ? '86px' : '92px', flexShrink: 0 }}>Scheduled On</span>
-                <span style={{ fontWeight: 700, flexShrink: 0 }}>:</span>
-                <div style={{ flex: 1, minWidth: 0, padding: '0.5rem 0.75rem', border: '1px solid #dde6f4', borderRadius: '8px', backgroundColor: '#f9fbff', fontSize: isMobileView ? '0.76rem' : '0.8rem', fontFamily: "'Poppins', sans-serif", color: '#555', boxSizing: 'border-box', overflowWrap: 'anywhere' }}>
-                  {scheduledOn}
+              {hasNextRound ? (
+                <div style={{ height: '35px', display: 'flex', alignItems: 'center', gap: isMobileView ? '6px' : '8px', width: '100%' }}>
+                  <span style={{ fontWeight: 700, fontSize: isMobileView ? '0.78rem' : '0.8rem', whiteSpace: 'nowrap', minWidth: isMobileView ? '82px' : '86px', flexShrink: 0 }}>Next Round</span>
+                  <span style={{ fontWeight: 700, flexShrink: 0 }}>:</span>
+                  <div style={{ flex: 1, minWidth: 0, height: '35px', display: 'flex', alignItems: 'center', padding: '0 0.75rem', border: '1px solid #dde6f4', borderRadius: '8px', backgroundColor: '#f9fbff', fontSize: isMobileView ? '0.76rem' : '0.8rem', fontFamily: "'Poppins', sans-serif", color: '#555', boxSizing: 'border-box', overflowWrap: 'anywhere' }}>
+                    {displayNextRound}
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div style={{ height: '35px', display: 'flex', alignItems: 'center', gap: isMobileView ? '6px' : '8px', width: '100%' }}>
+                  <span style={{ fontWeight: 700, fontSize: isMobileView ? '0.78rem' : '0.8rem', whiteSpace: 'nowrap', minWidth: isMobileView ? '82px' : '86px', flexShrink: 0 }}>Scheduled On</span>
+                  <span style={{ fontWeight: 700, flexShrink: 0 }}>:</span>
+                  <div style={{ flex: 1, minWidth: 0, height: '35px', display: 'flex', alignItems: 'center', padding: '0 0.75rem', border: '1px solid #dde6f4', borderRadius: '8px', backgroundColor: '#f9fbff', fontSize: isMobileView ? '0.76rem' : '0.8rem', fontFamily: "'Poppins', sans-serif", color: '#555', boxSizing: 'border-box', overflowWrap: 'anywhere' }}>
+                    {scheduledOn}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
           {/* Feedback message box */}
-          <FeedbackScrollBox text={feedbackText} />
+          <FeedbackScrollBox text={feedbackText} isPassed={isPassed} />
         </div>
 
         {/* Footer */}
@@ -329,6 +396,7 @@ function SFPScrollTextarea({ value, onChange, readOnly, height = 110 }) {
 function StudentFeedbackPopup({
   roundName,
   onClose,
+  onSubmitted,
   viewOnly = false,
   driveContext = null,
   roundNumber = null,
@@ -568,6 +636,9 @@ function StudentFeedbackPopup({
       });
 
       setShowSubmitSuccess(true);
+      if (typeof onSubmitted === 'function' && parsedRoundNumber) {
+        onSubmitted(parsedRoundNumber);
+      }
     } catch (error) {
       setSaveError(error?.message || 'Failed to save feedback.');
     } finally {
@@ -627,7 +698,7 @@ function StudentFeedbackPopup({
             <circle cx="26" cy="26" r="25" fill="none"/>
             <path fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
           </svg>
-          <h2 style={{ margin:'1rem 0 0.5rem', fontSize:'24px', color:'#333', fontWeight:600 }}>Submitted âœ“</h2>
+          <h2 style={{ margin:'1rem 0 0.5rem', fontSize:'24px', color:'#333', fontWeight:600 }}>Submitted!</h2>
           <p style={{ margin:0, color:'#888', fontSize:'16px' }}>Your feedback has been submitted</p>
         </div>
         <div style={{ padding:'1.5rem', backgroundColor:'#f7f7f7' }}>
@@ -706,11 +777,21 @@ function StudentFeedbackPopup({
             overflowY: 'auto',
             overflowX: 'hidden',
             WebkitOverflowScrolling: 'touch',
-            position: 'relative'
+            position: 'relative',
+            scrollbarWidth: 'none',
+            msOverflowStyle: 'none'
           }}
         >
           <style>{`
-            .sfp-hide-native::-webkit-scrollbar { display: none; }
+            .sfp-hide-native {
+              scrollbar-width: none !important;
+              -ms-overflow-style: none !important;
+            }
+            .sfp-hide-native::-webkit-scrollbar {
+              display: none !important;
+              width: 0 !important;
+              height: 0 !important;
+            }
             .sfp-select {
               width: 100%; padding: 0.9rem 2.5rem 0.9rem 0.9rem;
               border: 1px solid #dde6f4; border-radius: 8px;
@@ -796,7 +877,7 @@ function StudentFeedbackPopup({
                     </svg>
                   </span>
                 </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ flex: 1, minWidth: 0, pointerEvents: viewOnly ? 'none' : 'auto', opacity: viewOnly ? 0.75 : 1, cursor: viewOnly ? 'not-allowed' : 'default' }}>
                   <DOBDatePicker value={selectedDate} onChange={viewOnly ? () => {} : setSelectedDate} />
                 </div>
               </div>
@@ -837,7 +918,7 @@ function StudentFeedbackPopup({
                       </svg>
                     </span>
                   </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ flex: 1, minWidth: 0, pointerEvents: viewOnly ? 'none' : 'auto', opacity: viewOnly ? 0.75 : 1, cursor: viewOnly ? 'not-allowed' : 'default' }}>
                     <DOBDatePicker value={selectedDate} onChange={viewOnly ? () => {} : setSelectedDate} />
                   </div>
                 </div>
@@ -1330,10 +1411,39 @@ export const getOverallStatus = (app) => {
   return { status: "Pending", color: "#717070" };
 };
 
+const formatPackageValue = (pkg) => {
+  if (pkg === null || pkg === undefined || pkg === '') return 'N/A';
+  const str = String(pkg).trim();
+  if (!str || str === 'N/A') return 'N/A';
+  if (/lpa/i.test(str)) return str;
+  return `${str}LPA`;
+};
+
+const formatBondPeriodValue = (bond) => {
+  if (bond === null || bond === undefined || bond === '') return 'N/A';
+  const str = String(bond).trim();
+  if (!str || str === 'N/A') return 'N/A';
+  if (/year|month|day|no bond/i.test(str)) return str;
+  const num = parseFloat(str);
+  if (!isNaN(num)) {
+    return `${str} ${num === 1 ? 'Year' : 'Years'}`;
+  }
+  return `${str} Years`;
+};
+
+const formatRoundLabel = (index, name) => {
+  if (!name) return `Round ${index + 1}`;
+  if (/^round\s+\d+/i.test(name.trim())) return name.trim();
+  return `Round ${index + 1} (${name})`;
+};
+
+
+
 export default function PopUpPending({ app, onBack }) {
   const rounds = generateRounds(app);
 
   const { status: overallStatus, color: overallStatusColor } = getOverallStatus(app);
+  const [submittedRoundsSet, setSubmittedRoundsSet] = useState(new Set());
   const [selectedRole, setSelectedRole] = useState('Student');
   const [showAdminFeedback, setShowAdminFeedback] = useState(false);
   const [adminFeedbackRecords, setAdminFeedbackRecords] = useState([]);
@@ -1341,6 +1451,7 @@ export default function PopUpPending({ app, onBack }) {
   const [selectedAdminFeedback, setSelectedAdminFeedback] = useState(null);
   const [selectedAdminFeedbackType, setSelectedAdminFeedbackType] = useState('passed');
   const [selectedAdminRoundLabel, setSelectedAdminRoundLabel] = useState('');
+  const [selectedAdminNextRoundLabel, setSelectedAdminNextRoundLabel] = useState(null);
   const [showStudentFeedback, setShowStudentFeedback] = useState(false);
   const [selectedRoundName, setSelectedRoundName] = useState('');
   const [selectedRoundNumber, setSelectedRoundNumber] = useState(null);
@@ -1691,6 +1802,54 @@ export default function PopUpPending({ app, onBack }) {
     };
   }, [app?.driveId]);
 
+  useEffect(() => {
+    let isActive = true;
+
+    const loadStudentSubmittedRounds = async () => {
+      const driveId = (app?.driveId || '').toString().trim();
+      const { studentId, regNoRaw } = getStudentIdentity();
+
+      if (!driveId || (!studentId && !regNoRaw)) {
+        setSubmittedRoundsSet(new Set());
+        return;
+      }
+
+      try {
+        const response = await mongoDBService.getStudentFeedback({
+          driveId,
+          companyName: app?.company,
+          jobRole: app?.jobRole,
+          startingDate: app?.startDate,
+          studentId,
+          regNo: regNoRaw
+        });
+
+        if (!isActive) return;
+
+        const records = Array.isArray(response?.data) ? response.data : [];
+        const submittedSet = new Set();
+        records.forEach((rec) => {
+          const roundNum = Number(rec?.roundNumber);
+          if (Number.isFinite(roundNum) && roundNum > 0) {
+            submittedSet.add(roundNum);
+          }
+        });
+        setSubmittedRoundsSet(submittedSet);
+      } catch (error) {
+        console.error('Failed to load student submitted rounds:', error);
+        if (isActive) {
+          setSubmittedRoundsSet(new Set());
+        }
+      }
+    };
+
+    loadStudentSubmittedRounds();
+
+    return () => {
+      isActive = false;
+    };
+  }, [app?.driveId, app?.company, app?.jobRole, app?.startDate]);
+
   const resolveFeedbackTypeForRound = (roundStatusText = '') => {
     const normalized = String(roundStatusText).trim().toLowerCase();
     if (normalized === 'failed' || normalized === 'rejected' || normalized === 'absent') {
@@ -1886,72 +2045,80 @@ export default function PopUpPending({ app, onBack }) {
         const isEligible = isEligibleForAdminFeedback(index + 1, feedbackType, round.statusText);
         if (!isEligible) return null;
         const feedbackRecord = getFeedbackRecordForRound(index + 1, feedbackType);
+        const nextRoundObj = roundsToRender[index + 1];
+        const nextRoundLabel = nextRoundObj ? formatRoundLabel(index + 1, nextRoundObj.name) : null;
         return (
-        <div style={{ display: 'flex', flexShrink: 0 }}>
+        <div style={{ display: 'flex', flexShrink: 0, width: isMobile ? '56px' : '74px' }}>
           <button
             onClick={(e) => {
               e.stopPropagation();
               setSelectedAdminFeedback(feedbackRecord);
               setSelectedAdminFeedbackType(feedbackType);
-              setSelectedAdminRoundLabel(`Round ${index + 1} (${round.name})`);
+              setSelectedAdminRoundLabel(formatRoundLabel(index, round.name));
+              setSelectedAdminNextRoundLabel(nextRoundLabel);
               setShowAdminFeedback(true);
             }}
+            title="View Admin Feedback"
             style={{
               backgroundColor: '#197AFF', border: 'none', cursor: 'pointer',
-              padding: isMobile ? '0 14px' : '0 24px',
+              padding: 0,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              width: isMobile ? '70px' : 'auto',
-              minHeight: 'auto'
-            }}
-          >
-            <img src={CopmanyviewFeedbackicon} alt="View" style={{ width: 34, height: 34 }} />
-          </button>
-        </div>
-        );
-      })()}
-      {!isFirstRoundAbsent && round.statusText !== 'Not Eligible' && selectedRole === 'Student' && overallStatus !== "Pending" && (
-        <div style={{ display: 'flex', flexShrink: 0, width: isMobile ? '112px' : 'auto' }}>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setSelectedRoundName(`Round ${index + 1} (${round.name})`);
-              setSelectedRoundNumber(index + 1);
-              setSelectedRoundStatus(round.statusText || '');
-              setFeedbackViewMode('edit');
-              setShowStudentFeedback(true);
-            }}
-            style={{
-              backgroundColor: '#197AFF', border: 'none', cursor: 'pointer',
-              padding: isMobile ? '0 0' : '0 20px',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              borderRight: '1px solid rgba(255,255,255,0.35)',
-              width: isMobile ? '56px' : 'auto',
-              minHeight: 'auto'
-            }}
-          >
-            <img src={companyfeedbackicon} alt="Feedback" style={{ width: isMobile ? 30 : 34, height: isMobile ? 30 : 34, filter: 'brightness(0) invert(1)' }} />
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setSelectedRoundName(`Round ${index + 1} (${round.name})`);
-              setSelectedRoundNumber(index + 1);
-              setSelectedRoundStatus(round.statusText || '');
-              setFeedbackViewMode('view');
-              setShowStudentFeedback(true);
-            }}
-            style={{
-              backgroundColor: '#197AFF', border: 'none', cursor: 'pointer',
-              padding: isMobile ? '0 0' : '0 20px',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              width: isMobile ? '56px' : 'auto',
-              minHeight: 'auto'
+              width: '100%', height: '100%'
             }}
           >
             <img src={CopmanyviewFeedbackicon} alt="View" style={{ width: isMobile ? 30 : 34, height: isMobile ? 30 : 34 }} />
           </button>
         </div>
-      )}
+        );
+      })()}
+      {!isFirstRoundAbsent && round.statusText !== 'Not Eligible' && selectedRole === 'Student' && overallStatus !== "Pending" && (() => {
+        const isSubmitted = submittedRoundsSet.has(index + 1);
+        return (
+          <div style={{ display: 'flex', flexShrink: 0, width: isMobile ? '56px' : '74px' }}>
+            {!isSubmitted ? (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedRoundName(`Round ${index + 1} (${round.name})`);
+                  setSelectedRoundNumber(index + 1);
+                  setSelectedRoundStatus(round.statusText || '');
+                  setFeedbackViewMode('edit');
+                  setShowStudentFeedback(true);
+                }}
+                title="Submit Feedback"
+                style={{
+                  backgroundColor: '#197AFF', border: 'none', cursor: 'pointer',
+                  padding: 0,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  width: '100%', height: '100%'
+                }}
+              >
+                <img src={companyfeedbackicon} alt="Feedback" style={{ width: isMobile ? 30 : 34, height: isMobile ? 30 : 34, filter: 'brightness(0) invert(1)' }} />
+              </button>
+            ) : (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedRoundName(`Round ${index + 1} (${round.name})`);
+                  setSelectedRoundNumber(index + 1);
+                  setSelectedRoundStatus(round.statusText || '');
+                  setFeedbackViewMode('view');
+                  setShowStudentFeedback(true);
+                }}
+                title="View Submitted Feedback"
+                style={{
+                  backgroundColor: '#197AFF', border: 'none', cursor: 'pointer',
+                  padding: 0,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  width: '100%', height: '100%'
+                }}
+              >
+                <img src={CopmanyviewFeedbackicon} alt="View" style={{ width: isMobile ? 30 : 34, height: isMobile ? 30 : 34 }} />
+              </button>
+            )}
+          </div>
+        );
+      })()}
     </div>
   )) : (
     <div style={{ textAlign: 'center', color: '#888', padding: '40px', fontSize: '1rem' }}>
@@ -1984,7 +2151,7 @@ export default function PopUpPending({ app, onBack }) {
                 </div>
                 <div>
                   <span style={{ color: "#888", fontWeight: 500, fontSize: isMobile ? '1.02rem' : 'inherit' }}>Package: </span>
-                  <span style={{ color: "#333", fontWeight: 600, fontSize: isMobile ? '1.08rem' : 'inherit' }}>{app?.package || 'N/A'}</span>
+                  <span style={{ color: "#333", fontWeight: 600, fontSize: isMobile ? '1.08rem' : 'inherit' }}>{formatPackageValue(app?.package)}</span>
                 </div>
                 <div>
                   <span style={{ color: "#888", fontWeight: 500, fontSize: isMobile ? '1.02rem' : 'inherit' }}>Start Date: </span>
@@ -2004,7 +2171,7 @@ export default function PopUpPending({ app, onBack }) {
                 </div>
                 <div>
                   <span style={{ color: "#888", fontWeight: 500, fontSize: isMobile ? '1.02rem' : 'inherit' }}>Bond Period: </span>
-                  <span style={{ color: "#333", fontWeight: 600, fontSize: isMobile ? '1.08rem' : 'inherit' }}>{app?.bondPeriod || 'N/A'}</span>
+                  <span style={{ color: "#333", fontWeight: 600, fontSize: isMobile ? '1.08rem' : 'inherit' }}>{formatBondPeriodValue(app?.bondPeriod || app?.bond)}</span>
                 </div>
               </div>
             </div>
@@ -2117,6 +2284,7 @@ export default function PopUpPending({ app, onBack }) {
             feedbackRecord={selectedAdminFeedback}
             feedbackType={selectedAdminFeedbackType}
             roundLabel={selectedAdminRoundLabel}
+            nextRoundLabel={selectedAdminNextRoundLabel}
             onClose={() => { setShowAdminFeedback(false); }}
           />
         )}
@@ -2128,6 +2296,9 @@ export default function PopUpPending({ app, onBack }) {
             driveContext={app}
             viewOnly={feedbackViewMode === 'view'}
             onClose={() => { setShowStudentFeedback(false); }}
+            onSubmitted={(roundNum) => {
+              setSubmittedRoundsSet((prev) => new Set([...prev, Number(roundNum)]));
+            }}
           />
         )}
         {showOfferLetterPopup && canShowOfferLetterButton && (

@@ -5,6 +5,24 @@ import Adnavbar from '../components/Navbar/Adnavbar';
 import Adsidebar from '../components/Sidebar/Adsidebar';
 import styles from './Ad_ZipActive_Batches_Department.module.css';
 import Adminicon from '../assets/Adminicon.png';
+import Ad_zipfile_icon from '../assets/Ad_zipfile_icon.svg';
+
+const getDepartmentFullForm = (dept) => {
+    if (!dept) return '';
+    const upperDept = dept.trim().toUpperCase();
+    const mapping = {
+        'CSE': 'Computer Science and Engineering',
+        'ECE': 'Electronics and Communication Engineering',
+        'EEE': 'Electrical and Electronics Engineering',
+        'IT': 'Information Technology',
+        'MECH': 'Mechanical Engineering',
+        'CIVIL': 'Civil Engineering',
+        'AIDS': 'Artificial Intelligence and Data Science',
+        'AIML': 'Artificial Intelligence and Machine Learning',
+        'BME': 'Biomedical Engineering'
+    };
+    return mapping[upperDept] || dept;
+};
 import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -19,14 +37,16 @@ const Ad_ZipActive_Batches_Department = () => {
     // Get department data from navigation state
     const deptData = location.state?.departmentData || {};
     const batchData = location.state?.batchData || '';
+    const driveId = location.state?.driveId;
 
     // State for sidebar
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     // Filter states
-    const [nameFilter, setNameFilter] = useState('');
+    const [searchFilter, setSearchFilter] = useState('');
     const [sectionFilter, setSectionFilter] = useState('');
-    const [regnoFilter, setRegnoFilter] = useState('');
+    const [phoneFilter, setPhoneFilter] = useState('');
+    const [statusFilter, setStatusFilter] = useState('');
 
     // State for students data
     const [students, setStudents] = useState([]);
@@ -76,20 +96,31 @@ const Ad_ZipActive_Batches_Department = () => {
                 ? studentArray.filter(s => (s.branch || s.department) === deptData.name)
                 : studentArray;
 
-            setStudents(deptStudents);
-            setFilteredStudents(deptStudents);
+            // Map students to populate name and phone fields
+            const mappedStudents = deptStudents.map(s => {
+                const fullName = `${s.firstName || s.firstname || ''} ${s.lastName || s.lastname || ''}`.trim() || s.name || s.fullName || '';
+                const phoneNum = s.phone || s.mobile || s.phoneNo || s.mobileNo || s.mobileNumber || '';
+                return {
+                    ...s,
+                    name: fullName,
+                    phone: phoneNum
+                };
+            });
+
+            setStudents(mappedStudents);
+            setFilteredStudents(mappedStudents);
 
             // Extract unique sections
-            const uniqueSections = [...new Set(deptStudents.map(s => s.section).filter(Boolean))].sort();
+            const uniqueSections = [...new Set(mappedStudents.map(s => s.section).filter(Boolean))].sort();
             setSections(uniqueSections);
 
             // Calculate stats
-            const placedCount = deptStudents.filter(s => s.placementStatus === 'Placed' || s.isPlaced).length;
+            const placedCount = mappedStudents.filter(s => s.placementStatus === 'Placed' || s.isPlaced).length;
             setDeptStats({
                 name: deptData.name || 'Department',
                 batch: batchData || '2023 - 2027',
                 totalSections: uniqueSections.length,
-                totalStudents: deptStudents.length,
+                totalStudents: mappedStudents.length,
                 placedStudents: placedCount
             });
 
@@ -111,9 +142,11 @@ const Ad_ZipActive_Batches_Department = () => {
     const applyFilters = () => {
         let filtered = [...students];
 
-        if (nameFilter.trim()) {
+        if (searchFilter.trim()) {
+            const query = searchFilter.toLowerCase();
             filtered = filtered.filter(s =>
-                (s.name || '').toLowerCase().includes(nameFilter.toLowerCase())
+                (s.name || '').toLowerCase().includes(query) ||
+                (s.registerNumber || s.regNo || '').toLowerCase().includes(query)
             );
         }
 
@@ -121,10 +154,20 @@ const Ad_ZipActive_Batches_Department = () => {
             filtered = filtered.filter(s => s.section === sectionFilter);
         }
 
-        if (regnoFilter.trim()) {
+        if (phoneFilter.trim()) {
+            const query = phoneFilter.toLowerCase();
             filtered = filtered.filter(s =>
-                (s.registerNumber || s.regNo || '').toLowerCase().includes(regnoFilter.toLowerCase())
+                (s.phone || s.mobileNumber || '').toLowerCase().includes(query)
             );
+        }
+
+        if (statusFilter) {
+            filtered = filtered.filter(s => {
+                const isPlaced = s.placementStatus === 'Placed' || s.isPlaced;
+                if (statusFilter === 'Placed') return isPlaced;
+                if (statusFilter === 'Unplaced') return !isPlaced;
+                return true;
+            });
         }
 
         setFilteredStudents(filtered);
@@ -133,13 +176,14 @@ const Ad_ZipActive_Batches_Department = () => {
     // Auto-apply filters when inputs change
     useEffect(() => {
         applyFilters();
-    }, [nameFilter, sectionFilter, regnoFilter, students]);
+    }, [searchFilter, sectionFilter, phoneFilter, statusFilter, students]);
 
     // Discard filters
     const discardFilters = () => {
-        setNameFilter('');
+        setSearchFilter('');
         setSectionFilter('');
-        setRegnoFilter('');
+        setPhoneFilter('');
+        setStatusFilter('');
         setFilteredStudents(students);
     };
 
@@ -308,54 +352,82 @@ const Ad_ZipActive_Batches_Department = () => {
             <main className={styles['Ad-zd-main-content']}>
                 {/* Top Section - Filter and Stats */}
                 <div className={styles['Ad-zd-top-section']}>
+                    {/* Active Zip Card */}
+                    <div
+                        className={styles['Ad-zd-active-zip-card']}
+                        onClick={() => navigate(`/admin/active-zip/${driveId}`)}
+                    >
+                        <div className={styles['Ad-zd-summary-card-icon']}>
+                            <img src={Ad_zipfile_icon} alt="Active Zip" />
+                        </div>
+                        <div className={styles['Ad-zd-summary-card-title-1']}>Active Zip</div>
+                        <div className={`${styles['Ad-zd-summary-card-desc-1']} ${styles['Ad-zd-summary-card-desc-1-margin']}`}>Go back to active zip<br />management page</div>
+                    </div>
+
                     {/* Filter Card */}
                     <div className={styles['Ad-zd-filter-card']}>
                         <div className={styles['Ad-zd-filter-header']}>
                             <span>Filter & Sort</span>
                         </div>
                         <div className={styles['Ad-zd-filter-content']}>
-                            <div className={styles['Ad-zd-filter-row']}>
-                                <input
-                                    type="text"
-                                    className={styles['Ad-zd-input']}
-                                    placeholder="Name"
-                                    value={nameFilter}
-                                    onChange={(e) => setNameFilter(e.target.value)}
-                                />
-                                <div className={styles['Ad-zd-select-wrapper']}>
+                            {/* Row 1 Column 1: Name / Reg No */}
+                            <div className={styles['Ad-zd-input-wrapper']}>
+                                <label className={styles['Ad-zd-static-label']}>Name / Reg No</label>
+                                <div className={styles['Ad-zd-text-container']}>
+                                    <input
+                                        type="text"
+                                        className={styles['Ad-zd-text']}
+                                        placeholder="Enter Name / Reg No"
+                                        value={searchFilter}
+                                        onChange={(e) => setSearchFilter(e.target.value)}
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Row 1 Column 2: Section Dropdown */}
+                            <div className={styles['Ad-zd-input-wrapper']}>
+                                <label className={styles['Ad-zd-static-label']}>Section</label>
+                                <div className={styles['Ad-zd-dropdown-container']}>
                                     <select
-                                        className={styles['Ad-zd-select']}
+                                        className={styles['Ad-zd-dropdown']}
                                         value={sectionFilter}
                                         onChange={(e) => setSectionFilter(e.target.value)}
                                     >
-                                        <option value="">Section</option>
+                                        <option value="">Select Section</option>
                                         {sections.map((sec, idx) => (
                                             <option key={idx} value={sec}>{sec}</option>
                                         ))}
                                     </select>
                                 </div>
                             </div>
-                            <div className={styles['Ad-zd-filter-row']}>
-                                <input
-                                    type="text"
-                                    className={styles['Ad-zd-input']}
-                                    placeholder="Regno"
-                                    value={regnoFilter}
-                                    onChange={(e) => setRegnoFilter(e.target.value)}
-                                />
-                                <div className={styles['Ad-zd-filter-buttons']}>
-                                    <button
-                                        className={styles['Ad-zd-filter-btn']}
-                                        onClick={applyFilters}
+
+                            {/* Row 2 Column 1: Phone No */}
+                            <div className={styles['Ad-zd-input-wrapper']}>
+                                <label className={styles['Ad-zd-static-label']}>Phone No</label>
+                                <div className={styles['Ad-zd-text-container']}>
+                                    <input
+                                        type="text"
+                                        className={styles['Ad-zd-text']}
+                                        placeholder="Enter Phone No"
+                                        value={phoneFilter}
+                                        onChange={(e) => setPhoneFilter(e.target.value)}
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Row 2 Column 2: Status Dropdown */}
+                            <div className={styles['Ad-zd-input-wrapper']}>
+                                <label className={styles['Ad-zd-static-label']}>Status</label>
+                                <div className={styles['Ad-zd-dropdown-container']}>
+                                    <select
+                                        className={styles['Ad-zd-dropdown']}
+                                        value={statusFilter}
+                                        onChange={(e) => setStatusFilter(e.target.value)}
                                     >
-                                        Filter
-                                    </button>
-                                    <button
-                                        className={styles['Ad-zd-discard-btn']}
-                                        onClick={discardFilters}
-                                    >
-                                        Discard
-                                    </button>
+                                        <option value="">Select Status</option>
+                                        <option value="Placed">Placed</option>
+                                        <option value="Unplaced">Unplaced</option>
+                                    </select>
                                 </div>
                             </div>
                         </div>
@@ -363,7 +435,7 @@ const Ad_ZipActive_Batches_Department = () => {
 
                     {/* Department Stats Card */}
                     <div className={styles['Ad-zd-stats-card']}>
-                        <h2 className={styles['Ad-zd-stats-title']}>{deptStats.name}</h2>
+                        <h2 className={styles['Ad-zd-stats-title']}>{getDepartmentFullForm(deptStats.name)}</h2>
                         <div className={styles['Ad-zd-stats-content']}>
                             <div className={styles['Ad-zd-stat-row']}>
                                 <span className={styles['Ad-zd-stat-label']}>Batch</span>
@@ -374,11 +446,6 @@ const Ad_ZipActive_Batches_Department = () => {
                                 <span className={styles['Ad-zd-stat-label']}>Total Sections</span>
                                 <span className={styles['Ad-zd-stat-colon']}>:</span>
                                 <span className={styles['Ad-zd-stat-value']}>{deptStats.totalSections}</span>
-                            </div>
-                            <div className={styles['Ad-zd-stat-row']}>
-                                <span className={styles['Ad-zd-stat-label']}>Total Students</span>
-                                <span className={styles['Ad-zd-stat-colon']}>:</span>
-                                <span className={styles['Ad-zd-stat-value']}>{deptStats.totalStudents}</span>
                             </div>
                             <div className={styles['Ad-zd-stat-row']}>
                                 <span className={styles['Ad-zd-stat-label']}>Placed Students</span>
@@ -392,7 +459,10 @@ const Ad_ZipActive_Batches_Department = () => {
                 {/* Table Section */}
                 <div className={styles['Ad-zd-table-card']}>
                     <div className={styles['Ad-zd-table-header']}>
-                        <h3 className={styles['Ad-zd-table-title']}>{deptStats.name.toUpperCase()}</h3>
+                        <h3 className={styles['Ad-zd-table-title']}>
+                            <span className={styles['Ad-zd-dept-name']}>{getDepartmentFullForm(deptStats.name).toUpperCase()}</span>
+                            <span className={styles['Ad-zd-dept-count']}>({filteredStudents.length})</span>
+                        </h3>
                         <div className={styles['Ad-zd-print-button-container']}>
                             <button
                                 className={styles['Ad-zd-print-btn']}

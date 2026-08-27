@@ -308,6 +308,7 @@ function AdminABN() {
 
   const closeSuccessPopup = () => {
     setShowSuccessPopup(false);
+    navigate('/admin-add-branch-main');
   };
 
   return (
@@ -322,7 +323,9 @@ function AdminABN() {
               <div className={styles['Admin-add-branch-card-icon']}>
                 <svg width="60" height="60" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <circle cx="30" cy="30" r="30" fill="white" />
-                  <path d="M30 20V40M20 30H40" stroke="#4EA24E" strokeWidth="4" strokeLinecap="round" />
+                  <g transform="translate(15, 15) scale(1.875)">
+                    <path fill="#4EA24E" d="M11.5 6a2.5 2.5 0 0 0-2.446 1.985C7.172 7.86 5.466 6.963 5.081 5.931a2.5 2.5 0 1 0-1.08.019v4.1a2.5 2.5 0 1 0 1 0V7.466a7 7 0 0 0 4.047 1.52A2.5 2.5 0 1 0 11.5 6M3 3.5a1.5 1.5 0 1 1 3 0a1.5 1.5 0 0 1-3 0m3 9a1.5 1.5 0 1 1-2.999 0a1.5 1.5 0 0 1 3 0m5.5-2.5a1.5 1.5 0 1 1 0-3a1.5 1.5 0 0 1 0 3" />
+                  </g>
                 </svg>
               </div>
               <h2 className={styles['Admin-add-branch-card-title']}>Existing Branch</h2>

@@ -601,9 +601,13 @@
   .Admin-rarw-tab-inactive,
   .Admin-rarw-tab-active-green,
   .Admin-rarw-filter-select,
-  .Admin-rarw-filter-date-input {
+  .Admin-rarw-filter-date-input,
+  .Admin-rarw-dropdown-wrapper,
+  .Admin-rarw-dropdown-header {
     min-width: 0 !important;
-    max-width: none !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
   }
 
   .Admin-rarw-rounds-container {
@@ -612,6 +616,22 @@
     max-width: 100% !important;
     width: 100% !important;
     flex-shrink: 0 !important;
+  }
+
+  .Admin-rarw-rounds-scroll {
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    scroll-behavior: smooth !important;
+    -webkit-overflow-scrolling: touch !important;
+    -ms-overflow-style: none !important;
+    scrollbar-width: none !important;
+  }
+
+  .Admin-rarw-rounds-scroll::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    background: transparent !important;
   }
 
   .Admin-rarw-table-section {
@@ -631,11 +651,16 @@
   .Admin-rarw-tab-inactive,
   .Admin-rarw-tab-active-green,
   .Admin-rarw-filter-select,
-  .Admin-rarw-filter-date-input {
+  .Admin-rarw-filter-date-input,
+  .Admin-rarw-dropdown-wrapper,
+  .Admin-rarw-dropdown-header {
+    width: 100% !important;
+    min-width: 0 !important;
     max-width: 100% !important;
     font-size: 0.95rem !important;
     padding: 8px 12px !important;
     height: 45px !important;
+    box-sizing: border-box !important;
   }
 
   .Admin-rarw-tab-container,
@@ -708,6 +733,22 @@
   .Admin-rarw-table-body-scroll::-webkit-scrollbar-thumb:horizontal:hover {
     background-color: #666666 !important;
   }
+
+  .Admin-rarw-rounds-scroll {
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    scroll-behavior: smooth !important;
+    -webkit-overflow-scrolling: touch !important;
+    -ms-overflow-style: none !important;
+    scrollbar-width: none !important;
+  }
+
+  .Admin-rarw-rounds-scroll::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    background: transparent !important;
+  }
 }
 
 /* Loading spinner styles */
@@ -774,7 +815,10 @@
 /* Dropdown styles */
 .Admin-rarw-dropdown-wrapper {
   position: relative;
-  width: 100%;
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
 }
 
 .Admin-rarw-dropdown-header {
@@ -791,6 +835,8 @@
   align-items: center;
   justify-content: space-between;
   transition: all 0.2s ease;
+  width: 100% !important;
+  box-sizing: border-box !important;
 }
 
 .Admin-rarw-dropdown-header:hover {

@@ -5,11 +5,29 @@ import Adnavbar from '../components/Navbar/Adnavbar';
 import Adsidebar from '../components/Sidebar/Adsidebar';
 import styles from './Ad_Zipped_Batch_Department_Students.module.css';
 import Adminicon from '../assets/Adminicon.png';
+import Ad_Zipped_Batches_DeptStu_icon from '../assets/Ad_Zipped_Batches_DeptStu_icon.svg';
 import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import mongoDBService from '../services/mongoDBService.jsx';
 import { ExportProgressAlert, ExportSuccessAlert, ExportFailedAlert } from '../components/alerts';
+
+const getDepartmentFullForm = (dept) => {
+    if (!dept) return '';
+    const upperDept = dept.trim().toUpperCase();
+    const mapping = {
+        'CSE': 'Computer Science and Engineering',
+        'ECE': 'Electronics and Communication Engineering',
+        'EEE': 'Electrical and Electronics Engineering',
+        'IT': 'Information Technology',
+        'MECH': 'Mechanical Engineering',
+        'CIVIL': 'Civil Engineering',
+        'AIDS': 'Artificial Intelligence and Data Science',
+        'AIML': 'Artificial Intelligence and Machine Learning',
+        'BME': 'Biomedical Engineering'
+    };
+    return mapping[upperDept] || dept;
+};
 
 const Ad_Zipped_Batch_Department_Students = () => {
     const navigate = useNavigate();
@@ -326,6 +344,10 @@ const Ad_Zipped_Batch_Department_Students = () => {
         return () => document.removeEventListener('click', handleClickOutside);
     }, [showExportMenu]);
 
+    const isAnyFilterActive = (nameFilter || '').toString().trim() !== '' || 
+                              (sectionFilter || '').toString().trim() !== '' || 
+                              (regnoFilter || '').toString().trim() !== '';
+
     if (authLoading) {
         return <div className={styles['Ad-zbds-layout']}>Loading...</div>;
     }
@@ -358,6 +380,22 @@ const Ad_Zipped_Batch_Department_Students = () => {
             <main className={styles['Ad-zbds-main-content']}>
                 {/* Top Section - Filter and Stats */}
                 <div className={styles['Ad-zbds-top-section']}>
+                    {/* Active Zip / Back Card */}
+                    <div 
+                        className={styles['Ad-zbds-active-zip-card']} 
+                        onClick={handleBack}
+                    >
+                        <img 
+                            src={Ad_Zipped_Batches_DeptStu_icon} 
+                            alt="Active Zip Icon" 
+                            className={styles['Ad-zbds-active-zip-icon']} 
+                        />
+                        <h2 className={styles['Ad-zbds-active-zip-title']}>Active Batch</h2>
+                        <p className={styles['Ad-zbds-active-zip-desc']}>
+                            Go back to active zip management page
+                        </p>
+                    </div>
+
                     {/* Filter Card */}
                     <div className={styles['Ad-zbds-filter-card']}>
                         <div className={styles['Ad-zbds-filter-header']}>
@@ -397,12 +435,14 @@ const Ad_Zipped_Batch_Department_Students = () => {
                                     <button
                                         className={styles['Ad-zbds-filter-btn']}
                                         onClick={applyFilters}
+                                        disabled={!isAnyFilterActive}
                                     >
                                         Filter
                                     </button>
                                     <button
                                         className={styles['Ad-zbds-discard-btn']}
                                         onClick={discardFilters}
+                                        disabled={!isAnyFilterActive}
                                     >
                                         Discard
                                     </button>
@@ -413,7 +453,7 @@ const Ad_Zipped_Batch_Department_Students = () => {
 
                     {/* Department Stats Card */}
                     <div className={styles['Ad-zbds-stats-card']}>
-                        <h2 className={styles['Ad-zbds-stats-title']}>{deptStats.name}</h2>
+                        <h2 className={styles['Ad-zbds-stats-title']}>{getDepartmentFullForm(deptStats.name)}</h2>
                         <div className={styles['Ad-zbds-stats-content']}>
                             <div className={styles['Ad-zbds-stat-row']}>
                                 <span className={styles['Ad-zbds-stat-label']}>Archive</span>
@@ -442,7 +482,9 @@ const Ad_Zipped_Batch_Department_Students = () => {
                 {/* Table Section */}
                 <div className={styles['Ad-zbds-table-card']}>
                     <div className={styles['Ad-zbds-table-header']}>
-                        <h3 className={styles['Ad-zbds-table-title']}>{deptStats.name.toUpperCase()}</h3>
+                        <h3 className={styles['Ad-zbds-table-title']}>
+                            <span className={styles['Ad-zbds-dept-name']}>{getDepartmentFullForm(deptStats.name).toUpperCase()}</span>
+                        </h3>
                         <div className={styles['Ad-zbds-print-button-container']}>
                             <button
                                 className={styles['Ad-zbds-print-btn']}
@@ -498,11 +540,10 @@ const Ad_Zipped_Batch_Department_Students = () => {
                                             <td className={styles['Ad-zbds-td']}>{student.phone}</td>
                                             <td className={styles['Ad-zbds-td']}>{student.email}</td>
                                             <td className={styles['Ad-zbds-td']}>
-                                                <span className={`${styles['Ad-zbds-status-tag']} ${
-                                                    student.placementStatus === 'Placed'
+                                                <span className={`${styles['Ad-zbds-status-tag']} ${student.placementStatus === 'Placed'
                                                         ? styles['Ad-zbds-status-placed']
                                                         : styles['Ad-zbds-status-unplaced']
-                                                }`}>
+                                                    }`}>
                                                     {student.placementStatus}
                                                 </span>
                                             </td>
@@ -512,8 +553,8 @@ const Ad_Zipped_Batch_Department_Students = () => {
                                                     onClick={() => handleViewProfile(student)}
                                                 >
                                                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="#4EA24E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                                                        <circle cx="12" cy="12" r="3" stroke="#4EA24E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="#4EA24E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                                        <circle cx="12" cy="12" r="3" stroke="#4EA24E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                                                     </svg>
                                                 </button>
                                             </td>
@@ -524,19 +565,12 @@ const Ad_Zipped_Batch_Department_Students = () => {
                         </table>
                     </div>
                 </div>
-
-                {/* Back Button */}
-                <div className={styles['Ad-zbds-back-container']}>
-                    <button className={styles['Ad-zbds-back-btn']} onClick={handleBack}>
-                        Back
-                    </button>
-                </div>
             </main>
 
             {/* Export Alerts */}
             <ExportProgressAlert
                 isOpen={exportPopupState === 'progress'}
-                onClose={() => {}}
+                onClose={() => { }}
                 progress={exportProgress}
                 exportType={exportType}
             />

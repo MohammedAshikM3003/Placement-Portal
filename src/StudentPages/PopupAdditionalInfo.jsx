@@ -5,7 +5,7 @@ import styles from './ResumeBuilder.module.css';
  * Additional Information Popup
  * Matches design: Information textarea
  */
-export default function PopupAdditionalInfo({ data, onSave, onDiscard }) {
+export default function PopupAdditionalInfo({ data, onSave, onDiscard, onDelete }) {
   const [info, setInfo] = useState(data?.info || '');
 
   // Sync info when data prop changes (when reopening saved additional info)
@@ -14,6 +14,13 @@ export default function PopupAdditionalInfo({ data, onSave, onDiscard }) {
       setInfo(data.info || '');
     }
   }, [data]);
+
+  const isFormValid = Boolean(info?.trim());
+
+  const handleSave = () => {
+    if (!isFormValid) return;
+    onSave({ info });
+  };
 
   return (
     <div className={styles.overlay}>
@@ -33,7 +40,10 @@ export default function PopupAdditionalInfo({ data, onSave, onDiscard }) {
 
         <div className={styles.popupFooter}>
           <button className={styles.popupDiscardBtn} onClick={onDiscard}>Back</button>
-          <button className={styles.popupSaveBtn} onClick={() => onSave({ info })}>Save</button>
+          {onDelete && (
+            <button className={styles.popupDiscardBtn} style={{ color: '#d9534f', borderColor: '#d9534f' }} onClick={onDelete}>Delete</button>
+          )}
+          <button className={styles.popupSaveBtn} onClick={handleSave} disabled={!isFormValid}>Save</button>
         </div>
       </div>
     </div>

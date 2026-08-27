@@ -79,6 +79,10 @@
     font-size: 0.95rem;
     cursor: pointer;
     transition: background-color 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
 }
 
 .Ad-zbdv-download-btn:hover {
@@ -97,13 +101,13 @@
 
 .Ad-zbdv-card-label {
     margin: 0;
-    font-size: 1.1rem;
+    font-size: 1.3rem;
     font-weight: 700;
 }
 
 .Ad-zbdv-card-number {
     margin-top: 10px;
-    font-size: 2.8rem;
+    font-size: 3.5rem;
     font-weight: 800;
     line-height: 1;
 }
@@ -114,6 +118,7 @@
     border-radius: 15px;
     padding: 20px 25px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    /* height: 36px; */
 }
 
 .Ad-zbdv-table-header {
@@ -192,7 +197,7 @@
 
 /* Table Container */
 .Ad-zbdv-table-container {
-    height: 300px;
+    height: 230px;
     overflow-y: scroll;
     overflow-x: auto;
     border: none;
@@ -333,46 +338,7 @@
     }
 }
 
-/* Action Buttons */
-.Ad-zbdv-action-buttons {
-    display: flex;
-    justify-content: flex-end;
-    gap: 15px;
-    padding-top: 15px;
-    border-top: 1px solid #eee;
-}
 
-.Ad-zbdv-discard-btn {
-    padding: 12px 35px;
-    border: none;
-    border-radius: 8px;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    background-color: #6c757d;
-    color: white;
-    transition: background-color 0.2s;
-}
-
-.Ad-zbdv-discard-btn:hover {
-    background-color: #5a6268;
-}
-
-.Ad-zbdv-unzip-btn {
-    padding: 12px 35px;
-    border: none;
-    border-radius: 8px;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    background-color: #4EA24E;
-    color: white;
-    transition: background-color 0.2s;
-}
-
-.Ad-zbdv-unzip-btn:hover {
-    background-color: #3d8a3d;
-}
 
 /* Popup Styles */
 .Ad-zbdv-popup-overlay {
@@ -597,7 +563,7 @@
     }
 
     .Ad-zbdv-card-number {
-        font-size: 2.4rem;
+        font-size: 3.0rem;
     }
 
     .Ad-zbdv-download-btn {
@@ -608,15 +574,17 @@
 /* Mobile View */
 @media screen and (max-width: 768px) {
     .Ad-zbdv-main-content {
-        margin: 70px 0px 0 2px;
+        margin: 72.5px 0px 0 2px;
         padding: 10px 10px 10px 20px;
         padding-bottom: 30px;
         gap: 10px;
         width: calc(100% - 30px);
-        max-height: calc(100vh - 70px);
+        max-height: calc(100vh - 72.5px);
         overflow-y: auto;
         overflow-x: hidden;
     }
+
+
 
     .Ad-zbdv-main-content::-webkit-scrollbar {
         width: 10px;
@@ -642,7 +610,7 @@
     .Ad-zbdv-card {
         height: 100px;
         padding: 15px;
-        flex-direction: row;
+        
         justify-content: space-around;
     }
 
@@ -657,11 +625,11 @@
     }
 
     .Ad-zbdv-card-label {
-        font-size: 1.2rem;
+        font-size: 1.3rem;
     }
 
     .Ad-zbdv-card-number {
-        font-size: 2.2rem;
+        font-size: 2.8rem;
         margin-top: 0;
     }
 
@@ -682,21 +650,13 @@
         font-size: 0.8rem;
     }
 
-    .Ad-zbdv-action-buttons {
-        gap: 10px;
-    }
 
-    .Ad-zbdv-discard-btn,
-    .Ad-zbdv-unzip-btn {
-        width: 100%;
-        padding: 12px 20px;
-    }
 }
 
 /* Mobile Portrait View */
 @media screen and (max-width: 480px) {
     .Ad-zbdv-main-content {
-        margin: 55px 0px 0 2px;
+        margin: 72.5px 0px 0 2px;
         padding: 10px 10px 10px 20px;
         width: calc(100% - 24px);
     }
@@ -715,11 +675,11 @@
     }
 
     .Ad-zbdv-card-label {
-        font-size: 1rem;
+        font-size: 1.15rem;
     }
 
     .Ad-zbdv-card-number {
-        font-size: 2rem;
+        font-size: 2.5rem;
     }
 
     .Ad-zbdv-table-card {

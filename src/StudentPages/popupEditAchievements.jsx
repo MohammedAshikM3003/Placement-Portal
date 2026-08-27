@@ -331,7 +331,7 @@ const dateToStr = (d) => {
 // ++ NEW: Success Popup Component for Edit ++
 const SuccessPopup = ({ onClose }) => (
   <div className={styles['Edit-popup-container']}>
-    <div className={styles['Edit-popup-header']}>Edit !</div>
+    <div className={styles['Edit-popup-header']}>Edited !</div>
     <div className={styles['Edit-popup-body']}>
       <svg className={styles['Edit-success-icon']} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
         <circle className={styles['Edit-success-icon--circle']} cx="26" cy="26" r="25" fill="none"/>

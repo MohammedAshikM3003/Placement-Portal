@@ -419,9 +419,13 @@
   .Admin-racw-tab-inactive,
   .Admin-racw-tab-active-green,
   .Admin-racw-filter-select,
-  .Admin-racw-filter-date-input {
+  .Admin-racw-filter-date-input,
+  .Admin-racw-dropdown-wrapper,
+  .Admin-racw-dropdown-header {
     min-width: 0 !important;
-    max-width: none !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
   }
 
   .Admin-racw-table-section {
@@ -441,11 +445,16 @@
   .Admin-racw-tab-inactive,
   .Admin-racw-tab-active-green,
   .Admin-racw-filter-select,
-  .Admin-racw-filter-date-input {
+  .Admin-racw-filter-date-input,
+  .Admin-racw-dropdown-wrapper,
+  .Admin-racw-dropdown-header {
+    width: 100% !important;
+    min-width: 0 !important;
     max-width: 100% !important;
     font-size: 0.95rem !important;
     padding: 8px 12px !important;
     height: 45px !important;
+    box-sizing: border-box !important;
   }
 
   .Admin-racw-tab-container,
@@ -578,7 +587,10 @@
 /* Dropdown styles */
 .Admin-racw-dropdown-wrapper {
   position: relative;
-  width: 100%;
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
 }
 
 .Admin-racw-dropdown-header {
@@ -595,6 +607,8 @@
     align-items: center;
     justify-content: space-between;
     transition: all 0.2s ease;
+    width: 100% !important;
+    box-sizing: border-box !important;
 }
 
 .Admin-racw-dropdown-header:hover {

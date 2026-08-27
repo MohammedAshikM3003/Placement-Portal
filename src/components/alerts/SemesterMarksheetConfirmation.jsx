@@ -1,5 +1,60 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef, useState, useEffect } from 'react';
 import styles from './SemesterMarksheetConfirmation.module.css';
+
+const ChangesRow = ({ children, changesRowClass, changesRowInnerClass }) => {
+  const containerRef = useRef(null);
+  const innerRef = useRef(null);
+  const [shouldScroll, setShouldScroll] = useState(false);
+  const [scrollDuration, setScrollDuration] = useState(16);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    const inner = innerRef.current;
+    if (!container || !inner) return;
+
+    const checkOverflow = () => {
+      const containerWidth = container.clientWidth;
+      const innerWidth = inner.scrollWidth;
+      const overflow = innerWidth > containerWidth;
+      setShouldScroll(overflow);
+
+      if (overflow) {
+        const speed = 40; // 40 pixels per second constant speed
+        const duration = Math.max(5, Math.round(innerWidth / speed));
+        setScrollDuration(duration);
+      }
+    };
+
+    // Monitor container and inner sizing changes (e.g. font loading, initial render, resizing)
+    const resizeObserver = new ResizeObserver(() => {
+      checkOverflow();
+    });
+
+    resizeObserver.observe(container);
+    resizeObserver.observe(inner);
+
+    checkOverflow();
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, [children]);
+
+  return (
+    <div ref={containerRef} className={changesRowClass}>
+      <div
+        ref={innerRef}
+        className={`${changesRowInnerClass} ${shouldScroll ? styles.marqueeActive : ''}`}
+        style={{
+          '--scroll-duration': `${scrollDuration}s`,
+          marginLeft:"35px"
+        }}
+      >
+        {children}
+      </div>
+    </div>
+  );
+};
 
 const SemesterMarksheetConfirmation = ({
   isOpen,
@@ -9,7 +64,8 @@ const SemesterMarksheetConfirmation = ({
   changedSubjects = [],
   isSaving = false,
   // When true, only render the small toast (no overlay/modal)
-  toastOnly = false
+  toastOnly = false,
+  theme = 'coordinator'
 }) => {
   // Generate toast subtitle with changed subject names
   const toastSubtitle = useMemo(() => {
@@ -81,7 +137,7 @@ const SemesterMarksheetConfirmation = ({
       {/* If toastOnly is requested, skip rendering the overlay/modal */}
       {(!toastOnly && isOpen) && (
         <div className={styles.overlay} onClick={isSaving ? undefined : onClose}>
-          <div className={styles.container} onClick={(event) => event.stopPropagation()}>
+          <div className={`${styles.container} ${theme === 'admin' ? styles.adminTheme : ''}`} onClick={(event) => event.stopPropagation()}>
             <div className={styles.header}>Semester Marksheet Updated !</div>
 
             <div className={styles.body}>
@@ -98,13 +154,31 @@ const SemesterMarksheetConfirmation = ({
                 <div className={styles.changedSubjectsContainer}>
                   <div className={styles.subjectsList}>
                     {changedSubjects.map((subject, index) => (
-                      <div key={index} className={styles.subjectChange}>
-                        <div className={styles.subjectName}>{subject.subjectName}</div>
-                        <div className={styles.gradeChange}>
-                          <span className={styles.oldGrade}>{subject.oldGrade}</span>
-                          <span className={styles.arrow}>→</span>
-                          <span className={styles.newGrade}>{subject.newGrade}</span>
+                      <div key={index} className={styles.subjectChange} style={{ flexDirection: 'column', alignItems: 'stretch', gap: '8px' }}>
+                        <div className={styles.subjectName} style={{ fontWeight: '600', borderBottom: '1px solid #eee', paddingBottom: '4px' }}>
+                          {subject.subjectName}
                         </div>
+                        <ChangesRow
+                          changesRowClass={styles.changesRow}
+                          changesRowInnerClass={styles.changesRowInner}
+                        >
+                          {subject.changes && subject.changes.map((ch, idx) => (
+                            <div key={idx} className={styles.changeItem}>
+                              <span className={styles.changeFieldLabel}>
+                                {ch.field === 'semester' ? 'Semester' : ch.field === 'credits' ? 'Credits' : ch.field === 'year' ? 'Year' : ch.field === 'code' ? 'Code' : ch.field === 'name' ? 'Name' : 'Grade'}:
+                              </span>
+                              <div className={styles.changeValues}>
+                                <span className={styles.oldGrade} style={{ textDecoration: (ch.from !== undefined && ch.from !== null && ch.from !== '') ? 'line-through' : 'none' }}>
+                                  {(ch.from !== undefined && ch.from !== null && ch.from !== '') ? ch.from : '--'}
+                                </span>
+                                <span className={styles.arrow}>→</span>
+                                <span className={styles.newGrade}>
+                                  {(ch.to !== undefined && ch.to !== null && ch.to !== '') ? ch.to : '--'}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </ChangesRow>
                       </div>
                     ))}
                   </div>

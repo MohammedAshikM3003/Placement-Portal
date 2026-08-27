@@ -5,7 +5,7 @@ import styles from './ResumeBuilder.module.css';
  * Certification Popup
  * Certificate Name input + Description textarea (AI-polishable)
  */
-export default function PopupCertification({ data, onSave, onDiscard, enableAI = true }) {
+export default function PopupCertification({ data, onSave, onDiscard, enableAI = true, onDelete }) {
   const [formData, setFormData] = useState({
     certificateName: data?.certificateName || '',
     description: data?.description || '',
@@ -35,6 +35,16 @@ export default function PopupCertification({ data, onSave, onDiscard, enableAI =
 
   const handleChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const isFormValid = Boolean(
+    formData.certificateName?.trim() &&
+    formData.description?.trim()
+  );
+
+  const handleSave = () => {
+    if (!isFormValid) return;
+    onSave(formData);
   };
 
   return (
@@ -82,7 +92,10 @@ export default function PopupCertification({ data, onSave, onDiscard, enableAI =
 
         <div className={styles.popupFooter}>
           <button className={styles.popupDiscardBtn} onClick={onDiscard}>Back</button>
-          <button className={styles.popupSaveBtn} onClick={() => onSave(formData)}>Save</button>
+          {onDelete && (
+            <button className={styles.popupDiscardBtn} style={{ color: '#d9534f', borderColor: '#d9534f' }} onClick={onDelete}>Delete</button>
+          )}
+          <button className={styles.popupSaveBtn} onClick={handleSave} disabled={!isFormValid}>Save</button>
         </div>
       </div>
     </div>

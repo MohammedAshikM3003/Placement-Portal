@@ -47,12 +47,12 @@ const PAGES_OPTIONS = [
   { label: 'No Limit', value: 'no-limit' }
 ];
 
-// Lazy load popups
-const PopupExperience = lazy(() => import('./PopupExperience.jsx'));
-const PopupProject = lazy(() => import('./PopupProject.jsx'));
-const PopupCertification = lazy(() => import('./PopupCertification.jsx'));
-const PopupAchievementBuilder = lazy(() => import('./PopupAchievementBuilder.jsx'));
-const PopupAdditionalInfo = lazy(() => import('./PopupAdditionalInfo.jsx'));
+// Popup components
+import PopupExperience from './PopupExperience.jsx';
+import PopupProject from './PopupProject.jsx';
+import PopupCertification from './PopupCertification.jsx';
+import PopupAchievementBuilder from './PopupAchievementBuilder.jsx';
+import PopupAdditionalInfo from './PopupAdditionalInfo.jsx';
 
 // ===== ATS KEYWORDS MAPPING =====
 // Used by AI for generating relevant content — NOT auto-added to skills
@@ -186,6 +186,10 @@ function BuilderContent({ onViewChange, studentData: parentStudentData }) {
   const [activePopup, setActivePopup] = useState(null); // 'experience' | 'project' | 'certification' | 'achievement' | 'additionalInfo'
   const [editIndex, setEditIndex] = useState(null);
 
+  // Delete popup state
+  const [deleteTarget, setDeleteTarget] = useState(null); // { type, index, title, typeLabel, name }
+  const [deletedSuccessData, setDeletedSuccessData] = useState(null); // { name, typeLabel }
+
   // Creating popup state (for Create button)
   const [isCreating, setIsCreating] = useState(false);
   const [createProgress, setCreateProgress] = useState(0);
@@ -251,6 +255,63 @@ function BuilderContent({ onViewChange, studentData: parentStudentData }) {
       console.warn('⚠️ Auto-sync to MongoDB failed:', err);
     }
   }, [studentData, getStorageKey]);
+
+  // ===== CONFIRM DELETE HANDLER =====
+  const confirmDelete = useCallback(() => {
+    if (!deleteTarget) return;
+
+    const { type, index, name, typeLabel } = deleteTarget;
+
+    if (type === 'experience') {
+      setExperiences(prev => {
+        const updated = prev.filter((_, i) => i !== index);
+        const storageKey = getStorageKey();
+        const currentStorage = JSON.parse(localStorage.getItem(storageKey) || '{}');
+        localStorage.setItem(storageKey, JSON.stringify({ ...currentStorage, experiences: updated }));
+        syncToMongoDB({ experiences: updated });
+        return updated;
+      });
+    } else if (type === 'project') {
+      setProjects(prev => {
+        const updated = prev.filter((_, i) => i !== index);
+        const storageKey = getStorageKey();
+        const currentStorage = JSON.parse(localStorage.getItem(storageKey) || '{}');
+        localStorage.setItem(storageKey, JSON.stringify({ ...currentStorage, projects: updated }));
+        syncToMongoDB({ projects: updated });
+        return updated;
+      });
+    } else if (type === 'certification') {
+      setCertifications(prev => {
+        const updated = prev.filter((_, i) => i !== index);
+        const storageKey = getStorageKey();
+        const currentStorage = JSON.parse(localStorage.getItem(storageKey) || '{}');
+        localStorage.setItem(storageKey, JSON.stringify({ ...currentStorage, certifications: updated }));
+        syncToMongoDB({ certifications: updated });
+        return updated;
+      });
+    } else if (type === 'achievement') {
+      setAchievements(prev => {
+        const updated = prev.filter((_, i) => i !== index);
+        const storageKey = getStorageKey();
+        const currentStorage = JSON.parse(localStorage.getItem(storageKey) || '{}');
+        localStorage.setItem(storageKey, JSON.stringify({ ...currentStorage, achievements: updated }));
+        syncToMongoDB({ achievements: updated });
+        return updated;
+      });
+    } else if (type === 'additionalInfo') {
+      setAdditionalInfo(prev => {
+        const updated = prev.filter((_, i) => i !== index);
+        const storageKey = getStorageKey();
+        const currentStorage = JSON.parse(localStorage.getItem(storageKey) || '{}');
+        localStorage.setItem(storageKey, JSON.stringify({ ...currentStorage, additionalInfo: updated }));
+        syncToMongoDB({ additionalInfo: updated });
+        return updated;
+      });
+    }
+
+    setDeleteTarget(null);
+    setDeletedSuccessData({ name, typeLabel });
+  }, [deleteTarget, getStorageKey, syncToMongoDB]);
 
   // ===== AUTO-EXPAND SUMMARY TEXTAREA =====
   useEffect(() => {
@@ -1721,7 +1782,7 @@ ${education.school10 ? `<div class="entry"><div class="entry-header"><span>10th 
               className={styles.formInput}
               placeholder="Enter Full Name"
               value={personalInfo.name}
-              onChange={e => setPersonalInfo(p => ({ ...p, name: e.target.value }))}
+              readOnly
             />
           </div>
 
@@ -1834,7 +1895,7 @@ ${education.school10 ? `<div class="entry"><div class="entry-header"><span>10th 
               className={styles.formInput}
               placeholder="Enter College or University Name"
               value={education.college}
-              onChange={e => setEducation(p => ({ ...p, college: e.target.value }))}
+              readOnly
             />
           </div>
 
@@ -1846,7 +1907,7 @@ ${education.school10 ? `<div class="entry"><div class="entry-header"><span>10th 
               className={styles.formInput}
               placeholder="e.g. B.E., B.Tech, M.Tech"
               value={education.degree}
-              onChange={e => setEducation(p => ({ ...p, degree: e.target.value }))}
+              readOnly
             />
           </div>
 
@@ -1858,7 +1919,7 @@ ${education.school10 ? `<div class="entry"><div class="entry-header"><span>10th 
               className={styles.formInput}
               placeholder="e.g. CSE, ECE, IT"
               value={education.branch}
-              onChange={e => setEducation(p => ({ ...p, branch: e.target.value }))}
+              readOnly
             />
           </div>
 
@@ -1885,7 +1946,7 @@ ${education.school10 ? `<div class="entry"><div class="entry-header"><span>10th 
               className={styles.formInput}
               placeholder="e.g. 2026"
               value={education.graduationYear}
-              onChange={e => setEducation(p => ({ ...p, graduationYear: e.target.value }))}
+              readOnly
             />
           </div>
         </div>
@@ -1901,7 +1962,7 @@ ${education.school10 ? `<div class="entry"><div class="entry-header"><span>10th 
               className={styles.formInput}
               placeholder="Enter School Name"
               value={education.school12}
-              onChange={e => setEducation(p => ({ ...p, school12: e.target.value }))}
+              readOnly
             />
           </div>
 
@@ -1914,7 +1975,7 @@ ${education.school10 ? `<div class="entry"><div class="entry-header"><span>10th 
                 className={styles.suffixInput}
                 placeholder="e.g. 85.5"
                 value={education.percentile12}
-                onChange={e => setEducation(p => ({ ...p, percentile12: e.target.value }))}
+                readOnly
               />
               <div className={styles.inputSuffix}>%</div>
             </div>
@@ -1928,7 +1989,7 @@ ${education.school10 ? `<div class="entry"><div class="entry-header"><span>10th 
               className={styles.formInput}
               placeholder="e.g. 2020-2022"
               value={education.batch12}
-              onChange={e => setEducation(p => ({ ...p, batch12: e.target.value }))}
+              readOnly
             />
           </div>
         </div>
@@ -1944,7 +2005,7 @@ ${education.school10 ? `<div class="entry"><div class="entry-header"><span>10th 
               className={styles.formInput}
               placeholder="Enter School Name"
               value={education.school10}
-              onChange={e => setEducation(p => ({ ...p, school10: e.target.value }))}
+              readOnly
             />
           </div>
 
@@ -1957,7 +2018,7 @@ ${education.school10 ? `<div class="entry"><div class="entry-header"><span>10th 
                 className={styles.suffixInput}
                 placeholder="e.g. 90.0"
                 value={education.percentile10}
-                onChange={e => setEducation(p => ({ ...p, percentile10: e.target.value }))}
+                readOnly
               />
               <div className={styles.inputSuffix}>%</div>
             </div>
@@ -1971,7 +2032,7 @@ ${education.school10 ? `<div class="entry"><div class="entry-header"><span>10th 
               className={styles.formInput}
               placeholder="e.g. 2019-2020"
               value={education.batch10}
-              onChange={e => setEducation(p => ({ ...p, batch10: e.target.value }))}
+              readOnly
             />
           </div>
         </div>
@@ -2132,11 +2193,26 @@ ${education.school10 ? `<div class="entry"><div class="entry-header"><span>10th 
         <div className={styles.chipsContainer}>
           {experiences.map((exp, i) => (
             <span key={i} className={styles.chip} onClick={() => openExperiencePopup(i)} style={{ cursor: 'pointer' }}>
-              {exp.label || exp.title || 'Experience'}
-              <button className={styles.chipRemove} onClick={e => { e.stopPropagation(); removeChip(experiences, setExperiences, i); }}>×</button>
+              {exp.label || exp.title || exp.companyName || 'Experience'}
+              <button
+                type="button"
+                className={styles.chipRemove}
+                onClick={e => {
+                  e.stopPropagation();
+                  setDeleteTarget({
+                    type: 'experience',
+                    index: i,
+                    title: 'Delete Internship',
+                    typeLabel: 'Internship',
+                    name: exp.companyName || exp.title || exp.label || 'Internship'
+                  });
+                }}
+              >
+                ×
+              </button>
             </span>
           ))}
-          <button className={styles.addChipBtn} onClick={() => openExperiencePopup(null)}>
+          <button type="button" className={styles.addChipBtn} onClick={() => openExperiencePopup(null)}>
             <span className={styles.addChipBtnIcon}>+</span>
             Click to Add Experience
           </button>
@@ -2150,10 +2226,25 @@ ${education.school10 ? `<div class="entry"><div class="entry-header"><span>10th 
           {projects.map((proj, i) => (
             <span key={i} className={styles.chip} onClick={() => openProjectPopup(i)} style={{ cursor: 'pointer' }}>
               {proj.label || proj.name || proj}
-              <button className={styles.chipRemove} onClick={e => { e.stopPropagation(); removeChip(projects, setProjects, i); }}>×</button>
+              <button
+                type="button"
+                className={styles.chipRemove}
+                onClick={e => {
+                  e.stopPropagation();
+                  setDeleteTarget({
+                    type: 'project',
+                    index: i,
+                    title: 'Delete Project',
+                    typeLabel: 'Project',
+                    name: typeof proj === 'string' ? proj : (proj.name || proj.label || 'Project')
+                  });
+                }}
+              >
+                ×
+              </button>
             </span>
           ))}
-          <button className={styles.addChipBtn} onClick={() => openProjectPopup(null)}>
+          <button type="button" className={styles.addChipBtn} onClick={() => openProjectPopup(null)}>
             <span className={styles.addChipBtnIcon}>+</span>
             Click to Add Project
           </button>
@@ -2167,10 +2258,25 @@ ${education.school10 ? `<div class="entry"><div class="entry-header"><span>10th 
           {certifications.map((cert, i) => (
             <span key={i} className={styles.chip} onClick={() => openCertificationPopup(i)} style={{ cursor: 'pointer' }}>
               {cert.label || cert.certificateName || cert}
-              <button className={styles.chipRemove} onClick={e => { e.stopPropagation(); removeChip(certifications, setCertifications, i); }}>×</button>
+              <button
+                type="button"
+                className={styles.chipRemove}
+                onClick={e => {
+                  e.stopPropagation();
+                  setDeleteTarget({
+                    type: 'certification',
+                    index: i,
+                    title: 'Delete Certificate',
+                    typeLabel: 'Certificate',
+                    name: typeof cert === 'string' ? cert : (cert.certificateName || cert.label || 'Certificate')
+                  });
+                }}
+              >
+                ×
+              </button>
             </span>
           ))}
-          <button className={styles.addChipBtn} onClick={() => openCertificationPopup(null)}>
+          <button type="button" className={styles.addChipBtn} onClick={() => openCertificationPopup(null)}>
             <span className={styles.addChipBtnIcon}>+</span>
             Click to Add Certificate
           </button>
@@ -2184,10 +2290,25 @@ ${education.school10 ? `<div class="entry"><div class="entry-header"><span>10th 
           {achievements.map((ach, i) => (
             <span key={i} className={styles.chip} onClick={() => openAchievementPopup(i)} style={{ cursor: 'pointer' }}>
               {ach.label || ach.details || ach}
-              <button className={styles.chipRemove} onClick={e => { e.stopPropagation(); removeChip(achievements, setAchievements, i); }}>×</button>
+              <button
+                type="button"
+                className={styles.chipRemove}
+                onClick={e => {
+                  e.stopPropagation();
+                  setDeleteTarget({
+                    type: 'achievement',
+                    index: i,
+                    title: 'Delete Achievement',
+                    typeLabel: 'Achievement',
+                    name: typeof ach === 'string' ? ach : (ach.details || ach.label || 'Achievement')
+                  });
+                }}
+              >
+                ×
+              </button>
             </span>
           ))}
-          <button className={styles.addChipBtn} onClick={() => openAchievementPopup(null)}>
+          <button type="button" className={styles.addChipBtn} onClick={() => openAchievementPopup(null)}>
             <span className={styles.addChipBtnIcon}>+</span>
             Click to Add Achievement
           </button>
@@ -2201,10 +2322,25 @@ ${education.school10 ? `<div class="entry"><div class="entry-header"><span>10th 
           {additionalInfo.map((info, i) => (
             <span key={i} className={styles.chip} onClick={() => openAdditionalInfoPopup(i)} style={{ cursor: 'pointer' }}>
               {info.label || info.info || info}
-              <button className={styles.chipRemove} onClick={e => { e.stopPropagation(); removeChip(additionalInfo, setAdditionalInfo, i); }}>×</button>
+              <button
+                type="button"
+                className={styles.chipRemove}
+                onClick={e => {
+                  e.stopPropagation();
+                  setDeleteTarget({
+                    type: 'additionalInfo',
+                    index: i,
+                    title: 'Delete Additional Information',
+                    typeLabel: 'Additional Information',
+                    name: typeof info === 'string' ? info : (info.info || info.label || 'Info')
+                  });
+                }}
+              >
+                ×
+              </button>
             </span>
           ))}
-          <button className={styles.addChipBtn} onClick={() => openAdditionalInfoPopup(null)}>
+          <button type="button" className={styles.addChipBtn} onClick={() => openAdditionalInfoPopup(null)}>
             <span className={styles.addChipBtnIcon}>+</span>
             Click to Add Info
           </button>
@@ -2239,6 +2375,17 @@ ${education.school10 ? `<div class="entry"><div class="entry-header"><span>10th 
             onSave={saveExperience}
             onDiscard={closePopup}
             enableAI={resumeSettings.enableAI}
+            onDelete={editIndex !== null ? () => {
+              const exp = experiences[editIndex];
+              closePopup();
+              setDeleteTarget({
+                type: 'experience',
+                index: editIndex,
+                title: 'Delete Internship',
+                typeLabel: 'Internship',
+                name: exp?.companyName || exp?.title || exp?.label || 'Internship'
+              });
+            } : null}
           />
         )}
         {activePopup === 'project' && (
@@ -2249,6 +2396,17 @@ ${education.school10 ? `<div class="entry"><div class="entry-header"><span>10th 
             onSave={saveProject}
             onDiscard={closePopup}
             enableAI={resumeSettings.enableAI}
+            onDelete={editIndex !== null ? () => {
+              const proj = projects[editIndex];
+              closePopup();
+              setDeleteTarget({
+                type: 'project',
+                index: editIndex,
+                title: 'Delete Project',
+                typeLabel: 'Project',
+                name: typeof proj === 'string' ? proj : (proj?.name || proj?.label || 'Project')
+              });
+            } : null}
           />
         )}
         {activePopup === 'certification' && (
@@ -2258,6 +2416,17 @@ ${education.school10 ? `<div class="entry"><div class="entry-header"><span>10th 
             onSave={saveCertification}
             onDiscard={closePopup}
             enableAI={resumeSettings.enableAI}
+            onDelete={editIndex !== null ? () => {
+              const cert = certifications[editIndex];
+              closePopup();
+              setDeleteTarget({
+                type: 'certification',
+                index: editIndex,
+                title: 'Delete Certificate',
+                typeLabel: 'Certificate',
+                name: typeof cert === 'string' ? cert : (cert?.certificateName || cert?.label || 'Certificate')
+              });
+            } : null}
           />
         )}
         {activePopup === 'achievement' && (
@@ -2267,6 +2436,17 @@ ${education.school10 ? `<div class="entry"><div class="entry-header"><span>10th 
             onSave={saveAchievement}
             onDiscard={closePopup}
             enableAI={resumeSettings.enableAI}
+            onDelete={editIndex !== null ? () => {
+              const ach = achievements[editIndex];
+              closePopup();
+              setDeleteTarget({
+                type: 'achievement',
+                index: editIndex,
+                title: 'Delete Achievement',
+                typeLabel: 'Achievement',
+                name: typeof ach === 'string' ? ach : (ach?.details || ach?.label || 'Achievement')
+              });
+            } : null}
           />
         )}
         {activePopup === 'additionalInfo' && (
@@ -2275,9 +2455,81 @@ ${education.school10 ? `<div class="entry"><div class="entry-header"><span>10th 
             data={editIndex !== null ? additionalInfo[editIndex] : null}
             onSave={saveAdditionalInfoItem}
             onDiscard={closePopup}
+            onDelete={editIndex !== null ? () => {
+              const info = additionalInfo[editIndex];
+              closePopup();
+              setDeleteTarget({
+                type: 'additionalInfo',
+                index: editIndex,
+                title: 'Delete Additional Information',
+                typeLabel: 'Additional Information',
+                name: typeof info === 'string' ? info : (info?.info || info?.label || 'Info')
+              });
+            } : null}
           />
         )}
       </Suspense>
+
+      {/* ===== DELETE WARNING CONFIRMATION POPUP ===== */}
+      {deleteTarget && (
+        <div className={styles.overlay} onClick={() => setDeleteTarget(null)}>
+          <div className={styles.deletePopupContainer} onClick={e => e.stopPropagation()}>
+            <div className={styles.deletePopupHeader}>
+              {deleteTarget.title || `Delete ${deleteTarget.typeLabel || 'Item'}`}
+            </div>
+            <div className={styles.deletePopupBody}>
+              <svg className={styles.warningIcon} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                <circle className={styles.warningIconCircle} cx="26" cy="26" r="25" fill="none" />
+                <path d="M26 16v12M26 34v2" stroke="#ffffff" strokeWidth="3" fill="none" />
+              </svg>
+              <h2 style={{ margin: '1rem 0 0.5rem 0', fontSize: '24px', color: '#333', fontWeight: '600' }}>
+                Are you sure?
+              </h2>
+              <p style={{ margin: 0, color: '#888', fontSize: '16px' }}>
+                Do you want to delete 1 selected {deleteTarget.typeLabel ? deleteTarget.typeLabel.toLowerCase() : 'item'}?
+              </p>
+            </div>
+            <div className={styles.deletePopupFooter}>
+              <button type="button" onClick={() => setDeleteTarget(null)} className={styles.deletePopupCancelBtn}>
+                Discard
+              </button>
+              <button type="button" onClick={confirmDelete} className={styles.deletePopupDeleteBtn}>
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ===== DELETE SUCCESS POPUP ===== */}
+      {deletedSuccessData && (
+        <div className={styles.overlay} onClick={() => setDeletedSuccessData(null)}>
+          <div className={styles.deletePopupContainer} onClick={e => e.stopPropagation()}>
+            <div className={styles.deletePopupHeader}>Deleted !</div>
+            <div className={styles.deletePopupBody}>
+              <svg className={styles.deleteBinIcon} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                <circle className={styles.deleteBinIconCircle} cx="26" cy="26" r="25" fill="none" />
+                <g className={styles.deleteBinIconBin} fill="none" strokeWidth="2">
+                  <path d="M16 20l20 0M18 20l0 16c0 1 1 2 2 2l12 0c1 0 2-1 2-2l0-16M21 20l0-3c0-1 1-2 2-2l6 0c1 0 2 1 2 2l0 3M23 25l0 8M26 25l0 8M29 25l0 8" />
+                </g>
+              </svg>
+              <h2 style={{ margin: '1rem 0 0.5rem 0', fontSize: '24px', color: '#000', fontWeight: '700' }}>
+                {deletedSuccessData.name}
+              </h2>
+              <p style={{ margin: 0, color: '#888', fontSize: '16px' }}>
+                The selected {deletedSuccessData.typeLabel || 'item'}<br />
+                has been Deleted Successfully!
+              </p>
+            </div>
+            <div className={styles.deletePopupFooter}>
+              <button type="button" onClick={() => setDeletedSuccessData(null)} className={styles.deletePopupCloseBtn}>
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
 
       {/* ===== CREATING POPUP ===== */}
       {isCreating && (
@@ -2336,8 +2588,47 @@ ${education.school10 ? `<div class="entry"><div class="entry-header"><span>10th 
                 Your resume has been successfully created.
               </p>
             </div>
-            <div className="achievement-popup-footer" style={{ display: 'flex', gap: '24px', justifyContent: 'center', padding: '1.5rem' }}>
+            <div className="achievement-popup-footer" style={{ display: 'flex', gap: '8px', justifyContent: 'center', alignItems: 'center', padding: '1.25rem 0.75rem', flexWrap: 'nowrap' }}>
               <button
+                type="button"
+                onClick={() => setShowCreated(false)}
+                className="achievement-popup-close-btn"
+                style={{
+                  flex: '1 1 0',
+                  maxWidth: '110px',
+                  height: '38px',
+                  padding: '0 6px',
+                  backgroundColor: '#f1f5f9',
+                  color: '#475569',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '0.85rem',
+                  fontWeight: '600',
+                  whiteSpace: 'nowrap',
+                  cursor: 'pointer',
+                  transition: 'background-color 0.2s ease',
+                  boxShadow: 'none',
+                  transform: 'none',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxSizing: 'border-box'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.backgroundColor = '#e2e8f0';
+                  e.target.style.boxShadow = 'none';
+                  e.target.style.transform = 'none';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.backgroundColor = '#f1f5f9';
+                  e.target.style.boxShadow = 'none';
+                  e.target.style.transform = 'none';
+                }}
+              >
+                Close
+              </button>
+              <button
+                type="button"
                 onClick={() => {
                   if (!resumePdfUrl || isPreviewing) return;
                   setIsPreviewing(true);
@@ -2354,18 +2645,26 @@ ${education.school10 ? `<div class="entry"><div class="entry-header"><span>10th 
                 className="achievement-popup-close-btn"
                 disabled={isPreviewing || !resumePdfUrl}
                 style={{
+                  flex: '1 1 0',
+                  maxWidth: '110px',
+                  height: '38px',
+                  padding: '0 6px',
                   background: '#e9f1fc',
                   color: '#2085f6',
                   border: 'none',
-                  padding: '0.8rem 2rem',
                   borderRadius: '8px',
-                  fontSize: '1rem',
-                  fontWeight: '500',
+                  fontSize: '0.85rem',
+                  fontWeight: '600',
+                  whiteSpace: 'nowrap',
                   cursor: (isPreviewing || !resumePdfUrl) ? 'not-allowed' : 'pointer',
                   opacity: (isPreviewing || !resumePdfUrl) ? 0.6 : 1,
                   transition: 'background 0.2s ease',
                   boxShadow: 'none',
-                  transform: 'none'
+                  transform: 'none',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxSizing: 'border-box'
                 }}
                 onMouseEnter={(e) => {
                   if (!isPreviewing && resumePdfUrl) {
@@ -2383,22 +2682,32 @@ ${education.school10 ? `<div class="entry"><div class="entry-header"><span>10th 
                 {isPreviewing ? 'Previewing...' : 'Preview'}
               </button>
               <button
+                type="button"
                 onClick={() => {
+                  setShowCreated(false);
                   handleCheckATS();
                 }}
                 className="achievement-popup-close-btn"
                 style={{
+                  flex: '1 1 0',
+                  maxWidth: '110px',
+                  height: '38px',
+                  padding: '0 6px',
                   backgroundColor: '#2085f6',
                   color: 'white',
                   border: 'none',
-                  padding: '0.8rem 2rem',
                   borderRadius: '8px',
-                  fontSize: '1rem',
-                  fontWeight: '500',
+                  fontSize: '0.85rem',
+                  fontWeight: '600',
+                  whiteSpace: 'nowrap',
                   cursor: 'pointer',
                   transition: 'background-color 0.2s ease',
                   boxShadow: 'none',
-                  transform: 'none'
+                  transform: 'none',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxSizing: 'border-box'
                 }}
                 onMouseEnter={(e) => {
                   e.target.style.backgroundColor = '#1976d2';
@@ -2414,6 +2723,7 @@ ${education.school10 ? `<div class="entry"><div class="entry-header"><span>10th 
                 ATS check
               </button>
             </div>
+
           </div>
         </div>
       )}

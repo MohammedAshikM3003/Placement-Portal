@@ -165,7 +165,7 @@ function AdminEsstudapp() {
       // Apply local filters to the database students list
       const baseStudents = students || [];
       const locallyFiltered = baseStudents.filter(student => {
-        const branchMatch = !localFilter.branch || student.branch === localFilter.branch;
+        const branchMatch = !localFilter.branch || localFilter.branch === 'All Branches' || student.branch === localFilter.branch;
 
         const queryMatch = !localFilter.searchQuery ||
           `${student.firstName || ''} ${student.lastName || ''}`.toLowerCase().includes(localFilter.searchQuery.toLowerCase()) ||
@@ -743,7 +743,7 @@ function AdminEsstudapp() {
               <div className={styles['Admin-es-input-group']}>
                 <label className={styles['Admin-es-input-label']}>Branch</label>
                 <Dropdown
-                  options={filterCriteria?.department ? filterCriteria.department.split(',').map(branch => branch.trim()) : []}
+                  options={['All Branches', ...(filterCriteria?.department ? filterCriteria.department.split(',').map(branch => branch.trim()).filter(b => b && b !== 'All Branches') : ['CSE', 'ECE', 'EEE', 'MECH', 'CIVIL', 'IT'])]}
                   selectedOption={localFilter.branch}
                   onSelect={(val) => handleLocalFilterChange('branch', val)}
                   placeholder="Select Branch"

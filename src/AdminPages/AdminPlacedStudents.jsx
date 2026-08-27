@@ -15,11 +15,47 @@ import Adminicon from "../assets/Adminicon.png";
 import { ExportProgressAlert, ExportSuccessAlert, ExportFailedAlert, OfferUploadSuccessAlert } from '../components/alerts';
 import Dropdown from '../components/common/Dropdown/Dropdown';
 
+// Helper to calculate dynamic Y-axis ticks and domain
+const calculateYAxisTicks = (maxVal) => {
+  if (!maxVal || maxVal <= 0) return { ticks: [0, 1, 2, 3, 4, 5], domain: [0, 5] };
+
+  if (maxVal <= 2) {
+    return { ticks: [0, 1, 2], domain: [0, 2] };
+  }
+  if (maxVal <= 5) {
+    const ticks = Array.from({ length: maxVal + 1 }, (_, i) => i);
+    return { ticks, domain: [0, maxVal] };
+  }
+
+  let step = 5;
+  if (maxVal <= 10) step = 2;
+  else if (maxVal <= 25) step = 5;
+  else if (maxVal <= 50) step = 10;
+  else if (maxVal <= 100) step = 20;
+  else if (maxVal <= 250) step = 50;
+  else step = Math.ceil(maxVal / 5 / 10) * 10;
+
+  const upperLimit = Math.ceil(maxVal / step) * step;
+  const ticks = [];
+  for (let i = 0; i <= upperLimit; i += step) {
+    ticks.push(i);
+  }
+
+  return { ticks, domain: [0, upperLimit] };
+};
+
 // Component for the Bar Chart
 const BarChartComponent = ({ data }) => {
+  const maxVal = useMemo(() => {
+    if (!data || data.length === 0) return 0;
+    return Math.max(...data.map(d => Number(d.students) || 0));
+  }, [data]);
+
+  const { ticks, domain } = useMemo(() => calculateYAxisTicks(maxVal), [maxVal]);
+
   return (
     <ResponsiveContainer width="100%" height={250}>
-      <BarChart data={data} margin={{ top: 20, right: 30, left: 0, bottom: 30 }}>
+      <BarChart data={data} margin={{ top: 20, right: 20, left: -10, bottom: 30 }}>
         <CartesianGrid strokeDasharray="3 3" />
         <XAxis 
           dataKey="branch" 
@@ -30,8 +66,9 @@ const BarChartComponent = ({ data }) => {
         />
         <YAxis 
           allowDecimals={false}
-          domain={[0, 'dataMax + 1']}
-          ticks={[0, 1, 2, 3, 4, 5]}
+          domain={domain}
+          ticks={ticks}
+          tick={{ fontSize: 12 }}
         />
         <Tooltip />
         <Bar dataKey="students" fill="#7B68EE" radius={[8, 8, 0, 0]} />
@@ -226,17 +263,17 @@ const PlacementDashboard = () => {
         
         if (branchesData && branchesData.length > 0) {
           // Use branchAbbreviation for dropdown options
-          const branchList = branchesData.map(b => b.branchAbbreviation).filter(Boolean);
+          const branchList = Array.from(new Set(branchesData.map(b => b.branchAbbreviation).filter(Boolean))).sort((a, b) => a.localeCompare(b));
           console.log('Branch list:', branchList);
           setBranches(['All Branches', ...branchList]);
         } else {
           // Fallback to default branches if no data
           console.log('No branches found, using defaults');
-          setBranches(['All Branches', 'CSE', 'IT', 'ECE', 'EEE', 'MECH', 'CIVIL']);
+          setBranches(['All Branches', 'CIVIL', 'CSE', 'ECE', 'EEE', 'IT', 'MECH']);
         }
       } catch (error) {
         console.error('Error fetching branches:', error);
-        setBranches(['All Branches', 'CSE', 'IT', 'ECE', 'EEE', 'MECH', 'CIVIL']);
+        setBranches(['All Branches', 'CIVIL', 'CSE', 'ECE', 'EEE', 'IT', 'MECH']);
       }
     };
     fetchBranches();
@@ -286,20 +323,20 @@ const PlacementDashboard = () => {
           generateChartData(mappedData);
           
           // Extract unique companies and job roles from placed_students collection
-          const uniqueCompanies = ['All Companies', ...new Set(
+          const sortedCompanies = Array.from(new Set(
             mappedData
               .map(s => s.company)
               .filter(c => c && c !== 'N/A')
-          )].sort();
+          )).sort((a, b) => a.localeCompare(b));
           
-          const uniqueRoles = ['All Job Roles', ...new Set(
+          const sortedRoles = Array.from(new Set(
             mappedData
               .map(s => s.role)
               .filter(r => r && r !== 'N/A')
-          )].sort();
+          )).sort((a, b) => a.localeCompare(b));
           
-          setCompanies(uniqueCompanies);
-          setJobRoles(uniqueRoles);
+          setCompanies(['All Companies', ...sortedCompanies]);
+          setJobRoles(['All Job Roles', ...sortedRoles]);
         } else if (response.success && response.data?.length === 0) {
           console.log('ℹ️ No placed students found in collection');
           setAllStudentsData([]);
@@ -347,7 +384,10 @@ const PlacementDashboard = () => {
   };
 
   // Get unique values for dropdown options
-  const uniqueBatches = ['All Batches', ...new Set(allStudentsData.map(s => s.batch))].sort();
+  const uniqueBatches = useMemo(() => {
+    const rawBatches = Array.from(new Set(allStudentsData.map(s => s.batch).filter(Boolean))).sort((a, b) => a.localeCompare(b));
+    return ['All Batches', ...rawBatches];
+  }, [allStudentsData]);
   const filteredStudents = useMemo(() => {
     const query = studentSearch.trim().toLowerCase();
     if (!query) return displayedStudents;

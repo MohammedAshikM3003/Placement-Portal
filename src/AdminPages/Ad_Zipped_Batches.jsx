@@ -226,10 +226,12 @@ const Ad_Zipped_Batches = () => {
         }
     };
 
+    /*
     // Handle discard
     const handleDiscard = () => {
         navigate('/admin-student-database');
     };
+    */
 
     // Export functions
     const handleExportExcel = async () => {
@@ -513,21 +515,7 @@ const Ad_Zipped_Batches = () => {
                         <span className={styles['Ad-zb-note-text']}>Unzipping restores students from ALL departments in this batch</span>
                     </div>
 
-                    {/* Action Buttons */}
-                    <div className={styles['Ad-zb-action-buttons']}>
-                        <button
-                            className={styles['Ad-zb-discard-btn']}
-                            onClick={handleDiscard}
-                        >
-                            Discard
-                        </button>
-                        <button
-                            className={styles['Ad-zb-archive-btn']}
-                            onClick={() => navigate('/admin/active-zip/student-database', { state: { source: 'student-database' } })}
-                        >
-                            Archive Zip
-                        </button>
-                    </div>
+
                 </div>
             </main>
 

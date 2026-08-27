@@ -42,7 +42,7 @@
 .view-content-wrapper {
   display: flex;
   gap: 1.5rem;
-  height: 100%;
+  height: 620px;
   width: 100%;
   overflow: hidden;
 }
@@ -66,6 +66,7 @@
   max-height: 100%;
   padding-right: 15px;
   padding-bottom: 20px;
+  margin-top: 10px;
 }
 
 /* Hide scrollbar for right column */
@@ -96,7 +97,7 @@
   flex-direction: column;
   align-items: center;
   flex-shrink: 0;
-  height: 630px;
+  height: 610px;
   position: relative;
   z-index: 5;
 }
@@ -111,6 +112,7 @@
   justify-content: center;
   margin-bottom: 2.4rem;
   padding: 1rem;
+  margin-top: -17px;
 }
 
 .view-cap-icon {
@@ -121,6 +123,27 @@
 
 .view-student-details {
   width: 100%;
+  margin-top: -25px;
+  overflow-y: auto;
+  flex: 1;
+  padding-right: 5px;
+}
+
+.view-student-details::-webkit-scrollbar {
+  width: 4px;
+}
+
+.view-student-details::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.view-student-details::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 10px;
+}
+
+.view-student-details::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5);
 }
 
 .view-detail-row {
@@ -148,7 +171,7 @@
 
 .view-detail-value {
   flex: 1;
-  font-weight: 600;
+  font-weight: 500;
   font-size: 17px;
   word-break: break-word;
 }
@@ -602,6 +625,8 @@
     max-height: 405px;
     overflow-y: auto;
     overflow-x: auto;
+    width: 100%;
+    margin-left: 0;
   }
 
   /* Green scrollbar for table */
@@ -651,14 +676,38 @@
     flex-direction: column;
     overflow: visible;
     height: auto;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
   }
 
   .view-left-column {
     width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  .view-right-column {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    min-width: 0;
+  }
+
+  .view-student-card {
+    height: auto;
+    min-height: auto;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
   }
 
   .view-action-cards {
     flex-direction: column;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    margin-left: 6px;
   }
 
   .view-action-icon,
@@ -718,6 +767,24 @@
   .view-content::-webkit-scrollbar-thumb:hover {
     background: #3d8a3d;
   }
+
+  .view-student-details {
+    width: 100%;
+    margin-top: 0px;
+    overflow-y: visible;
+    flex: 1;
+    padding-right: 5px;
+  }
+
+  .view-table-container {
+    max-height: 550px;
+    overflow-y: auto;
+    overflow-x: auto;
+    width: 100%;
+    max-width: 100%;
+    margin-left: 0;
+    box-sizing: border-box;
+  }
 }
 
 @media (max-width: 480px) {
@@ -733,6 +800,16 @@
   .view-content-wrapper {
     overflow: visible;
     height: auto;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  .view-right-column {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    min-width: 0;
   }
 
   /* Medium green scrollbar for mobile content */
@@ -760,6 +837,9 @@
 
   .view-student-card {
     padding: 1.5rem 1rem;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
   }
 
   .view-student-header {
@@ -785,6 +865,9 @@
   .view-action-card {
     padding: 1.25rem;
     min-height: 100px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
   }
 
   .view-action-icon,
@@ -887,9 +970,13 @@
   }
 
   .view-table-container {
-    max-height: 350px;
+    max-height: 550px;
     overflow-y: auto;
     overflow-x: auto;
+    width: 100%;
+    min-width: 356px;
+    margin-left: -11px;
+    box-sizing: border-box;
   }
 
   /* Green scrollbar for table */
@@ -935,7 +1022,7 @@
   .view-submit-btn {
     min-width: 130px;
     padding: 0.875rem 1.5rem;
-    margin-left:auto;
+    margin-left: auto;
   }
 }
 
@@ -945,4 +1032,3 @@
     display: none;
   }
 }
-

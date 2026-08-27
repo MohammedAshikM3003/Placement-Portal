@@ -1159,7 +1159,6 @@
 
   height: 250px;
 
-  flex: 0 0 500px;
 
 }
 
@@ -1628,7 +1627,7 @@
 
  .ad-train-att-dropdown-container::after {
 
-   content: 'â–¼';
+   content: '\25BC';
 
    position: absolute;
 
@@ -3917,7 +3916,7 @@
 
   .ad-train-att-page .ad-train-att-content-area {
 
-    padding: 10px;
+    padding: 10px 10px 80px 10px !important;
 
     overflow-y: auto;
 
@@ -4048,6 +4047,7 @@
     margin-bottom: 0;
 
     gap: 15px;
+    
 
   }
 
@@ -4059,9 +4059,9 @@
 
     max-width: 100%;
 
-    padding: 15px;
+    padding: 12px;
 
-    height: auto;
+    height: 365px !important;
 
     margin-top: 67px;
 
@@ -4069,55 +4069,77 @@
 
   }
 
+  .ad-train-att-filter-tabs-container {
+    gap: 8px;
+    margin-bottom: 10px;
+    margin-top: 7px;
+  }
 
+  .ad-train-att-filter-tab-button {
+    width: auto;
+    flex: 1;
+    font-size: 0.75rem;
+    padding: 6px 4px;
+    height: auto;
+    white-space: nowrap;
+  }
 
-  /* Filter fields stack one by one */
+  /* Filter fields stack vertically (one per line) */
 
   .ad-train-att-filter-fields-container {
 
     flex-direction: column;
 
-    gap: 15px;
+    gap: 10px;
+    top: 0;
 
   }
-
-
 
   .ad-train-att-filter-fields-row {
 
     flex-direction: column;
 
-    gap: 15px;
+    gap: 10px;
 
     height: auto;
-
   }
 
+  .ad-train-att-filter-field-wrapper {
+    width: 100%;
+  }
 
+  .ad-train-att-text-container,
+  .ad-train-att-dropdown-container {
+    height: 42px;
+  }
+
+  .ad-train-att-text,
+  .ad-train-att-dropdown {
+    padding: 0 10px;
+    font-size: 0.9rem;
+  }
+
+  .ad-train-att-trainer-btn {
+    font-size: 0.9rem;
+    padding: 0 10px;
+  }
+
+  .ad-train-att-static-label {
+    font-size: 0.8rem;
+  }
 
   .ad-train-att-filter-input-wrapper 
-
   {
-
     width: 100%;
-
     min-width: 100%;
-
   }
-
-
 
   .ad-train-att-filter-input 
 
   {
-
     width: 100%;
-
     max-width: 100%;
-
   }
-
-
 
   /* Buttons section - full width, below filter */
 
@@ -4126,147 +4148,97 @@
   {
 
     width: 100%;
-
     gap: 10px;
-
     height: auto;
-
     order: 2;
 
   }
-
-
 
   .ad-train-att-buttons-white-card 
 
   {
 
     max-width: 100%;
-
     padding: 12px;
 
   }
-
-
 
   /* Training and batch buttons - horizontal scroll */
 
   .ad-train-att-training-buttons-row,
-
   .ad-train-att-batch-buttons-row 
-
   {
 
     flex-wrap: nowrap;
-
     overflow-x: auto;
-
     gap: 10px;
 
   }
 
-
-
   .ad-train-att-training-seq-btn,
-
   .ad-train-att-batch-btn 
-
   {
 
     flex: 0 0 auto;
-
     min-width: 100px;
-
     padding: 8px 14px;
-
     font-size: 16px;
 
   }
 
-
-
   /* Action buttons - stack vertically */
-
   .ad-train-att-action-buttons-row 
-
   {
 
     flex-direction: column;
-
     gap: 10px;
-
     margin-top: 10px;
 
   }
 
-
-
   .ad-train-att-action-btn 
-
   {
 
     width: 100%;
-
     max-width: 100%;
-
     padding: 12px;
-
     font-size: 16px;
 
   }
 
-
-
   /* Attendance table section - below buttons */
-
   .ad-train-att-table-section 
-
   {
 
     padding: 10px;
-
     height: 470px;
-
     min-height: 300px;
-
     order: 3;
 
   }
 
-
-
   /* Table wrapper scrollbar on mobile */
-
   .ad-train-att-table-wrapper {
 
     overflow-y: auto;
-
     max-height: 90vh;
-
     max-width: 100vw;
-
     border-radius: 12px;
-
     position: relative;
 
   }
 
   .ad-train-att-table-wrapper::-webkit-scrollbar {
-
     width: 8px;
-
     background: #4ea24e;
-
   }
 
   .ad-train-att-table-wrapper::-webkit-scrollbar-track {
-
     background: #ffffff;
 
   }
 
   .ad-train-att-table-wrapper::-webkit-scrollbar-thumb {
-
     background: #4ea24e;
 
   }
@@ -4278,47 +4250,31 @@
   }
 
   .ad-train-att-table-wrapper::-webkit-scrollbar:horizontal {
-
     height: 6px;
-
     background: #afadad;
-
   }
 
   .ad-train-att-table-wrapper::-webkit-scrollbar-track:horizontal {
 
     background: #ffffff;
-
   }
 
   .ad-train-att-table-wrapper::-webkit-scrollbar-thumb:horizontal {
-
     background: #afadad;
-
     border-radius: 8px;
-
   }
 
   .ad-train-att-table-wrapper::-webkit-scrollbar-thumb:hover:horizontal {
-
     background: #afadad;
-
   }
 
   .ad-train-att-table {
-
     border-collapse: collapse;
-
     font-size: 15px;
-
     color: #000;
-
     font-weight: 500;
-
     min-width: 900px;
-
     width: 100%;
-
     table-layout: auto;
 
   }
@@ -4326,27 +4282,18 @@
   .ad-train-att-table-header 
 
   {
-
     flex-direction: row;
-
     justify-content: space-between;
-
     align-items: center;
-
     gap: 8px;
-
     width: 100%;
 
   }
 
-
-
   .ad-train-att-table-title 
-
   {
 
     font-size: 1rem;
-
   }
 
 
@@ -4362,33 +4309,23 @@
   .ad-train-att-print-btn {
 
     padding: 6px 20px;
-
     font-size: 0.9rem;
 
   }
 
-
-
   /* Bottom actions - below table */
-
   .ad-train-att-bottom-actions {
 
     gap: 10px;
-
     margin-top: 10px;
-
     order: 4;
 
   }
 
-
-
   .ad-train-att-discard-btn,
-
   .ad-train-att-update-btn {
 
     width: 100%;
-
     padding: 12px;
 
   }

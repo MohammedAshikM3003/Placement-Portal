@@ -353,6 +353,43 @@
 
 }
 
+.Admin-at-clear-btn {
+
+  background: #6C757D;
+
+  color: #fff;
+
+  border: none;
+
+  border-radius: 42px;
+
+  padding: 0 20px;
+
+  height: 34px;
+
+  font-weight: bold;
+
+  font-size: 1.05rem;
+
+  box-shadow: 0 2px 8px #eee;
+
+  cursor: pointer;
+
+  flex-shrink: 0;
+
+  transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
+
+}
+
+.Admin-at-clear-btn:hover,
+
+.Admin-at-clear-btn:active {
+
+  background: #5a6268;
+
+}
+
+
 
 
 /* Task 2 Fix: Scrollbar Styling for Webkit Browsers */
@@ -1774,11 +1811,31 @@
 
 
 
-  .Admin-at-summary-card {
-
-    width: 100%;
-
+  .Admin-at-summary-grid {
+    gap: 12px;
   }
+
+  .Admin-at-summary-card {
+    width: 100%;
+    height: auto;
+    min-height: 96px;
+    padding: 10px 6px;
+    box-sizing: border-box;
+  }
+
+  .Admin-at-card-label {
+    font-size: 16px;
+    margin-bottom: 4px;
+    line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .Admin-at-card-value {
+    font-size: 32px;
+    line-height: 1.1;
+  }
+
 
 
 

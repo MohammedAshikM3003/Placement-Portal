@@ -30,7 +30,7 @@ const RoundSaveSuccessPopup = ({ onClose, nextRound }) => {
             </svg>
           </div>
           <h3 className={styles['Admin-Drive-AD-Success-title']}>
-            Round Results Saved âœ“
+            Round Results Saved !“
           </h3>
           <p className={styles['Admin-Drive-AD-Success-text']}>
             {nextRound ? `Moving to Round ${nextRound}...` : 'Round results have been successfully saved'}
@@ -78,7 +78,7 @@ function Admincdd() {
   const location = useLocation();
   const bannerTestMode = new URLSearchParams(location.search).get('bannerTest') === '1';
   const [showDropdown, setShowDropdown] = useState(false);
-  const [activeRound, setActiveRound] = useState(1);
+  const [activeRound, setActiveRound] = useState(location.state?.roundNumber || location.state?.round || 1);
   const [filterData, setFilterData] = useState({
     batch: '',
     registerNo: '',
@@ -98,6 +98,7 @@ function Admincdd() {
   const [originalAttendanceStudents, setOriginalAttendanceStudents] = useState([]); // Store Round 1 students
   const [allRoundResults, setAllRoundResults] = useState(null);
   const [isReadOnly, setIsReadOnly] = useState(false); // Read-only mode when viewing completed drive results
+  const [isEditingCompletedRound, setIsEditingCompletedRound] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const toggleSidebar = () => setIsSidebarOpen(prev => !prev);
   const [showAdminFeedback, setShowAdminFeedback] = useState(false);
@@ -113,6 +114,47 @@ function Admincdd() {
     jobRole: '',
     currentRound: ''
   });
+
+  // Helper function to extract saved Pass/Fail status for a student from round data
+  const getStudentSavedStatus = (student, roundObj) => {
+    if (!roundObj) return null;
+    const sId = String(student.id || student.studentId || student._id || '').trim();
+    const sReg = String(student.registerNo || student.regNo || '').trim();
+
+    // 1. Check in roundObj.students array
+    if (Array.isArray(roundObj.students) && roundObj.students.length > 0) {
+      const found = roundObj.students.find(s => {
+        const matchId = String(s.studentId || s.id || s._id || '').trim();
+        const matchReg = String(s.registerNo || s.regNo || '').trim();
+        return (sId && matchId === sId) || (sReg && matchReg === sReg);
+      });
+      if (found && found.status) {
+        return found.status;
+      }
+    }
+
+    // 2. Check in passedStudents
+    if (Array.isArray(roundObj.passedStudents) && roundObj.passedStudents.length > 0) {
+      const isPassed = roundObj.passedStudents.some(s => {
+        const matchId = String(s.studentId || s.id || s._id || '').trim();
+        const matchReg = String(s.registerNo || s.regNo || '').trim();
+        return (sId && matchId === sId) || (sReg && matchReg === sReg);
+      });
+      if (isPassed) return 'Passed';
+    }
+
+    // 3. Check in failedStudents
+    if (Array.isArray(roundObj.failedStudents) && roundObj.failedStudents.length > 0) {
+      const isFailed = roundObj.failedStudents.some(s => {
+        const matchId = String(s.studentId || s.id || s._id || '').trim();
+        const matchReg = String(s.registerNo || s.regNo || '').trim();
+        return (sId && matchId === sId) || (sReg && matchReg === sReg);
+      });
+      if (isFailed) return 'Failed';
+    }
+
+    return null;
+  };
 
   // Fetch drive data and students when component mounts
   useEffect(() => {
@@ -355,14 +397,19 @@ function Admincdd() {
             setAllStudentsData(studentsData);
             setOriginalAttendanceStudents(studentsData); // Store original Round 1 students
 
-            // Keep selections blank on load so admin chooses pass/fail manually.
+            // Check if Round 1 already has saved results
+            const r1Saved = (roundResultsResponse?.data?.rounds || []).find(r => r.roundNumber === 1);
             const resetStatuses = {};
             studentsData.forEach(student => {
-              resetStatuses[student.id] = {
-                passed: false,
-                failed: false,
-                confirmed: false
-              };
+              const savedStatus = getStudentSavedStatus(student, r1Saved);
+              if (savedStatus === 'Passed') {
+                resetStatuses[student.id] = { passed: true, failed: false, confirmed: false };
+              } else if (savedStatus === 'Failed') {
+                resetStatuses[student.id] = { passed: false, failed: true, confirmed: false };
+              } else {
+                // Default to Failed for all students in uncompleted rounds
+                resetStatuses[student.id] = { passed: false, failed: true, confirmed: false };
+              }
             });
             setStudentStatuses(resetStatuses);
           } else {
@@ -397,6 +444,14 @@ function Admincdd() {
 
   const [studentStatuses, setStudentStatuses] = useState({});
 
+  const completedRoundData = (allRoundResults?.data?.rounds || []).find(r => r.roundNumber === activeRound) || null;
+  const isCurrentRoundCompleted = Boolean(
+    completedRoundData &&
+    ((completedRoundData.students && completedRoundData.students.length > 0) ||
+     (completedRoundData.passedStudents && completedRoundData.passedStudents.length > 0))
+  );
+  const isRoundViewOnly = isReadOnly || (isCurrentRoundCompleted && !isEditingCompletedRound);
+
   const handleFilterChange = (field, value) => {
     setFilterData(prev => ({
       ...prev,
@@ -428,6 +483,7 @@ function Admincdd() {
   };
 
   const handleStatusChange = (studentId, statusType) => {
+    if (isRoundViewOnly) return;
     setStudentStatuses(prev => ({
       ...prev,
       [studentId]: {
@@ -619,6 +675,8 @@ function Admincdd() {
         console.error('Error dispatching notifications:', notifyError);
       }
 
+      setIsEditingCompletedRound(false);
+
       // Show success popup based on both round position and remaining students.
       const totalRounds = companyInfo.rounds || 1;
       const hasMoreRounds = activeRound < totalRounds;
@@ -695,18 +753,32 @@ function Admincdd() {
         }
       }
 
-      // Auto-advance to next round if not the last round
+      // Auto-advance to next round by navigating to Attendance page pre-filled with next round details
       if (willAdvance) {
-        // Wait a moment for user to see the popup, then load next round
+        const nextR = activeRound + 1;
         setTimeout(async () => {
-          // Pass the updated results to handleRoundChange
-          await handleRoundChange(activeRound + 1, updatedResults);
-          // Close popup after students are loaded
-          setTimeout(() => {
-            setShowSuccessPopup(false);
-            setNextRoundNumber(null);
-            setIsSaving(false);
-          }, 800);
+          setShowSuccessPopup(false);
+          setNextRoundNumber(null);
+          setIsSaving(false);
+          delete window.adminFeedbackData;
+
+          navigate('/admin-attendance', {
+            state: {
+              companyData: {
+                companyName: fullDriveData.companyName,
+                jobRole: fullDriveData.jobRole,
+                startingDate: fullDriveData.startingDate,
+                endingDate: fullDriveData.endingDate
+              },
+              targetDrive: fullDriveData,
+              driveId: fullDriveData._id,
+              startingDate: fullDriveData.startingDate,
+              endingDate: fullDriveData.endingDate,
+              roundNumber: nextR,
+              selectedRound: `Round ${nextR}`,
+              round: nextR
+            }
+          });
         }, 1500);
       } else {
         // Last round - DON'T auto-close, let user click Close to redirect
@@ -799,21 +871,21 @@ function Admincdd() {
   };
 
   const handleClearStatuses = () => {
+    if (isRoundViewOnly) return;
     const resetStatuses = {};
-    Object.keys(allRoundsData).forEach(round => {
-      allRoundsData[round].forEach(student => {
-        resetStatuses[student.id] = {
-          passed: false,
-          failed: false,
-          confirmed: false
-        };
-      });
+    allStudentsData.forEach(student => {
+      resetStatuses[student.id] = {
+        passed: false,
+        failed: true,
+        confirmed: false
+      };
     });
     setStudentStatuses(resetStatuses);
   };
 
   const handleRoundChange = async (round, updatedRoundResults = null) => {
     setActiveRound(round);
+    setIsEditingCompletedRound(false);
     setIsFiltered(false);
     setFilteredStudents([]);
     setIsLoading(true);
@@ -842,35 +914,69 @@ function Admincdd() {
         currentRoundNumber: round
       }));
 
-      // NEW: Work with nested structure - roundResults.data is now the drive document
       const driveData = roundResults.data;
-      console.log('Drive data for round change:', driveData);
-      console.log('Looking for round:', round);
-      console.log('Available rounds:', driveData?.rounds);
+      const targetRoundSaved = (driveData?.rounds || []).find(r => r.roundNumber === round);
+      const isTargetRoundCompleted = Boolean(
+        targetRoundSaved &&
+        ((targetRoundSaved.students && targetRoundSaved.students.length > 0) ||
+         (targetRoundSaved.passedStudents && targetRoundSaved.passedStudents.length > 0))
+      );
 
-      // For Round 1, load from attendance. For Round 2+, load from previous round's passed students
-      if (round === 1) {
-        // Round 1 - always reload the original attendance students with blank selections
-        setAllStudentsData(originalAttendanceStudents);
-        const resetStatuses = {};
-        originalAttendanceStudents.forEach(student => {
-          resetStatuses[student.id] = {
-            passed: false,
-            failed: false,
+      if (isTargetRoundCompleted) {
+        // Completed round: load participating students and set saved Pass/Fail selection
+        let baseStudents = [];
+        if (targetRoundSaved.students && targetRoundSaved.students.length > 0) {
+          baseStudents = targetRoundSaved.students;
+        } else if (round === 1 && originalAttendanceStudents && originalAttendanceStudents.length > 0) {
+          baseStudents = originalAttendanceStudents;
+        } else {
+          baseStudents = [...(targetRoundSaved.passedStudents || []), ...(targetRoundSaved.failedStudents || [])];
+        }
+
+        const formattedStudents = baseStudents.map(s => {
+          const id = String(s.id || s.studentId || s._id || s.registerNo);
+          return {
+            id,
+            name: s.name || 'N/A',
+            registerNo: s.registerNo || s.regNo || 'N/A',
+            branch: s.branch || s.department || 'N/A',
+            department: s.department || s.branch || 'N/A',
+            batch: s.batch || 'N/A',
+            yearSec: s.yearSec || 'N/A',
+            semester: s.semester || 'N/A',
+            phone: s.phone || 'N/A',
+            email: s.email || 'N/A',
+            cgpa: s.cgpa || 'N/A',
+            skills: s.skills || 'N/A',
+            photo: s.photo || null
+          };
+        });
+
+        const savedStatuses = {};
+        formattedStudents.forEach(s => {
+          const savedStatus = getStudentSavedStatus(s, targetRoundSaved);
+          savedStatuses[s.id] = {
+            passed: savedStatus === 'Passed',
+            failed: savedStatus === 'Failed' || savedStatus !== 'Passed',
             confirmed: false
           };
         });
-        setStudentStatuses(resetStatuses);
-      } else if (round > 1) {
-        const previousRoundData = driveData?.rounds?.find(r => r.roundNumber === round - 1);
 
-        console.log('Previous round data:', previousRoundData);
-        console.log('Passed students from previous round:', previousRoundData?.passedStudents);
-
-        if (previousRoundData && previousRoundData.passedStudents) {
-          const passedStudents = previousRoundData.passedStudents;
-
-          if (passedStudents.length > 0) {
+        setAllStudentsData(formattedStudents);
+        setStudentStatuses(savedStatuses);
+      } else {
+        // Uncompleted round: load eligible students with Failed as default for all
+        if (round === 1) {
+          setAllStudentsData(originalAttendanceStudents);
+          const resetStatuses = {};
+          originalAttendanceStudents.forEach(student => {
+            resetStatuses[student.id] = { passed: false, failed: true, confirmed: false };
+          });
+          setStudentStatuses(resetStatuses);
+        } else {
+          const previousRoundData = driveData?.rounds?.find(r => r.roundNumber === round - 1);
+          if (previousRoundData && previousRoundData.passedStudents && previousRoundData.passedStudents.length > 0) {
+            const passedStudents = previousRoundData.passedStudents;
             const studentsToShow = await Promise.all(
               passedStudents.map(async (roundStudent) => {
                 try {
@@ -889,13 +995,9 @@ function Admincdd() {
                     email: student.primaryEmail || student.email || 'N/A',
                     photo: student.photo || null,
                     branch: student.department || student.branch || roundStudent.department || roundStudent.branch || 'N/A',
-                    department: student.department || student.branch || roundStudent.department || 'N/A',
-                    passed: false,
-                    failed: false,
-                    confirmed: false
+                    department: student.department || student.branch || roundStudent.department || 'N/A'
                   };
                 } catch (error) {
-                  console.error(`Error fetching student ${roundStudent.studentId}:`, error);
                   return {
                     id: roundStudent.studentId,
                     name: roundStudent.name || 'N/A',
@@ -910,34 +1012,20 @@ function Admincdd() {
                     email: roundStudent.email || 'N/A',
                     photo: null,
                     branch: roundStudent.branch || roundStudent.department || 'N/A',
-                    department: roundStudent.department || roundStudent.branch || 'N/A',
-                    passed: false,
-                    failed: false,
-                    confirmed: false
+                    department: roundStudent.department || roundStudent.branch || 'N/A'
                   };
                 }
               })
             );
-
-            // Update the allStudentsData for this round
             setAllStudentsData(studentsToShow);
-
-            // Always reset selections when loading a round; admin must choose manually.
             const resetStatuses = {};
             studentsToShow.forEach(student => {
-              resetStatuses[student.id] = {
-                passed: false,
-                failed: false,
-                confirmed: false
-              };
+              resetStatuses[student.id] = { passed: false, failed: true, confirmed: false };
             });
             setStudentStatuses(resetStatuses);
           } else {
             setAllStudentsData([]);
           }
-        } else {
-          // No previous round data, no students for this round yet
-          setAllStudentsData([]);
         }
       }
     } catch (error) {
@@ -1210,23 +1298,34 @@ function Admincdd() {
             <div className={styles['Admin-cdd-company-profile']}>
               <div className={styles['Admin-cdd-profile-header']}>
                 <div className={styles['Admin-cdd-profile-title']}>COMPANY DRIVE</div>
-                <div className={styles['Admin-cdd-print-btn-container']}>
-                  <button
-                    className={styles['Admin-cdd-print-btn']}
-                    onClick={() => setShowDropdown(!showDropdown)}
-                  >
-                    Print
-                  </button>
-                  {showDropdown && (
-                    <div className={styles['Admin-cdd-dropdown-menu']}>
-                      <div className={styles['Admin-cdd-dropdown-item']} onClick={() => handleExport('excel')}>
-                        Export to Excel
-                      </div>
-                      <div className={styles['Admin-cdd-dropdown-item']} onClick={() => handleExport('pdf')}>
-                        Save as PDF
-                      </div>
-                    </div>
+                <div className={styles['Admin-cdd-header-actions']}>
+                  {!isReadOnly && isCurrentRoundCompleted && (
+                    <button
+                      type="button"
+                      className={`${styles['Admin-cdd-edit-btn']} ${isEditingCompletedRound ? styles['editing-active'] : ''}`}
+                      onClick={() => setIsEditingCompletedRound(prev => !prev)}
+                    >
+                      {isEditingCompletedRound ? 'Cancel Edit' : 'Edit'}
+                    </button>
                   )}
+                  <div className={styles['Admin-cdd-print-btn-container']}>
+                    <button
+                      className={styles['Admin-cdd-print-btn']}
+                      onClick={() => setShowDropdown(!showDropdown)}
+                    >
+                      Print
+                    </button>
+                    {showDropdown && (
+                      <div className={styles['Admin-cdd-dropdown-menu']}>
+                        <div className={styles['Admin-cdd-dropdown-item']} onClick={() => handleExport('excel')}>
+                          Export to Excel
+                        </div>
+                        <div className={styles['Admin-cdd-dropdown-item']} onClick={() => handleExport('pdf')}>
+                          Save as PDF
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -1265,13 +1364,13 @@ function Admincdd() {
                         <td>{student.phone}</td>
                         <td>
                           <div
-                            className={`${styles['Admin-cdd-radio-button']} ${styles['Admin-cdd-radio-centered']} ${studentStatuses[student.id]?.passed ? styles.passed : ''}`}
+                            className={`${styles['Admin-cdd-radio-button']} ${styles['Admin-cdd-radio-centered']} ${studentStatuses[student.id]?.passed ? styles.passed : ''} ${isRoundViewOnly ? styles['disabled-radio'] : ''}`}
                             onClick={() => handleStatusChange(student.id, 'passed')}
                           />
                         </td>
                         <td>
                           <div
-                            className={`${styles['Admin-cdd-radio-button']} ${styles['Admin-cdd-radio-centered']} ${studentStatuses[student.id]?.failed ? styles.failed : ''}`}
+                            className={`${styles['Admin-cdd-radio-button']} ${styles['Admin-cdd-radio-centered']} ${studentStatuses[student.id]?.failed ? styles.failed : ''} ${isRoundViewOnly ? styles['disabled-radio'] : ''}`}
                             onClick={() => handleStatusChange(student.id, 'failed')}
                           />
                         </td>
@@ -1287,8 +1386,8 @@ function Admincdd() {
                 </table>
               </div>
 
-              {/* Action Buttons - Hidden in Read-Only Mode */}
-              {!isReadOnly && (
+              {/* Action Buttons - Hidden in Read-Only / View-Only Completed Round Mode */}
+              {!isRoundViewOnly && (
                 <div className={styles['Admin-cdd-action-buttons']}>
                   <button
                     className={styles['Admin-cdd-save-btn']}

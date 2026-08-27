@@ -206,7 +206,7 @@ const FileSizeErrorPopup = ({ isOpen, onClose, fileSizeKB }) => {
                             </g>
                         </svg>
                     </div>
-                    <h2>Image Size Exceeded âœ—</h2>
+                    <h2>Image Size Exceeded {"\u2717"}</h2>
                     <p className={styles.imageSizePopupLine}>
                         Maximum allowed: <strong>500KB</strong>
                     </p>
@@ -237,6 +237,16 @@ const toPdfBlobUrl = (fileData, mimeType = 'application/pdf') => {
     const byteArray = new Uint8Array(byteNumbers);
     const blob = new Blob([byteArray], { type: mimeType });
     return window.URL.createObjectURL(blob);
+};
+
+const cleanMobileNumber = (val) => {
+    if (!val) return '';
+    let str = String(val).replace(/\D/g, '');
+    while (str.startsWith('91') && str.length > 10) {
+        str = str.slice(2);
+    }
+    str = str.replace(/^0+/, '');
+    return str.substring(0, 10);
 };
 
 const resolveResumeFileUrl = (value) => {
@@ -640,7 +650,7 @@ const URLValidationErrorPopup = ({ isOpen, onClose, urlType, invalidUrl }) => {
                 <div className={styles.imageSizePopupHeader}>Invalid {urlType} URL!</div>
                 <div className={styles.imageSizePopupBody}>
                     {renderIcon()}
-                    <h2>Invalid {urlType} Link âœ—</h2>
+                    <h2>Invalid {urlType} Link {"\u2717"}</h2>
                     {invalidUrl && (
                         <p className={styles.imageSizePopupLine} style={{ wordBreak: 'break-all' }}>
                             You entered: <strong>{invalidUrl}</strong>
@@ -794,6 +804,77 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
     const [resumeActionType, setResumeActionType] = useState('');
     const [isResumeDownloadSuccessOpen, setIsResumeDownloadSuccessOpen] = useState(false);
     const [availableSemesters, setAvailableSemesters] = useState([]);
+    const [hasResume, setHasResume] = useState(false);
+    const [certificateCount, setCertificateCount] = useState(0);
+
+    useEffect(() => {
+        let isMounted = true;
+        const checkResumeAndCertificates = async () => {
+            const idToUse = studentData?._id || studentId;
+            if (!idToUse) {
+                if (isMounted) {
+                    setHasResume(false);
+                    setCertificateCount(0);
+                }
+                return;
+            }
+
+            let resumeFound = Boolean(
+                studentData?.resumeUrl || 
+                studentData?.resume || 
+                studentData?.resumeFile || 
+                studentData?.resumeFileName || 
+                studentData?.resumeData || 
+                studentData?.gridfsFileId
+            );
+
+            if (!resumeFound) {
+                try {
+                    const resDoc = await getResumeDocument(idToUse);
+                    if (resDoc && (resDoc.url || resDoc.fileName || resDoc.name || resDoc.gridfsFileId || resDoc.resumeData)) {
+                        resumeFound = true;
+                    }
+                } catch (err) {
+                    resumeFound = false;
+                }
+            }
+
+            if (isMounted) {
+                setHasResume(resumeFound);
+            }
+
+            try {
+                const certRes = await mongoDBService.getCertificatesByStudentId(idToUse);
+                let certList = [];
+                if (Array.isArray(certRes)) {
+                    certList = certRes;
+                } else if (Array.isArray(certRes?.certificates)) {
+                    certList = certRes.certificates;
+                } else if (Array.isArray(certRes?.data)) {
+                    certList = certRes.data;
+                }
+
+                if (certList.length === 0 && Array.isArray(studentData?.certificates)) {
+                    certList = studentData.certificates;
+                }
+
+                const approvedCount = certList.filter(cert => (cert.status || '').toLowerCase() === 'approved').length;
+
+                if (isMounted) {
+                    setCertificateCount(approvedCount);
+                }
+            } catch (err) {
+                if (isMounted) {
+                    const fallbackCerts = Array.isArray(studentData?.certificates) ? studentData.certificates : [];
+                    const approvedCount = fallbackCerts.filter(cert => (cert.status || '').toLowerCase() === 'approved').length;
+                    setCertificateCount(approvedCount);
+                }
+            }
+        };
+
+        checkResumeAndCertificates();
+        return () => { isMounted = false; };
+    }, [studentId, studentData?._id, studentData?.resumeUrl, studentData?.resume, studentData?.certificates]);
 
     useEffect(() => {
         const handleResize = () => setIsMobile(window.innerWidth <= 600);
@@ -1367,7 +1448,11 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
             degree: data.degree || data.course || '',
             branch: data.branch || data.department || '',
             currentYear: data.currentYear || data.year || '',
-            currentSemester: data.currentSemester || data.semester || ''
+            currentSemester: data.currentSemester || data.semester || '',
+            mobileNo: cleanMobileNumber(data.mobileNo || data.MobileNo || data.mobile || ''),
+            fatherMobile: cleanMobileNumber(data.fatherMobile || data.FatherMobile || ''),
+            motherMobile: cleanMobileNumber(data.motherMobile || data.MotherMobile || ''),
+            guardianMobile: cleanMobileNumber(data.guardianMobile || data.GuardianMobile || data.guardianNumber || '')
         };
 
         const merged = { ...data, ...normalized };
@@ -1430,7 +1515,7 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
         if (!studentId) return;
 
         try {
-            const completeData = await fastDataService.getCompleteStudentData(studentId);
+            const completeData = await fastDataService.getCompleteStudentData(studentId, false);
             console.log('🔍 API Response - completeData (View):', {
                 exists: !!completeData,
                 hasStudent: !!completeData?.student,
@@ -1440,6 +1525,11 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
 
             if (completeData && completeData.student) {
                 populateFormFields(completeData.student, false);
+                const approvedCount = completeData.certificates 
+                    ? completeData.certificates.filter(cert => (cert.status || '').toLowerCase() === 'approved').length 
+                    : 0;
+                setCertificateCount(approvedCount);
+                setHasResume(!!completeData.resume);
 
                 // Fetch available semesters from SemesterRecord
                 const regNo = completeData.student.regNo || completeData.student.registerNumber || '';
@@ -1746,14 +1836,14 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
                 address: formData.get('address') || studentData?.address || '',
                 city: formData.get('city') || studentData?.city || '',
                 primaryEmail: formData.get('primaryEmail') || studentData?.primaryEmail || '',
-                mobileNo: formData.get('mobileNo') || studentData?.mobileNo || '',
+                mobileNo: cleanMobileNumber(formData.get('mobileNo') || studentData?.mobileNo || ''),
                 fatherOccupation: formData.get('fatherOccupation') || studentData?.fatherOccupation || '',
-                fatherMobile: formData.get('fatherMobile') || studentData?.fatherMobile || '',
+                fatherMobile: cleanMobileNumber(formData.get('fatherMobile') || studentData?.fatherMobile || ''),
                 motherOccupation: formData.get('motherOccupation') || studentData?.motherOccupation || '',
-                motherMobile: formData.get('motherMobile') || studentData?.motherMobile || '',
+                motherMobile: cleanMobileNumber(formData.get('motherMobile') || studentData?.motherMobile || ''),
                 section: formData.get('section') || studentData?.section || '',
                 guardianName: formData.get('guardianName') || studentData?.guardianName || '',
-                guardianMobile: formData.get('guardianMobile') || studentData?.guardianMobile || '',
+                guardianMobile: cleanMobileNumber(formData.get('guardianMobile') || studentData?.guardianMobile || ''),
                 bloodGroup: formData.get('bloodGroup') || studentData?.bloodGroup || '',
                 studyCategory: studyCategory || studentData?.studyCategory || '',
                 currentYear: formData.get('currentYear') || studentData?.currentYear || '',
@@ -1898,16 +1988,10 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
 
     const handleMobileChange = (e, fieldName) => {
         let value = e.target.value;
-        // Remove leading zeros
-        value = value.replace(/^0+/, '');
-        // Only allow digits
-        value = value.replace(/\D/g, '');
-        // First digit must be 6, 7, 8, or 9
+        value = cleanMobileNumber(value);
         if (value.length > 0 && !/^[6789]/.test(value)) {
             value = '';
         }
-        // Limit to 10 digits
-        value = value.substring(0, 10);
         setStudentData(prev => ({ ...prev, [fieldName]: value }));
     };
 
@@ -2290,7 +2374,7 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
                                         <label>Mobile No. <RequiredStar /></label>
                                         <div className={styles.mobileInputWrapper}>
                                             <div className={styles.countryCode}>+91</div>
-                                            <input type="tel" name="mobileNo" placeholder="Enter Mobile No." value={studentData?.mobileNo || ''} onChange={(e) => handleMobileChange(e, 'mobileNo')} disabled={isSaving} className={styles.mobileNumberInput} />
+                                            <input type="tel" name="mobileNo" placeholder="Enter Mobile No." value={cleanMobileNumber(studentData?.mobileNo)} onChange={(e) => handleMobileChange(e, 'mobileNo')} disabled={isSaving} className={styles.mobileNumberInput} />
                                         </div>
                                     </div>
                                     <div className={styles.field}>
@@ -2305,7 +2389,7 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
                                         <label>Father Mobile No. <RequiredStar /></label>
                                         <div className={styles.mobileInputWrapper}>
                                             <div className={styles.countryCode}>+91</div>
-                                            <input type="tel" name="fatherMobile" placeholder="Enter Father Mobile No." value={studentData?.fatherMobile || ''} onChange={(e) => handleMobileChange(e, 'fatherMobile')} disabled={isSaving} className={styles.mobileNumberInput} />
+                                            <input type="tel" name="fatherMobile" placeholder="Enter Father Mobile No." value={cleanMobileNumber(studentData?.fatherMobile)} onChange={(e) => handleMobileChange(e, 'fatherMobile')} disabled={isSaving} className={styles.mobileNumberInput} />
                                         </div>
                                     </div>
                                     <div className={styles.field}>
@@ -2320,7 +2404,7 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
                                         <label>Mother Mobile No. <RequiredStar /></label>
                                         <div className={styles.mobileInputWrapper}>
                                             <div className={styles.countryCode}>+91</div>
-                                            <input type="tel" name="motherMobile" placeholder="Enter Mother Mobile No." value={studentData?.motherMobile || ''} onChange={(e) => handleMobileChange(e, 'motherMobile')} disabled={isSaving} className={styles.mobileNumberInput} />
+                                            <input type="tel" name="motherMobile" placeholder="Enter Mother Mobile No." value={cleanMobileNumber(studentData?.motherMobile)} onChange={(e) => handleMobileChange(e, 'motherMobile')} disabled={isSaving} className={styles.mobileNumberInput} />
                                         </div>
                                     </div>
                                     <div className={styles.field}>
@@ -2334,6 +2418,7 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
                                             type="button"
                                             className={styles.fieldButton}
                                             onClick={openResumePopup}
+                                            disabled={!hasResume}
                                         >
                                             Resume
                                         </button>
@@ -2343,7 +2428,8 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
                                         <button
                                             type="button"
                                             className={styles.fieldButton}
-                                            onClick={() => navigate(`/admin-student-certificates/${studentId}`, { state: { studentData } })}
+                                            onClick={() => navigate(`/admin-student-certificates/${studentData?._id || studentId}`, { state: { studentData } })}
+                                            disabled={certificateCount < 1}
                                         >
                                             Certificate
                                         </button>
@@ -2424,7 +2510,7 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
                                         <label>Guardian Number</label>
                                         <div className={styles.mobileInputWrapper}>
                                             <div className={styles.countryCode}>+91</div>
-                                            <input type="tel" name="guardianMobile" placeholder="Enter Guardian Number" value={studentData?.guardianMobile || ''} onChange={(e) => handleMobileChange(e, 'guardianMobile')} disabled={isSaving} className={styles.mobileNumberInput} />
+                                            <input type="tel" name="guardianMobile" placeholder="Enter Guardian Number" value={cleanMobileNumber(studentData?.guardianMobile)} onChange={(e) => handleMobileChange(e, 'guardianMobile')} disabled={isSaving} className={styles.mobileNumberInput} />
                                         </div>
                                     </div>
                                 </div>
@@ -2549,7 +2635,7 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
                                             <button 
                                                 type="button" 
                                                 className={styles.viewMarksheetBtn}
-                                                onClick={() => navigate(`/admin-semester-marksheet-view/${studentId}`, { 
+                                                onClick={() => navigate(`/admin-semester-marksheet-view/${studentData?._id || studentId}`, { 
                                                     state: { 
                                                         student: {
                                                             ...studentData,
@@ -2754,12 +2840,12 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
                                 </>
                             ) : (
                                 <>
-                                    {/* â”€â”€ Analysis Panel (inline) â”€â”€ */}
+                                    {/* --- Analysis Panel (inline) --- */}
                                     <div className={styles.anlsHeader}>
                                         <h3 className={styles.sectionHeader} style={{ marginBottom: 0, paddingBottom: '6px' }}>Analysis</h3>
                                         <div className={styles.anlsTitleRow}>
                                             <span className={`${styles.anlsPlacedBadge} ${isStudentPlaced ? styles.anlsPlacedBadgePlaced : styles.anlsPlacedBadgeNotPlaced}`}><span className={`${styles.anlsPlacedDot} ${isStudentPlaced ? styles.anlsPlacedDotPlaced : styles.anlsPlacedDotNotPlaced}`} />{isStudentPlaced ? 'Placed' : 'Not placed'}</span>
-                                            <button type="button" className={styles.anlsBackBtn} onClick={() => setShowAnalysis(false)}>Back â†©</button>
+                                            <button type="button" className={styles.anlsBackBtn} onClick={() => setShowAnalysis(false)}>Back {"\u21a9"}</button>
                                         </div>
                                     </div>
 
@@ -2828,7 +2914,7 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
                                                         className={styles.anlsClearBtn}
                                                         onClick={() => { setSelectedRound(null); setHoveredRound(null); }}
                                                     >
-                                                        âœ• Clear Selection
+                                                        {"\u2716"} Clear Selection
                                                     </button>
                                                 </div>
                                             )}
@@ -2887,7 +2973,7 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
                                                                 <span className={styles.anlsStatLabel}>Work On</span>
                                                             </div>
                                                             <ul className={styles.anlsStatList}>
-                                                                {driveAnalytics.workOn.map((item) => <li key={item}><span className={styles.anlsArrow}>â†’</span>{item}</li>)}
+                                                                {driveAnalytics.workOn.map((item) => <li key={item}><span className={styles.anlsArrow}>{"\u2192"}</span>{item}</li>)}
                                                             </ul>
                                                         </div>
                                                         <div className={`${styles.anlsStatCard} ${styles.anlsCardMint}`}>
@@ -2898,7 +2984,7 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
                                                                 <span className={styles.anlsStatLabel}>Best</span>
                                                             </div>
                                                             <ul className={styles.anlsStatList}>
-                                                                {driveAnalytics.bestAt.map((item) => <li key={item}><span className={styles.anlsArrow}>â†’</span>{item}</li>)}
+                                                                {driveAnalytics.bestAt.map((item) => <li key={item}><span className={styles.anlsArrow}>{"\u2192"}</span>{item}</li>)}
                                                             </ul>
                                                         </div>
                                                     </div>
@@ -2909,24 +2995,24 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
                                                     <div className={styles.anlsAchievCol}>
                                                         <div className={styles.anlsGoodCard}>
                                                             <div className={styles.anlsGoodBadHeader}>
-                                                                <span className={styles.anlsGoodIcon}>ðŸ‘ </span>
+                                                                <span className={styles.anlsGoodIcon}>{"\uD83D\uDC4D"}</span>
                                                                 <span className={styles.anlsGoodLabel}>GOOD</span>
                                                             </div>
                                                             {ROUND_DETAILS[selectedRound].good.map((g, i) => (
                                                                 <div key={i} className={styles.anlsGoodItem}>
-                                                                    <span className={styles.anlsCheckIcon}>âœ…</span>
+                                                                    <span className={styles.anlsCheckIcon}>{"\u2705"}</span>
                                                                     <span>{g}</span>
                                                                 </div>
                                                             ))}
                                                         </div>
                                                         <div className={styles.anlsBadCard}>
                                                             <div className={styles.anlsGoodBadHeader}>
-                                                                <span className={styles.anlsGoodIcon}>ðŸ‘Ž</span>
+                                                                <span className={styles.anlsGoodIcon}>{"\uD83D\uDC4E"}</span>
                                                                 <span className={styles.anlsBadLabel}>BAD</span>
                                                             </div>
                                                             {ROUND_DETAILS[selectedRound].bad.map((b, i) => (
                                                                 <div key={i} className={styles.anlsBadItem}>
-                                                                    <span className={styles.anlsCheckIcon}>â Œ</span>
+                                                                    <span className={styles.anlsCheckIcon}>{"\u274C"}</span>
                                                                     <span>{b}</span>
                                                                 </div>
                                                             ))}
@@ -3031,132 +3117,16 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
                                             <div className={styles.skillLabelBox}>
                                                 {cat.category}
                                             </div>
-                                            <button
-                                                type="button"
-                                                className={styles.categoryRemoveBtn}
-                                                onClick={() => setSkills(prev => prev.filter((_, ci) => ci !== catIndex))}
-                                                title="Remove category"
-                                                disabled={isSaving}
-                                            >
-                                                ×
-                                            </button>
                                         </div>
                                         <div className={styles.skillsChipsContainer}>
                                             {cat.items.map((skill, i) => (
                                                 <span key={i} className={styles.skillChip}>
                                                     {skill}
-                                                    <button
-                                                        type="button"
-                                                        className={styles.skillChipRemove}
-                                                        onClick={() => {
-                                                            setSkills(prev => prev.map((c, ci) =>
-                                                                ci === catIndex ? { ...c, items: c.items.filter((_, si) => si !== i) } : c
-                                                            ));
-                                                        }}
-                                                        disabled={isSaving}
-                                                    >
-                                                        ×
-                                                    </button>
                                                 </span>
                                             ))}
-                                            {activeSkillCategory === catIndex && (
-                                                <input
-                                                    type="text"
-                                                    className={styles.skillNameInput}
-                                                    placeholder="Enter Skill"
-                                                    value={newSkillName}
-                                                    onChange={e => setNewSkillName(e.target.value)}
-                                                    autoFocus
-                                                    disabled={isSaving}
-                                                    onKeyDown={e => {
-                                                        if (e.key === 'Enter') {
-                                                            e.preventDefault();
-                                                            const val = newSkillName.trim();
-                                                            if (val && !cat.items.includes(val)) {
-                                                                setSkills(prev => prev.map((c, ci) =>
-                                                                    ci === catIndex ? { ...c, items: [...c.items, val] } : c
-                                                                ));
-                                                            }
-                                                            setNewSkillName('');
-                                                        }
-                                                        if (e.key === 'Escape') {
-                                                            setActiveSkillCategory(null);
-                                                            setNewSkillName('');
-                                                        }
-                                                    }}
-                                                    onBlur={() => {
-                                                        const val = newSkillName.trim();
-                                                        if (val && !cat.items.includes(val)) {
-                                                            setSkills(prev => prev.map((c, ci) =>
-                                                                ci === catIndex ? { ...c, items: [...c.items, val] } : c
-                                                            ));
-                                                        }
-                                                        setNewSkillName('');
-                                                        setActiveSkillCategory(null);
-                                                    }}
-                                                />
-                                            )}
-                                            <button
-                                                type="button"
-                                                className={styles.addChipBtn}
-                                                onClick={() => { setActiveSkillCategory(catIndex); setNewSkillName(''); }}
-                                                disabled={isSaving}
-                                            >
-                                                <span className={styles.addChipBtnIcon}>+</span>
-                                                Add Skill
-                                            </button>
                                         </div>
                                     </div>
                                 ))}
-
-                                {/* Add custom category */}
-                                <div style={{ marginTop: '16px' }}>
-                                    <div className={styles.skillsChipsContainer}>
-                                        {showAddCategory && (
-                                            <input
-                                                type="text"
-                                                className={styles.skillNameInput}
-                                                placeholder="Category Name"
-                                                value={newCategoryName}
-                                                onChange={e => setNewCategoryName(e.target.value)}
-                                                autoFocus
-                                                disabled={isSaving}
-                                                onKeyDown={e => {
-                                                    if (e.key === 'Enter') {
-                                                        e.preventDefault();
-                                                        const val = newCategoryName.trim();
-                                                        if (val && !skills.some(c => c.category === val)) {
-                                                            setSkills(prev => [...prev, { category: val, items: [] }]);
-                                                        }
-                                                        setNewCategoryName('');
-                                                        setShowAddCategory(false);
-                                                    }
-                                                    if (e.key === 'Escape') {
-                                                        setShowAddCategory(false);
-                                                        setNewCategoryName('');
-                                                    }
-                                                }}
-                                                onBlur={() => {
-                                                    const val = newCategoryName.trim();
-                                                    if (val && !skills.some(c => c.category === val)) {
-                                                        setSkills(prev => [...prev, { category: val, items: [] }]);
-                                                    }
-                                                    setNewCategoryName('');
-                                                    setShowAddCategory(false);
-                                                }}
-                                            />
-                                        )}
-                                        <button
-                                            type="button"
-                                            className={styles.addCategoryBtn}
-                                            onClick={() => { setShowAddCategory(true); setNewCategoryName(''); }}
-                                            disabled={isSaving}
-                                        >
-                                            <span className={styles.addChipBtnIcon}>+</span>
-                                            Add Category
-                                        </button>
-                                    </div>
-                                </div>
                             </div>
                         </div>
 

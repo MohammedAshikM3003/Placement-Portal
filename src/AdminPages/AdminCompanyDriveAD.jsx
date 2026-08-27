@@ -10,12 +10,15 @@ import styles from './AdminCompanyDriveAD.module.css';
 import mongoDBService from '../services/mongoDBService';
 import { clearCompanyDrivesCache } from '../services/landingPageCacheService';
 import Adminicon from "../assets/Adminicon.png";
+import { normalizeSkillCategories } from '../utils/skillUtils';
 
 // Define the initial state for the form
 const initialFormData = {
     companyName: '',
     mode: '',
     jobRole: '',
+    batchStart: '',
+    batchEnd: '',
     branch: '',
     eligibleBranches: [],
     rounds: 0,
@@ -30,6 +33,10 @@ const initialFormData = {
     status: '',
     visitDate: '',
     location: '',
+    internship: 'No',
+    internshipDuration: '',
+    stipend: '',
+    coreSkills: normalizeSkillCategories([]),
     roundDetails: [],
     roundDates: []
 };
@@ -138,6 +145,9 @@ function Adcompanydrivead({ onLogout }) {
         if (!formData.companyName) missing.push({ field: 'companyName', label: 'Company Name' });
         if (!formData.mode) missing.push({ field: 'mode', label: 'Mode' });
         if (!formData.jobRole) missing.push({ field: 'jobRole', label: 'Job Role' });
+        if (!formData.batchStart || !formData.batchEnd) {
+            missing.push({ field: 'batchStart', label: 'Eligible Batch' });
+        }
         if (!formData.eligibleBranches || formData.eligibleBranches.length === 0) {
             missing.push({ field: 'eligibleBranches', label: 'Branches' });
         }
@@ -170,6 +180,10 @@ function Adcompanydrivead({ onLogout }) {
     const [showDepartmentPopup, setShowDepartmentPopup] = useState(false);
     const [selectedDepartments, setSelectedDepartments] = useState([]);
     const [validationWarnings, setValidationWarnings] = useState({});
+    const [activeSkillCategory, setActiveSkillCategory] = useState(null);
+    const [newSkillName, setNewSkillName] = useState('');
+    const [showAddCategory, setShowAddCategory] = useState(false);
+    const [newCategoryName, setNewCategoryName] = useState('');
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -262,11 +276,16 @@ function Adcompanydrivead({ onLogout }) {
             ? drive.roundDates
             : new Array(roundsFromData).fill('');
 
+        const batchStartVal = drive.batchStart || (drive.eligibleBatch ? drive.eligibleBatch.split('-')[0] : drive.batch ? drive.batch.split('-')[0] : '');
+        const batchEndVal = drive.batchEnd || (drive.eligibleBatch ? drive.eligibleBatch.split('-')[1] : drive.batch ? drive.batch.split('-')[1] : '');
+
         return {
             ...initialFormData,
             companyName: drive.companyName || '',
             mode: drive.mode || '',
             jobRole: drive.jobRole || '',
+            batchStart: batchStartVal || '',
+            batchEnd: batchEndVal || '',
             branch: drive.branch || drive.department || '',
             eligibleBranches: Array.isArray(drive.eligibleBranches) && drive.eligibleBranches.length
                 ? drive.eligibleBranches
@@ -287,6 +306,16 @@ function Adcompanydrivead({ onLogout }) {
             status: drive.status || '',
             visitDate: formatDateForInput(drive.visitDate),
             location: drive.location || '',
+            internship: drive.internship || 'No',
+            internshipDuration: drive.internshipDuration || '',
+            stipend: drive.stipend || '',
+            coreSkills: normalizeSkillCategories(
+                Array.isArray(drive.coreSkills) && drive.coreSkills.length > 0
+                    ? drive.coreSkills
+                    : Array.isArray(drive.skills) && drive.skills.length > 0
+                        ? drive.skills
+                        : []
+            ),
             roundDetails,
             roundDates
         };
@@ -379,7 +408,19 @@ function Adcompanydrivead({ onLogout }) {
                     rounds: numRounds,
                     roundDetails: roundDetailsArray,
                     roundDates: roundDatesArray,
+                    batchStart: selectedCompany.batchStart || (selectedCompany.eligibleBatch ? selectedCompany.eligibleBatch.split('-')[0] : selectedCompany.batch ? selectedCompany.batch.split('-')[0] : ''),
+                    batchEnd: selectedCompany.batchEnd || (selectedCompany.eligibleBatch ? selectedCompany.eligibleBatch.split('-')[1] : selectedCompany.batch ? selectedCompany.batch.split('-')[1] : ''),
                     eligibleBranches: selectedCompany.eligibleBranches || [],
+                    internship: selectedCompany.internship || 'No',
+                    internshipDuration: selectedCompany.internshipDuration || '',
+                    stipend: selectedCompany.stipend || '',
+                    coreSkills: normalizeSkillCategories(
+                        Array.isArray(selectedCompany.coreSkills) && selectedCompany.coreSkills.length > 0
+                            ? selectedCompany.coreSkills
+                            : Array.isArray(selectedCompany.skills) && selectedCompany.skills.length > 0
+                                ? selectedCompany.skills
+                                : []
+                    ),
                     package: selectedCompany.package || '',
                     status: selectedCompany.status || '',
                     visitDate: selectedCompany.visitDate ? (() => {
@@ -430,6 +471,52 @@ function Adcompanydrivead({ onLogout }) {
             });
         } else {
             setFormData(prev => ({ ...prev, [name]: value }));
+        }
+    };
+
+    const handleBatchStartChange = (e) => {
+        const value = e.target.value;
+        if (value !== '' && !/^\d*$/.test(value)) return;
+
+        setFormData(prev => {
+            const startNum = parseInt(value, 10);
+            let calculatedEnd = prev.batchEnd;
+            if (!isNaN(startNum) && value.length === 4) {
+                calculatedEnd = String(startNum + 4);
+            } else if (value === '') {
+                calculatedEnd = '';
+            }
+            return {
+                ...prev,
+                batchStart: value,
+                batchEnd: calculatedEnd
+            };
+        });
+
+        if (validationWarnings.batchStart) {
+            setValidationWarnings(prev => {
+                const updated = { ...prev };
+                delete updated.batchStart;
+                return updated;
+            });
+        }
+    };
+
+    const handleBatchEndChange = (e) => {
+        const value = e.target.value;
+        if (value !== '' && !/^\d*$/.test(value)) return;
+
+        setFormData(prev => ({
+            ...prev,
+            batchEnd: value
+        }));
+
+        if (validationWarnings.batchStart) {
+            setValidationWarnings(prev => {
+                const updated = { ...prev };
+                delete updated.batchStart;
+                return updated;
+            });
         }
     };
 
@@ -496,7 +583,19 @@ function Adcompanydrivead({ onLogout }) {
     };
 
     const handleDiscard = () => {
-        navigate('/admin-company-drive');
+        if (isEditing && editingDrive) {
+            const formState = mapDriveToForm(editingDrive);
+            setFormData(formState);
+            setSelectedDepartments(formState.eligibleBranches || []);
+            setValidationWarnings({});
+        } else {
+            setFormData({
+                ...initialFormData,
+                coreSkills: normalizeSkillCategories([])
+            });
+            setSelectedDepartments([]);
+            setValidationWarnings({});
+        }
     };
 
     const handleDepartmentToggle = (deptValue) => {
@@ -535,6 +634,9 @@ function Adcompanydrivead({ onLogout }) {
         }
         if (!formData.jobRole) {
             warnings.jobRole = 'Please fill out this field.';
+        }
+        if (!formData.batchStart || !formData.batchEnd) {
+            warnings.batchStart = 'Please fill out this field.';
         }
         if (!formData.eligibleBranches || formData.eligibleBranches.length === 0) {
             warnings.eligibleBranches = 'Please fill out this field.';
@@ -598,6 +700,11 @@ function Adcompanydrivead({ onLogout }) {
 
             const payload = {
                 ...formData,
+                eligibleBatch: formData.batchStart && formData.batchEnd ? `${formData.batchStart}-${formData.batchEnd}` : '',
+                internship: formData.internship,
+                internshipDuration: formData.internship === 'Yes' ? formData.internshipDuration : '',
+                stipend: formData.internship === 'Yes' ? formData.stipend : '',
+                coreSkills: formData.coreSkills || [],
                 department: formData.branch,
                 eligibleBranches: normalizedEligible,
                 startingDate: formatDateForSubmit(formData.startingDate),
@@ -723,6 +830,39 @@ function Adcompanydrivead({ onLogout }) {
                                     />
                                 </div>
 
+                                <div className={styles['Admin-Drive-AD-form-group']}>
+                                    <label className={styles['Admin-Drive-AD-label']}>Eligible Batch <RequiredStar /></label>
+                                    <div className={styles['Admin-Drive-AD-batch-wrapper']}>
+                                        <input
+                                            ref={registerFieldRef('batchStart')}
+                                            type="text"
+                                            name="batchStart"
+                                            value={formData.batchStart}
+                                            onChange={handleBatchStartChange}
+                                            placeholder="Start"
+                                            maxLength={4}
+                                            className={`${styles['Admin-Drive-AD-batch-input']} ${highlightedField === 'batchStart' ? styles['Admin-Drive-AD-field-highlight'] : ''}`}
+                                            required
+                                            readOnly={viewMode}
+                                            disabled={viewMode}
+                                        />
+                                        <span className={styles['Admin-Drive-AD-batch-separator']}>-</span>
+                                        <input
+                                            ref={registerFieldRef('batchEnd')}
+                                            type="text"
+                                            name="batchEnd"
+                                            value={formData.batchEnd}
+                                            onChange={handleBatchEndChange}
+                                            placeholder="End"
+                                            maxLength={4}
+                                            className={`${styles['Admin-Drive-AD-batch-input']} ${highlightedField === 'batchEnd' ? styles['Admin-Drive-AD-field-highlight'] : ''}`}
+                                            required
+                                            readOnly={viewMode}
+                                            disabled={viewMode}
+                                        />
+                                    </div>
+                                </div>
+
                                 <div className={styles['Admin-Drive-AD-form-group']} style={{ position: 'relative' }}>
                                     <label className={styles['Admin-Drive-AD-label']}>Branches <RequiredStar /></label>
                                     <button
@@ -767,6 +907,7 @@ function Adcompanydrivead({ onLogout }) {
                                         name="rounds"
                                         value={formData.rounds === 0 ? '' : formData.rounds}
                                         onChange={handleInputChange}
+                                        onWheel={(e) => e.target.blur()}
                                         placeholder="Enter number of rounds"
                                         className={`${styles['Admin-Drive-AD-input']} ${highlightedField === 'rounds' ? styles['Admin-Drive-AD-field-highlight'] : ''}`}
                                         min="0"
@@ -783,6 +924,7 @@ function Adcompanydrivead({ onLogout }) {
                                             name="package"
                                             value={formData.package}
                                             onChange={handleInputChange}
+                                            onWheel={(e) => e.target.blur()}
                                             placeholder="e.g. 6"
                                             className={styles['Admin-Drive-AD-input']}
                                             required
@@ -818,6 +960,7 @@ function Adcompanydrivead({ onLogout }) {
                                             name="bondPeriod"
                                             value={formData.bondPeriod}
                                             onChange={handleInputChange}
+                                            onWheel={(e) => e.target.blur()}
                                             placeholder="e.g. 1"
                                             className={styles['Admin-Drive-AD-input']}
                                             min="0"
@@ -885,6 +1028,234 @@ function Adcompanydrivead({ onLogout }) {
                                         disabled
                                         style={{ cursor: 'not-allowed', color: '#666666' }}
                                     />
+                                </div>
+
+                                <div className={styles['Admin-Drive-AD-form-group']}>
+                                    <label className={styles['Admin-Drive-AD-label']}>Internship</label>
+                                    <FormDropdown
+                                        id="internship-dropdown"
+                                        options={['Yes', 'No']}
+                                        selectedOption={formData.internship || 'No'}
+                                        onSelect={(val) => handleInputChange({ target: { name: 'internship', value: val } })}
+                                        placeholder="Select Internship"
+                                        disabled={viewMode}
+                                        role="admin"
+                                        className={`${styles['Admin-Drive-AD-dropdown-wrapper']} ${highlightedField === 'internship' ? styles['Admin-Drive-AD-field-highlight'] : ''}`}
+                                        headerClassName={styles['Admin-Drive-AD-dropdown-header']}
+                                        ref={registerFieldRef('internship')}
+                                    />
+                                </div>
+
+                                {formData.internship === 'Yes' && (
+                                    <>
+                                        <div className={styles['Admin-Drive-AD-form-group']}>
+                                            <label className={styles['Admin-Drive-AD-label']}>Duration</label>
+                                            <FormDropdown
+                                                id="internshipDuration-dropdown"
+                                                options={[
+                                                    '1 Month', '2 Months', '3 Months', '4 Months', '5 Months', '6 Months',
+                                                    '7 Months', '8 Months', '9 Months', '10 Months', '11 Months', '12 Months'
+                                                ]}
+                                                selectedOption={formData.internshipDuration}
+                                                onSelect={(val) => handleInputChange({ target: { name: 'internshipDuration', value: val } })}
+                                                placeholder="Select Duration"
+                                                disabled={viewMode}
+                                                role="admin"
+                                                className={`${styles['Admin-Drive-AD-dropdown-wrapper']} ${highlightedField === 'internshipDuration' ? styles['Admin-Drive-AD-field-highlight'] : ''}`}
+                                                headerClassName={styles['Admin-Drive-AD-dropdown-header']}
+                                                ref={registerFieldRef('internshipDuration')}
+                                            />
+                                        </div>
+
+                                        <div className={styles['Admin-Drive-AD-form-group']}>
+                                            <label className={styles['Admin-Drive-AD-label']}>Stipend</label>
+                                            <div className={`${styles['Admin-Drive-AD-input-with-chip']} ${highlightedField === 'stipend' ? styles['Admin-Drive-AD-field-highlight'] : ''}`}>
+                                                <input
+                                                    ref={registerFieldRef('stipend')}
+                                                    type="number"
+                                                    name="stipend"
+                                                    value={formData.stipend}
+                                                    onChange={handleInputChange}
+                                                    onWheel={(e) => e.target.blur()}
+                                                    placeholder="e.g. 15000"
+                                                    className={styles['Admin-Drive-AD-input']}
+                                                    min="0"
+                                                    readOnly={viewMode}
+                                                    disabled={viewMode}
+                                                />
+                                                <span className={styles['Admin-Drive-AD-chip']}>/ Month</span>
+                                            </div>
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+
+                            {/* --- CORE SKILLS CARD (GREEN THEME) --- */}
+                            <div className={styles['Admin-Drive-AD-skills-section']}>
+                                <h3 className={styles['Admin-Drive-AD-skills-title']}>Core Skills</h3>
+                                <div className={styles['Admin-Drive-AD-skills-list']}>
+                                    {(formData.coreSkills || []).map((cat, catIndex) => (
+                                        <div key={catIndex} className={styles['Admin-Drive-AD-skills-row']}>
+                                            <div className={styles['Admin-Drive-AD-skill-category-field']}>
+                                                <div className={styles['Admin-Drive-AD-skill-label-box']}>
+                                                    {cat.category}
+                                                </div>
+                                                {!viewMode && (
+                                                    <button
+                                                        type="button"
+                                                        className={styles['Admin-Drive-AD-category-remove-btn']}
+                                                        onClick={() => {
+                                                            setFormData(prev => ({
+                                                                ...prev,
+                                                                coreSkills: (prev.coreSkills || []).filter((_, ci) => ci !== catIndex)
+                                                            }));
+                                                        }}
+                                                        title="Remove category"
+                                                        disabled={isLoading}
+                                                    >
+                                                        ×
+                                                    </button>
+                                                )}
+                                            </div>
+                                            <div className={styles['Admin-Drive-AD-skills-chips-container']}>
+                                                {(cat.items || []).map((skill, i) => (
+                                                    <span key={i} className={styles['Admin-Drive-AD-skill-chip']}>
+                                                        {skill}
+                                                        {!viewMode && (
+                                                            <button
+                                                                type="button"
+                                                                className={styles['Admin-Drive-AD-skill-chip-remove']}
+                                                                onClick={() => {
+                                                                    setFormData(prev => ({
+                                                                        ...prev,
+                                                                        coreSkills: (prev.coreSkills || []).map((c, ci) =>
+                                                                            ci === catIndex ? { ...c, items: c.items.filter((_, si) => si !== i) } : c
+                                                                        )
+                                                                    }));
+                                                                }}
+                                                                disabled={isLoading}
+                                                            >
+                                                                ×
+                                                            </button>
+                                                        )}
+                                                    </span>
+                                                ))}
+                                                {viewMode && (!cat.items || cat.items.length === 0) && (
+                                                    <span style={{ color: '#999', fontSize: '0.88rem', fontStyle: 'italic' }}>—</span>
+                                                )}
+                                                {!viewMode && activeSkillCategory === catIndex && (
+                                                    <input
+                                                        type="text"
+                                                        className={styles['Admin-Drive-AD-skill-name-input']}
+                                                        placeholder="Enter Skill"
+                                                        value={newSkillName}
+                                                        onChange={e => setNewSkillName(e.target.value)}
+                                                        autoFocus
+                                                        disabled={isLoading}
+                                                        onKeyDown={e => {
+                                                            if (e.key === 'Enter') {
+                                                                e.preventDefault();
+                                                                const val = newSkillName.trim();
+                                                                if (val && !cat.items.includes(val)) {
+                                                                    setFormData(prev => ({
+                                                                        ...prev,
+                                                                        coreSkills: (prev.coreSkills || []).map((c, ci) =>
+                                                                            ci === catIndex ? { ...c, items: [...c.items, val] } : c
+                                                                        )
+                                                                    }));
+                                                                }
+                                                                setNewSkillName('');
+                                                            }
+                                                            if (e.key === 'Escape') {
+                                                                setActiveSkillCategory(null);
+                                                                setNewSkillName('');
+                                                            }
+                                                        }}
+                                                        onBlur={() => {
+                                                            const val = newSkillName.trim();
+                                                            if (val && !cat.items.includes(val)) {
+                                                                setFormData(prev => ({
+                                                                    ...prev,
+                                                                    coreSkills: (prev.coreSkills || []).map((c, ci) =>
+                                                                        ci === catIndex ? { ...c, items: [...c.items, val] } : c
+                                                                    )
+                                                                }));
+                                                            }
+                                                            setNewSkillName('');
+                                                            setActiveSkillCategory(null);
+                                                        }}
+                                                    />
+                                                )}
+                                                {!viewMode && (
+                                                    <button
+                                                        type="button"
+                                                        className={styles['Admin-Drive-AD-add-chip-btn']}
+                                                        onClick={() => { setActiveSkillCategory(catIndex); setNewSkillName(''); }}
+                                                        disabled={isLoading}
+                                                    >
+                                                        <span className={styles['Admin-Drive-AD-add-chip-btn-icon']}>+</span>
+                                                        Add Skill
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
+
+                                    {!viewMode && (
+                                        <div style={{ marginTop: '10px' }}>
+                                            <div className={styles['Admin-Drive-AD-skills-chips-container']}>
+                                                {showAddCategory && (
+                                                    <input
+                                                        type="text"
+                                                        className={styles['Admin-Drive-AD-skill-name-input']}
+                                                        placeholder="Category Name"
+                                                        value={newCategoryName}
+                                                        onChange={e => setNewCategoryName(e.target.value)}
+                                                        autoFocus
+                                                        disabled={isLoading}
+                                                        onKeyDown={e => {
+                                                            if (e.key === 'Enter') {
+                                                                e.preventDefault();
+                                                                const val = newCategoryName.trim();
+                                                                if (val && !(formData.coreSkills || []).some(c => c.category === val)) {
+                                                                    setFormData(prev => ({
+                                                                        ...prev,
+                                                                        coreSkills: [...(prev.coreSkills || []), { category: val, items: [] }]
+                                                                    }));
+                                                                }
+                                                                setNewCategoryName('');
+                                                                setShowAddCategory(false);
+                                                            }
+                                                            if (e.key === 'Escape') {
+                                                                setShowAddCategory(false);
+                                                                setNewCategoryName('');
+                                                            }
+                                                        }}
+                                                        onBlur={() => {
+                                                            const val = newCategoryName.trim();
+                                                            if (val && !(formData.coreSkills || []).some(c => c.category === val)) {
+                                                                setFormData(prev => ({
+                                                                    ...prev,
+                                                                    coreSkills: [...(prev.coreSkills || []), { category: val, items: [] }]
+                                                                }));
+                                                            }
+                                                            setNewCategoryName('');
+                                                            setShowAddCategory(false);
+                                                        }}
+                                                    />
+                                                )}
+                                                <button
+                                                    type="button"
+                                                    className={styles['Admin-Drive-AD-add-category-btn']}
+                                                    onClick={() => { setShowAddCategory(true); setNewCategoryName(''); }}
+                                                    disabled={isLoading}
+                                                >
+                                                    <span className={styles['Admin-Drive-AD-add-chip-btn-icon']}>+</span>
+                                                    Add Category
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
@@ -1010,6 +1381,15 @@ function Adcompanydrivead({ onLogout }) {
                                     </div>
 
                                     <div className={styles['Admin-Drive-AD-detail-row']}>
+                                        <label>Eligible Batch</label>
+                                        <div className={styles['Admin-Drive-AD-detail-value']}>
+                                            {formData.batchStart && formData.batchEnd
+                                                ? `${formData.batchStart} - ${formData.batchEnd}`
+                                                : formData.batchStart || formData.batchEnd || '—'}
+                                        </div>
+                                    </div>
+
+                                    <div className={styles['Admin-Drive-AD-detail-row']}>
                                         <label>Eligible Branches</label>
                                         <div className={styles['Admin-Drive-AD-detail-value']}>
                                             {formData.eligibleBranches && formData.eligibleBranches.length
@@ -1054,6 +1434,39 @@ function Adcompanydrivead({ onLogout }) {
                                             <span className={styles['Admin-Drive-AD-detail-chip']}>
                                                 {formData.bondPeriod > 1 ? 'Years' : 'Year'}
                                             </span>
+                                        </div>
+                                    </div>
+
+                                    <div className={styles['Admin-Drive-AD-detail-row']}>
+                                        <label>Internship</label>
+                                        <div className={styles['Admin-Drive-AD-detail-value']}>{formData.internship || 'No'}</div>
+                                    </div>
+
+                                    {formData.internship === 'Yes' && (
+                                        <>
+                                            <div className={styles['Admin-Drive-AD-detail-row']}>
+                                                <label>Internship Duration</label>
+                                                <div className={styles['Admin-Drive-AD-detail-value']}>{formData.internshipDuration || '—'}</div>
+                                            </div>
+
+                                            <div className={styles['Admin-Drive-AD-detail-row']}>
+                                                <label>Stipend</label>
+                                                <div className={styles['Admin-Drive-AD-detail-value-with-chip']}>
+                                                    <span style={{ flex: 1, padding: '0 0.9rem', display: 'flex', alignItems: 'center', fontSize: '0.95rem', fontWeight: '600', color: '#333333', minWidth: 0 }}>
+                                                        {formData.stipend || '—'}
+                                                    </span>
+                                                    <span className={styles['Admin-Drive-AD-detail-chip']}>/ Month</span>
+                                                </div>
+                                            </div>
+                                        </>
+                                    )}
+
+                                    <div className={styles['Admin-Drive-AD-detail-row']} style={{ gridColumn: '1 / -1' }}>
+                                        <label>Core Skills</label>
+                                        <div className={styles['Admin-Drive-AD-detail-value']} style={{ height: 'auto', minHeight: '53.6px', padding: '0.6rem 0.9rem', flexWrap: 'wrap', gap: '6px' }}>
+                                            {formData.coreSkills && formData.coreSkills.some(c => c.items && c.items.length > 0)
+                                                ? formData.coreSkills.filter(c => c.items && c.items.length > 0).map(c => `${c.category}: ${c.items.join(', ')}`).join(' | ')
+                                                : '—'}
                                         </div>
                                     </div>
                                 </div>

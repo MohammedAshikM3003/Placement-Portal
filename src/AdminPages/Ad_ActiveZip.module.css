@@ -211,7 +211,7 @@
 
 /* Table Container */
 .Ad-az-table-container {
-    height: 300px;
+    height: 284px;
     overflow-y: scroll;
     overflow-x: auto;
     border: none;
@@ -352,44 +352,50 @@
     }
 }
 
-/* Action Buttons */
-.Ad-az-action-buttons {
+/* Action Buttons at bottom of Batch Card */
+.Ad-az-actions-container {
     display: flex;
     justify-content: flex-end;
-    gap: 15px;
-    padding-top: 15px;
+    gap: 1rem;
+    margin-top: 20px;
     border-top: 1px solid #eee;
+    padding-top: 20px;
 }
 
 .Ad-az-discard-btn {
-    padding: 12px 35px;
+    background-color: #e8e8e8;
+    color: #666;
     border: none;
+    padding: 10px 30px;
     border-radius: 8px;
-    font-size: 1rem;
-    font-weight: 600;
     cursor: pointer;
-    background-color: #6c757d;
-    color: white;
+    font-weight: 600;
+    font-size: 1rem;
     transition: background-color 0.2s;
 }
 
-.Ad-az-discard-btn:hover {
-    background-color: #5a6268;
+.Ad-az-discard-btn:hover:not(:disabled) {
+    background-color: #d4d4d4;
+}
+
+.Ad-az-discard-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
 }
 
 .Ad-az-archive-btn {
-    padding: 12px 35px;
-    border: none;
-    border-radius: 8px;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
     background-color: #4EA24E;
     color: white;
-    transition: background-color 0.2s;
+    border: none;
+    padding: 10px 30px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: background-color 0.2s, box-shadow 0.2s;
 }
 
-.Ad-az-archive-btn:hover {
+.Ad-az-archive-btn:hover:not(:disabled) {
     background-color: #3d8a3d;
 }
 
@@ -432,8 +438,7 @@
 @media screen and (max-width: 768px) {
     .Ad-az-main-content {
         margin: 70px 0px 0 2px;
-        padding: 10px 10px 10px 20px;
-        padding-bottom: 30px;
+        padding: 10px 10px 25px 20px;
         gap: 10px;
         width: calc(100% - 30px);
         max-height: calc(100vh - 70px);
@@ -473,6 +478,10 @@
         min-width: auto;
     }
 
+    .Ad-az-batch-card {
+        padding: 20px 20px 20px 20px;
+    }
+
     .Ad-az-batch-header {
         align-items: flex-start;
         gap: 15px;
@@ -488,22 +497,26 @@
         font-size: 0.8rem;
     }
 
-    .Ad-az-action-buttons {
+    .Ad-az-actions-container {
+        justify-content: space-between;
+        width: 100%;
         gap: 10px;
     }
 
     .Ad-az-discard-btn,
     .Ad-az-archive-btn {
-        width: 100%;
-        padding: 12px 20px;
+        flex: 1;
+        padding: 10px 15px;
+        font-size: 0.9rem;
+        text-align: center;
     }
 }
 
 /* Mobile Portrait View */
 @media screen and (max-width: 480px) {
     .Ad-az-main-content {
-        margin: 55px 0px 0 2px;
-        padding: 10px 10px 10px 20px;
+        margin: 75px 0px 0 2px;
+        padding: 10px 10px 25px 20px;
         width: calc(100% - 24px);
     }
 
@@ -513,7 +526,7 @@
     }
 
     .Ad-az-batch-card {
-        padding: 15px;
+        padding: 15px 15px 20px 15px;
     }
 
     .Ad-az-print-btn {

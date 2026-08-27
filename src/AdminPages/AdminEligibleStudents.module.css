@@ -67,7 +67,7 @@
 
 .Admin-es-summary-cards>.Admin-es-company-profile-search {
   flex: 1;
-  max-width: 900px;
+  max-width: 676px;
 }
 
 .Admin-es-summary-card {
@@ -92,7 +92,7 @@
   width: 90px;
   height: 50px;
   margin: 0 auto 15px auto;
-  background: #f8f9fa;
+  background: #ffffff;
   border-radius: 10px;
   display: flex;
   align-items: center;
@@ -143,7 +143,7 @@
 /* Company Drive Card Specific Styles */
 .Admin-es-action-addcard {
   text-align: center;
-  width: 300px;
+  width: 250px;
   flex-shrink: 0;
   padding: 20px;
   background-color: #ffffff;
@@ -221,7 +221,7 @@
   background: #4EA24E;
   border-radius: 12px;
   padding: 20px;
-  width: 300px;
+  width: 250px;
   flex-shrink: 0;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   border: 2px solid #4EA24E;
@@ -385,7 +385,7 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  max-width: 600px;
+  max-width: 520px;
   box-sizing: border-box;
 }
 
@@ -1213,7 +1213,7 @@
   .Admin-es-main-content {
     margin-top: 65px !important;
     width: 100% !important;
-    padding: 10px 10px 10px 20px;
+    padding: 10px 10px 80px 20px !important;
     overflow-y: auto !important;
     overflow-x: hidden !important;
     height: calc(100vh - 65px) !important;
@@ -1277,14 +1277,63 @@
     font-size: 3.5rem !important;
   }
 
+  .Admin-es-action-addcard {
+    order: 1 !important;
+  }
+
+  .Admin-es-company-details-card {
+    order: 2 !important;
+  }
+
   .Admin-es-search-filters {
+    order: 3 !important;
     border-radius: 25px !important;
     width: 100% !important;
     height: auto !important;
     max-width: 100% !important;
     box-sizing: border-box !important;
-    padding: 20px 20px 30px 20px !important;
+    padding: 20px 15px 25px 15px !important;
     min-height: auto !important;
+  }
+
+  .Admin-es-filter-header-container {
+    position: relative !important;
+    display: flex !important;
+    justify-content: flex-start !important;
+    align-items: center !important;
+    width: 100% !important;
+    padding-left: 20px !important;
+    box-sizing: border-box !important;
+  }
+
+  .Admin-es-search-tab {
+    width: auto !important;
+    max-width: calc(100% - 75px) !important;
+    font-size: 0.82rem !important;
+    height: 30px !important;
+    line-height: 30px !important;
+    padding: 0 12px !important;
+    margin-left: 50px;
+  }
+
+  .Admin-es-clear-btn-header {
+    position: absolute !important;
+    right: 0 !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    height: 28px !important;
+    line-height: 28px !important;
+    font-size: 0.78rem !important;
+    padding: 0 10px !important;
+  }
+
+  .Admin-es-search-inputs,
+  .Admin-es-input-group,
+  .Admin-es-batch-range-inputs,
+  .Admin-es-yearsem-range-inputs {
+    width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
   }
 
   .Admin-es-search-inputs {
@@ -1293,7 +1342,61 @@
     margin-top: 25px !important;
   }
 
+  .Admin-es-batch-range-inputs,
+  .Admin-es-yearsem-range-inputs {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+  }
 
+  .Admin-es-batch-range-inputs .Admin-es-search-input,
+  .Admin-es-yearsem-range-inputs .es-dropdown-wrapper {
+    flex: 1 1 0px !important;
+    width: 0 !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    height: 45px !important;
+    box-sizing: border-box !important;
+  }
+
+  .Admin-es-batch-range-sep,
+  .Admin-es-yearsem-range-sep {
+    flex: 0 0 auto !important;
+    width: auto !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    font-weight: 700 !important;
+    color: #666 !important;
+  }
+
+  .Admin-es-batch-range-inputs .Admin-es-search-input input,
+  .Admin-es-yearsem-range-inputs .es-dropdown-header {
+    height: 45px !important;
+    border: 1.5px solid #d1d5db !important;
+    border-radius: 8px !important;
+    background-color: #ffffff !important;
+    font-size: 0.85rem !important;
+    font-weight: 400 !important;
+    font-family: 'Poppins', sans-serif !important;
+    color: #333 !important;
+    padding: 0 10px !important;
+    box-sizing: border-box !important;
+  }
+
+  .Admin-es-yearsem-range-inputs .es-dropdown-header {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+  }
+
+  .Admin-es-yearsem-range-inputs .es-dropdown-header span {
+    font-weight: 400 !important;
+    font-size: 0.85rem !important;
+    font-family: 'Poppins', sans-serif !important;
+  }
 
   .Admin-es-bottom-card {
     margin-left: 0 !important;
@@ -1333,31 +1436,31 @@
   /* Table Footer Buttons Stacking */
   .Admin-es-table-footer {
     display: flex !important;
-    flex-direction: column !important;
     gap: 1rem !important;
     width: 100% !important;
     box-sizing: border-box !important;
-    padding: 1.5rem 0 10px 0 !important;
+    padding: 1rem 0 10px 0 !important;
     position: static !important;
     background-color: transparent !important;
   }
 
   .Admin-es-clear-btn,
   .Admin-es-select-btn {
-    width: 100% !important;
+    flex: 1 !important;
+    width: auto !important;
     max-width: none !important;
-    padding: 1rem !important;
-    font-size: 1.1rem !important;
+    padding: 0.65rem 1rem !important;
+    font-size: 0.95rem !important;
+    font-weight: 600 !important;
     box-sizing: border-box !important;
     text-align: center !important;
     border-radius: 8px !important;
   }
 
-  /* Table container — let it grow to show all rows on mobile */
+  /* Table container — show 5 students with vertical scrollbar on mobile */
   .Admin-es-table-container {
-    height: auto !important;
-    max-height: none !important;
-    overflow-y: visible !important;
+    max-height: 275px !important;
+    overflow-y: auto !important;
     overflow-x: auto !important;
     width: 100% !important;
     position: relative !important;

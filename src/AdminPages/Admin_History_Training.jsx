@@ -815,7 +815,7 @@ function AdminHistoryTraining({ onLogout }) {
                     {/* Training History Table Section */}
                     <div className={styles['Admin-ht-bottom-card']}>
                         <div className={styles['Admin-ht-table-header-row']}>
-                            <h3 className={styles['Admin-ht-table-title']}># {currentCompanyName.toUpperCase()} HISTORY</h3>
+                            <h3 className={styles['Admin-ht-table-title']}> {currentCompanyName.toUpperCase()} HISTORY</h3>
                             <div className={styles['Admin-ht-table-actions']}>
                                 <div className={styles['Admin-ht-print-button-container']}>
                                     <button

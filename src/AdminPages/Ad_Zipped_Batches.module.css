@@ -309,47 +309,7 @@
     color: #666;
 }
 
-/* Action Buttons at Bottom */
-.Ad-zb-action-buttons {
-    display: flex;
-    justify-content: flex-end;
-    gap: 15px;
-    padding-top: 15px;
-    border-top: 1px solid #eee;
-    margin-top: 10px;
-}
 
-.Ad-zb-discard-btn {
-    padding: 12px 35px;
-    border: none;
-    border-radius: 8px;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    background-color: #6c757d;
-    color: white;
-    transition: background-color 0.2s;
-}
-
-.Ad-zb-discard-btn:hover {
-    background-color: #5a6268;
-}
-
-.Ad-zb-archive-btn {
-    padding: 12px 35px;
-    border: none;
-    border-radius: 8px;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    background-color: #4EA24E;
-    color: white;
-    transition: background-color 0.2s;
-}
-
-.Ad-zb-archive-btn:hover {
-    background-color: #3d8a3d;
-}
 
 /* Popup Styles */
 .Ad-zb-popup-overlay {
@@ -597,21 +557,13 @@
         font-size: 0.8rem;
     }
 
-    .Ad-zb-action-buttons {
-        gap: 10px;
-    }
 
-    .Ad-zb-discard-btn,
-    .Ad-zb-archive-btn {
-        width: 100%;
-        padding: 12px 20px;
-    }
 }
 
 /* Mobile Portrait View */
 @media screen and (max-width: 480px) {
     .Ad-zb-main-content {
-        margin: 55px 12px 0 12px;
+        margin: 75px 12px 0 12px;
         padding: 10px 10px 10px 20px;
         width: calc(100% - 24px);
     }

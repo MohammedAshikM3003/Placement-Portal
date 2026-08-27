@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useAdminAuth from '../utils/useAdminAuth';
 import Adnavbar from '../components/Navbar/Adnavbar';
@@ -73,34 +73,30 @@ const DeleteSuccessPopup = ({ onClose }) => (
     </div>
 );
 
+const extractCourseNames = (company) => {
+    const list = Array.isArray(company?.courses) ? company.courses : [];
+    return list
+        .map(c => (typeof c === 'string' ? c : c?.name || '').toString().trim())
+        .filter(Boolean);
+};
+
+const extractTrainerNames = (company) => {
+    const list = Array.isArray(company?.trainers) ? company.trainers : [];
+    return list
+        .map(t => (typeof t === 'string' ? t : t?.name || '').toString().trim())
+        .filter(Boolean);
+};
+
 function AdminTrainingCompany({ onLogout }) {
     const navigate = useNavigate();
     useAdminAuth();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-    // Filter states
-    const [tempFilterCompany, setTempFilterCompany] = useState('');
-    const [tempFilterBranch, setTempFilterBranch] = useState('');
-    const [tempFilterTraining, setTempFilterTraining] = useState('');
-    const [tempFilterPhase, setTempFilterPhase] = useState('');
-
-    // Focus states
-    const [companyFocused, setCompanyFocused] = useState(false);
-    const [branchFocused, setBranchFocused] = useState(false);
-    const [trainingFocused, setTrainingFocused] = useState(false);
-    const [phaseFocused, setPhaseFocused] = useState(false);
-
-    // Applied filter states
-    const [filterCompany, setFilterCompany] = useState('');
-    const [filterBranch, setFilterBranch] = useState('');
-    const [filterTraining, setFilterTraining] = useState('');
-    const [filterPhase, setFilterPhase] = useState('');
-
-    // Dropdown options
-    const [companyOptions, setCompanyOptions] = useState([]);
-    const [branchOptions, setBranchOptions] = useState([]);
-    const [trainingOptions, setTrainingOptions] = useState([]);
-    const [phaseOptions, setPhaseOptions] = useState([]);
+    // Interconnected Filter States
+    const [selectedCompany, setSelectedCompany] = useState('');
+    const [selectedCourse, setSelectedCourse] = useState('');
+    const [selectedHR, setSelectedHR] = useState('');
+    const [selectedTrainer, setSelectedTrainer] = useState('');
 
     const [showExportMenu, setShowExportMenu] = useState(false);
     const [activePopup, setActivePopup] = useState(null);
@@ -149,10 +145,6 @@ function AdminTrainingCompany({ onLogout }) {
 
             // Create a map to store unique companies
             const companyMap = new Map();
-            const companySet = new Set();
-            const branchSet = new Set();
-            const trainingSet = new Set();
-            const phaseSet = new Set();
 
             // First, add all companies from training_companies collection (source of truth)
             normalizedTrainings.forEach((training) => {
@@ -161,9 +153,6 @@ function AdminTrainingCompany({ onLogout }) {
 
                 const courses = Array.isArray(training?.courses) ? training.courses : [];
                 const trainers = Array.isArray(training?.trainers) ? training.trainers : [];
-
-                companySet.add(companyName);
-                trainingSet.add(companyName);
 
                 companyMap.set(companyName, {
                     _id: training._id,
@@ -191,20 +180,9 @@ function AdminTrainingCompany({ onLogout }) {
                     schedule.batches.forEach(batch => {
                         if (batch?.branch) {
                             branches.push(batch.branch);
-                            branchSet.add(batch.branch);
                         }
                     });
                 }
-
-                // Get phases
-                const phases = Array.isArray(schedule?.phases) ? schedule.phases : [];
-                phases.forEach((phase, idx) => {
-                    const phaseName = phase?.phaseName || `Phase ${idx + 1}`;
-                    phaseSet.add(phaseName);
-                });
-
-                companySet.add(companyName);
-                trainingSet.add(companyName);
 
                 // Get training data from training_companies collection
                 const trainingData = trainingDataMap.get(companyName.toLowerCase());
@@ -238,12 +216,7 @@ function AdminTrainingCompany({ onLogout }) {
             });
 
             const companiesList = Array.from(companyMap.values());
-
             setTrainingCompanies(companiesList);
-            setCompanyOptions(['', ...Array.from(companySet).sort()]);
-            setBranchOptions(['', ...Array.from(branchSet).sort()]);
-            setTrainingOptions(['', ...Array.from(trainingSet).sort()]);
-            setPhaseOptions(['', ...Array.from(phaseSet).sort()]);
         } catch (error) {
             console.error("Failed to fetch training companies:", error);
             setTrainingCompanies([]);
@@ -256,25 +229,79 @@ function AdminTrainingCompany({ onLogout }) {
         fetchTrainingCompanies();
     }, [fetchTrainingCompanies]);
 
+    // Interconnected Dropdown Options Logic
+    const companyOptions = useMemo(() => {
+        const matching = trainingCompanies.filter(c => {
+            if (selectedCourse && !extractCourseNames(c).includes(selectedCourse)) return false;
+            if (selectedHR && (c.companyHR || '').trim().toLowerCase() !== selectedHR.trim().toLowerCase()) return false;
+            if (selectedTrainer && !extractTrainerNames(c).includes(selectedTrainer)) return false;
+            return true;
+        });
+        const set = new Set(matching.map(c => (c.companyName || '').trim()).filter(Boolean));
+        return Array.from(set).sort((a, b) => a.localeCompare(b));
+    }, [trainingCompanies, selectedCourse, selectedHR, selectedTrainer]);
+
+    const courseOptions = useMemo(() => {
+        const matching = trainingCompanies.filter(c => {
+            if (selectedCompany && c.companyName !== selectedCompany) return false;
+            if (selectedHR && (c.companyHR || '').trim().toLowerCase() !== selectedHR.trim().toLowerCase()) return false;
+            if (selectedTrainer && !extractTrainerNames(c).includes(selectedTrainer)) return false;
+            return true;
+        });
+        const set = new Set(matching.flatMap(c => extractCourseNames(c)));
+        return Array.from(set).sort((a, b) => a.localeCompare(b));
+    }, [trainingCompanies, selectedCompany, selectedHR, selectedTrainer]);
+
+    const hrOptions = useMemo(() => {
+        const matching = trainingCompanies.filter(c => {
+            if (selectedCompany && c.companyName !== selectedCompany) return false;
+            if (selectedCourse && !extractCourseNames(c).includes(selectedCourse)) return false;
+            if (selectedTrainer && !extractTrainerNames(c).includes(selectedTrainer)) return false;
+            return true;
+        });
+        const set = new Set(matching.map(c => (c.companyHR || '').trim()).filter(c => c && c !== '-'));
+        return Array.from(set).sort((a, b) => a.localeCompare(b));
+    }, [trainingCompanies, selectedCompany, selectedCourse, selectedTrainer]);
+
+    const trainerOptions = useMemo(() => {
+        const matching = trainingCompanies.filter(c => {
+            if (selectedCompany && c.companyName !== selectedCompany) return false;
+            if (selectedCourse && !extractCourseNames(c).includes(selectedCourse)) return false;
+            if (selectedHR && (c.companyHR || '').trim().toLowerCase() !== selectedHR.trim().toLowerCase()) return false;
+            return true;
+        });
+        const set = new Set(matching.flatMap(c => extractTrainerNames(c)));
+        return Array.from(set).sort((a, b) => a.localeCompare(b));
+    }, [trainingCompanies, selectedCompany, selectedCourse, selectedHR]);
+
+    // Auto-reset invalid selections when options change
     useEffect(() => {
-        setFilterCompany(tempFilterCompany);
-        setFilterBranch(tempFilterBranch);
-        setFilterTraining(tempFilterTraining);
-        setFilterPhase(tempFilterPhase);
-    }, [tempFilterCompany, tempFilterBranch, tempFilterTraining, tempFilterPhase]);
+        if (selectedCompany && !companyOptions.includes(selectedCompany)) {
+            setSelectedCompany('');
+        }
+        if (selectedCourse && !courseOptions.includes(selectedCourse)) {
+            setSelectedCourse('');
+        }
+        if (selectedHR && !hrOptions.includes(selectedHR)) {
+            setSelectedHR('');
+        }
+        if (selectedTrainer && !trainerOptions.includes(selectedTrainer)) {
+            setSelectedTrainer('');
+        }
+    }, [companyOptions, courseOptions, hrOptions, trainerOptions, selectedCompany, selectedCourse, selectedHR, selectedTrainer]);
 
     const hasActiveFilters = Boolean(
-        tempFilterCompany ||
-        tempFilterBranch ||
-        tempFilterTraining ||
-        tempFilterPhase
+        selectedCompany ||
+        selectedCourse ||
+        selectedHR ||
+        selectedTrainer
     );
 
     const handleClearFilters = () => {
-        setTempFilterCompany('');
-        setTempFilterBranch('');
-        setTempFilterTraining('');
-        setTempFilterPhase('');
+        setSelectedCompany('');
+        setSelectedCourse('');
+        setSelectedHR('');
+        setSelectedTrainer('');
     };
 
     const handleCompanySelect = (id) => {
@@ -366,26 +393,31 @@ function AdminTrainingCompany({ onLogout }) {
     };
 
     const handleViewCompany = (company) => {
-        const query = new URLSearchParams({
-            mode: 'view',
-            company: company.companyName || ''
+        navigate('/admin-add-training', {
+            state: {
+                viewMode: true,
+                editingTraining: company.trainingData || {
+                    _id: company._id,
+                    companyName: company.companyName,
+                    companyHR: company.companyHR,
+                    companyHRName: company.companyHR,
+                    location: company.location,
+                    courses: company.courses || [],
+                    trainers: company.trainers || []
+                }
+            }
         });
-
-        if (company.scheduleId) {
-            query.set('scheduleId', company.scheduleId);
-        }
-
-        navigate(`/admin-schedule-training?${query.toString()}`);
     };
 
-    const filteredCompanies = trainingCompanies.filter(company => {
-        const companyMatch = filterCompany === '' || (company.companyName || '').toLowerCase().includes(filterCompany.toLowerCase());
-        const branchMatch = filterBranch === '' || (company.branch || '').toLowerCase().includes(filterBranch.toLowerCase());
-        const trainingMatch = filterTraining === '' || (company.trainingName || '').toLowerCase().includes(filterTraining.toLowerCase());
-        const phaseMatch = filterPhase === '' || (company.phaseName || '') === filterPhase;
-
-        return companyMatch && branchMatch && trainingMatch && phaseMatch;
-    });
+    const filteredCompanies = useMemo(() => {
+        return trainingCompanies.filter(c => {
+            if (selectedCompany && c.companyName !== selectedCompany) return false;
+            if (selectedCourse && !extractCourseNames(c).includes(selectedCourse)) return false;
+            if (selectedHR && (c.companyHR || '').trim().toLowerCase() !== selectedHR.trim().toLowerCase()) return false;
+            if (selectedTrainer && !extractTrainerNames(c).includes(selectedTrainer)) return false;
+            return true;
+        });
+    }, [trainingCompanies, selectedCompany, selectedCourse, selectedHR, selectedTrainer]);
 
     const exportToExcel = async () => {
         setShowExportMenu(false);
@@ -483,25 +515,25 @@ function AdminTrainingCompany({ onLogout }) {
         }
     };
 
-    const companyDropdownOptions = companyOptions.map(opt => ({
-        label: opt === '' ? 'All Companies' : opt,
-        value: opt
-    }));
+    const companyDropdownOptions = useMemo(() => [
+        { label: 'All Companies', value: '' },
+        ...companyOptions.map(opt => ({ label: opt, value: opt }))
+    ], [companyOptions]);
 
-    const branchDropdownOptions = branchOptions.map(opt => ({
-        label: opt === '' ? 'All Branches' : opt,
-        value: opt
-    }));
+    const courseDropdownOptions = useMemo(() => [
+        { label: 'All Courses', value: '' },
+        ...courseOptions.map(opt => ({ label: opt, value: opt }))
+    ], [courseOptions]);
 
-    const trainingDropdownOptions = trainingOptions.map(opt => ({
-        label: opt === '' ? 'All Trainings' : opt,
-        value: opt
-    }));
+    const hrDropdownOptions = useMemo(() => [
+        { label: 'All HRs', value: '' },
+        ...hrOptions.map(opt => ({ label: opt, value: opt }))
+    ], [hrOptions]);
 
-    const phaseDropdownOptions = phaseOptions.map(opt => ({
-        label: opt === '' ? 'All Phases' : opt,
-        value: opt
-    }));
+    const trainerDropdownOptions = useMemo(() => [
+        { label: 'All Trainers', value: '' },
+        ...trainerOptions.map(opt => ({ label: opt, value: opt }))
+    ], [trainerOptions]);
 
     return (
         <>
@@ -533,9 +565,9 @@ function AdminTrainingCompany({ onLogout }) {
                             <div className={styles['Admin-tc-add-icon']}>
                                 <img src={AdminAddTrainingCompany} alt="Add Company" />
                             </div>
-                            <h4 className={styles['Admin-tc-add-header']}>Add <br/> Company</h4>
+                            <h4 className={styles['Admin-tc-add-header']}>Add <br /> Company</h4>
                             <p className={styles['Admin-tc-add-description']}>
-                                Add new Training<br/>Company
+                                Add new Training<br />Company
                             </p>
                         </div>
 
@@ -559,8 +591,8 @@ function AdminTrainingCompany({ onLogout }) {
                                     <label className={styles['Admin-tc-static-label']}>Company Name</label>
                                     <Dropdown
                                         options={companyDropdownOptions}
-                                        selectedOption={tempFilterCompany}
-                                        onSelect={setTempFilterCompany}
+                                        selectedOption={selectedCompany}
+                                        onSelect={setSelectedCompany}
                                         placeholder="All Companies"
                                         role="admin"
                                         className={styles['company-dropdown-wrapper']}
@@ -568,42 +600,42 @@ function AdminTrainingCompany({ onLogout }) {
                                     />
                                 </div>
 
-                                {/* Branch Filter */}
+                                {/* Course Name Filter */}
                                 <div className={styles['Admin-tc-input-wrapper']}>
-                                    <label className={styles['Admin-tc-static-label']}>Branch</label>
+                                    <label className={styles['Admin-tc-static-label']}>Course Name</label>
                                     <Dropdown
-                                        options={branchDropdownOptions}
-                                        selectedOption={tempFilterBranch}
-                                        onSelect={setTempFilterBranch}
-                                        placeholder="All Branches"
+                                        options={courseDropdownOptions}
+                                        selectedOption={selectedCourse}
+                                        onSelect={setSelectedCourse}
+                                        placeholder="All Courses"
                                         role="admin"
                                         className={styles['company-dropdown-wrapper']}
                                         headerClassName={styles['company-dropdown-header']}
                                     />
                                 </div>
 
-                                {/* Training Name Filter */}
+                                {/* HR Name Filter */}
                                 <div className={styles['Admin-tc-input-wrapper']}>
-                                    <label className={styles['Admin-tc-static-label']}>Training Name</label>
+                                    <label className={styles['Admin-tc-static-label']}>HR Name</label>
                                     <Dropdown
-                                        options={trainingDropdownOptions}
-                                        selectedOption={tempFilterTraining}
-                                        onSelect={setTempFilterTraining}
-                                        placeholder="All Trainings"
+                                        options={hrDropdownOptions}
+                                        selectedOption={selectedHR}
+                                        onSelect={setSelectedHR}
+                                        placeholder="All HRs"
                                         role="admin"
                                         className={styles['company-dropdown-wrapper']}
                                         headerClassName={styles['company-dropdown-header']}
                                     />
                                 </div>
 
-                                {/* Phase Filter */}
+                                {/* Trainers Filter */}
                                 <div className={styles['Admin-tc-input-wrapper']}>
-                                    <label className={styles['Admin-tc-static-label']}>Phase</label>
+                                    <label className={styles['Admin-tc-static-label']}>Trainers</label>
                                     <Dropdown
-                                        options={phaseDropdownOptions}
-                                        selectedOption={tempFilterPhase}
-                                        onSelect={setTempFilterPhase}
-                                        placeholder="All Phases"
+                                        options={trainerDropdownOptions}
+                                        selectedOption={selectedTrainer}
+                                        onSelect={setSelectedTrainer}
+                                        placeholder="All Trainers"
                                         role="admin"
                                         className={styles['company-dropdown-wrapper']}
                                         headerClassName={styles['company-dropdown-header']}
@@ -741,7 +773,7 @@ function AdminTrainingCompany({ onLogout }) {
                                                             });
                                                         }}
                                                     >
-                                                        <path fill="#4EA24E" fillRule="evenodd" d="M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10s-4.477 10-10 10S2 17.523 2 12m11-4a1 1 0 1 0-2 0v4a1 1 0 0 0 .293.707l3 3a1 1 0 0 0 1.414-1.414L13 11.586z" clipRule="evenodd"/>
+                                                        <path fill="#4EA24E" fillRule="evenodd" d="M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10s-4.477 10-10 10S2 17.523 2 12m11-4a1 1 0 1 0-2 0v4a1 1 0 0 0 .293.707l3 3a1 1 0 0 0 1.414-1.414L13 11.586z" clipRule="evenodd" />
                                                     </svg>
                                                 </td>
                                                 <td className={`${styles['Admin-tc-td']} ${styles['Admin-tc-view']}`}>
@@ -757,8 +789,8 @@ function AdminTrainingCompany({ onLogout }) {
                                                             handleViewCompany(company);
                                                         }}
                                                     >
-                                                        <path d="M12 5C7 5 2.73 8.11 1 12.5C2.73 16.89 7 20 12 20C17 20 21.27 16.89 23 12.5C21.27 8.11 17 5 12 5Z" fill="#4EA24E" opacity="0.3"/>
-                                                        <circle cx="12" cy="12.5" r="3.5" fill="#4EA24E"/>
+                                                        <path d="M12 5C7 5 2.73 8.11 1 12.5C2.73 16.89 7 20 12 20C17 20 21.27 16.89 23 12.5C21.27 8.11 17 5 12 5Z" fill="#4EA24E" opacity="0.3" />
+                                                        <circle cx="12" cy="12.5" r="3.5" fill="#4EA24E" />
                                                     </svg>
                                                 </td>
                                             </tr>
@@ -773,7 +805,7 @@ function AdminTrainingCompany({ onLogout }) {
 
             <ExportProgressAlert
                 isOpen={exportPopupState === 'progress'}
-                onClose={() => {}}
+                onClose={() => { }}
                 progress={exportProgress}
                 exportType={exportType}
             />

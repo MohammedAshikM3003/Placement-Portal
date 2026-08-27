@@ -5,7 +5,8 @@ import Navbar from '../components/Navbar/Adnavbar';
 import Sidebar from '../components/Sidebar/Adsidebar';
 import Adminicon from '../assets/AdmingreenCapicon.svg';
 import { API_BASE_URL } from '../utils/apiConfig.js';
-import { SuccessAlert, ErrorAlert, useAlert } from '../components/alerts';
+import { ErrorAlert, useAlert } from '../components/alerts';
+import SuccessPopup from '../components/dialog/SuccessPopup';
 import SemesterMarksheetConfirmation from '../components/alerts/SemesterMarksheetConfirmation';
 import styles from './AdminSemesterMarksheetEdit.module.css';
 
@@ -25,6 +26,14 @@ const GRADE_POINTS = {
 
 const GRADE_OPTIONS = ['O', 'S', 'A+', 'A', 'B+', 'B', 'C', 'U', 'RA', 'WD'];
 
+const YEAR_OPTIONS = ['I', 'II', 'III', 'IV'];
+const YEAR_SEMESTER_MAP = {
+  'I': ['1', '2'],
+  'II': ['3', '4'],
+  'III': ['5', '6'],
+  'IV': ['7', '8']
+};
+
 const DEFAULT_STUDENT = {
   name: '',
   regNo: '',
@@ -43,7 +52,7 @@ const normalizeSubjects = (rawSubjects) => {
   return source.map((subject, index) => {
     const code = subject.code || subject.courseCode || subject.subjectCode || subject.id || '';
     const name = subject.name || subject.courseName || subject.subjectName || '';
-    const id = subject.id || code || `subject-${index + 1}`;
+    const id = subject.id || subject._id || code || `subject-${index + 1}`;
 
     return {
       id,
@@ -51,16 +60,22 @@ const normalizeSubjects = (rawSubjects) => {
       name,
       credits: subject.credits ?? '',
       grade: subject.grade || subject.currentGrade || 'U',
+      year: subject.year || '',
+      semester: subject.semester || '',
       isNew: Boolean(subject.isNew)
     };
   });
 };
 
-const buildSubjectLabel = (subject) => {
-  const name = subject.name || 'Untitled Subject';
+const buildSubjectLabel = (subject, isMobile) => {
+  let name = subject.name || 'Untitled Subject';
+  if (isMobile && name.length > 25) {
+    name = name.substring(0, 22) + '...';
+  }
   const code = subject.code || subject.id || 'CODE';
   const grade = subject.grade || 'U';
-  return `${name} (${code}) - ${grade}`;
+  const semDetails = subject.semester ? ` [Sem ${subject.semester}]` : '';
+  return `${name} (${code})${semDetails} - ${grade}`;
 };
 
 const createEmptySubject = () => ({
@@ -68,6 +83,8 @@ const createEmptySubject = () => ({
   code: '',
   name: '',
   credits: '',
+  year: '',
+  semester: '',
   grade: 'U',
   isNew: true
 });
@@ -78,6 +95,16 @@ function AdminSemesterMarksheetEdit({ onLogout, onViewChange }) {
   const location = useLocation();
   const { studentId } = useParams();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const persistedState = useMemo(() => {
     if (typeof window === 'undefined') return null;
@@ -110,14 +137,39 @@ function AdminSemesterMarksheetEdit({ onLogout, onViewChange }) {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [changedSubjects, setChangedSubjects] = useState([]);
   const [showUnsavedToast, setShowUnsavedToast] = useState(false);
+  const [isBackNavigationPending, setIsBackNavigationPending] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const { alerts, showSuccess, showError, closeAlert } = useAlert();
+  const [deleteConfirmState, setDeleteConfirmState] = useState({
+    isOpen: false,
+    subjectId: null,
+    subjectName: ''
+  });
 
   const detectChangedSubjects = () => {
     const changed = [];
-    
+
     subjects.forEach((currentSubject) => {
+      if (currentSubject.isNew) {
+        changed.push({
+          subjectName: currentSubject.name || 'New Subject',
+          id: currentSubject.id,
+          oldGrade: '--',
+          newGrade: currentSubject.grade || 'U',
+          changes: [
+            { field: 'grade', from: '', to: currentSubject.grade || 'U' },
+            { field: 'name', from: '', to: currentSubject.name || '' },
+            { field: 'code', from: '', to: currentSubject.code || '' },
+            { field: 'credits', from: '', to: currentSubject.credits || '' },
+            { field: 'year', from: '', to: currentSubject.year || '' },
+            { field: 'semester', from: '', to: currentSubject.semester || '' }
+          ]
+        });
+        return;
+      }
+
       const originalSubject = (initialSubjectsRef.current || []).find(
-        (orig) => orig.id === currentSubject.id || orig.code === currentSubject.code
+        (orig) => orig.id === currentSubject.id
       );
 
       if (originalSubject) {
@@ -129,23 +181,31 @@ function AdminSemesterMarksheetEdit({ onLogout, onViewChange }) {
         const newCode = (currentSubject.code || '').toString();
         const oldCredits = String(originalSubject.credits ?? '');
         const newCredits = String(currentSubject.credits ?? '');
+        const oldYear = (originalSubject.year || '').toString();
+        const newYear = (currentSubject.year || '').toString();
+        const oldSemester = (originalSubject.semester || '').toString();
+        const newSemester = (currentSubject.semester || '').toString();
 
         const fieldChanges = [];
         if (oldGrade !== newGrade) fieldChanges.push({ field: 'grade', from: oldGrade, to: newGrade });
         if (oldName !== newName) fieldChanges.push({ field: 'name', from: oldName, to: newName });
         if (oldCode !== newCode) fieldChanges.push({ field: 'code', from: oldCode, to: newCode });
         if (oldCredits !== newCredits) fieldChanges.push({ field: 'credits', from: oldCredits, to: newCredits });
+        if (oldYear !== newYear) fieldChanges.push({ field: 'year', from: oldYear, to: newYear });
+        if (oldSemester !== newSemester) fieldChanges.push({ field: 'semester', from: oldSemester, to: newSemester });
 
         if (fieldChanges.length > 0) {
           changed.push({
             subjectName: currentSubject.name || originalSubject.name || '',
             id: currentSubject.id,
+            oldGrade,
+            newGrade,
             changes: fieldChanges
           });
         }
       }
     });
-    
+
     return changed;
   };
 
@@ -212,9 +272,20 @@ function AdminSemesterMarksheetEdit({ onLogout, onViewChange }) {
   };
 
   const handleSubjectFieldChange = (subjectId, field, value) => {
-    setSubjects((prev) => prev.map((subject) => (
-      subject.id === subjectId ? { ...subject, [field]: value } : subject
-    )));
+    setSubjects((prev) => prev.map((subject) => {
+      if (subject.id !== subjectId) return subject;
+
+      if (field === 'year') {
+        const allowedSems = YEAR_SEMESTER_MAP[value] || [];
+        return {
+          ...subject,
+          year: value,
+          semester: allowedSems[0] || ''
+        };
+      }
+
+      return { ...subject, [field]: value };
+    }));
   };
 
   const handleGradeChange = (subjectId, grade) => {
@@ -251,17 +322,154 @@ function AdminSemesterMarksheetEdit({ onLogout, onViewChange }) {
     });
   };
 
-  const handleUpdate = () => {
+  const handleBackButtonClick = () => {
     const changed = detectChangedSubjects();
-    
+    if (changed.length > 0) {
+      setChangedSubjects(changed);
+      setIsBackNavigationPending(true);
+      setShowConfirmation(true);
+    } else {
+      handleDiscard();
+    }
+  };
+
+  const handleUpdate = () => {
+    // Validate that all subjects have a code and name and credits
+    for (const subject of subjects) {
+      if (subject.isNew || subject.isEditing) {
+        if (!subject.code || !subject.code.toString().trim()) {
+          showError('Validation Error', 'Please enter a Subject Code.');
+          return;
+        }
+        if (!subject.name || !subject.name.toString().trim()) {
+          showError('Validation Error', 'Please enter a Subject Name.');
+          return;
+        }
+        if (!subject.year || !subject.year.toString().trim()) {
+          showError('Validation Error', 'Please enter a Year.');
+          return;
+        }
+        if (!subject.semester || !subject.semester.toString().trim()) {
+          showError('Validation Error', 'Please enter a Semester.');
+          return;
+        }
+        if (subject.credits === '' || isNaN(Number(subject.credits)) || Number(subject.credits) < 0) {
+          showError('Validation Error', 'Please enter valid credits.');
+          return;
+        }
+      }
+    }
+
+    const changed = detectChangedSubjects();
+
     if (changed.length === 0) {
       showError('No Changes', 'No grade changes detected');
       return;
     }
-    
+
     setChangedSubjects(changed);
     setShowConfirmation(true);
     setShowUnsavedToast(true);
+  };
+
+  const calculateSgpaForSubjects = (subjectsList) => {
+    const totals = subjectsList.reduce((acc, subject) => {
+      const credits = Number(subject.credits) || 0;
+      const points = GRADE_POINTS[subject.grade] ?? 0;
+      return {
+        credits: acc.credits + credits,
+        points: acc.points + credits * points
+      };
+    }, { credits: 0, points: 0 });
+
+    if (!totals.credits) return '0.0';
+    return (totals.points / totals.credits).toFixed(1);
+  };
+
+  const handleDeleteSubject = (subjectId) => {
+    const subjectToDelete = subjects.find(s => s.id === subjectId);
+    if (!subjectToDelete) return;
+
+    if (subjectToDelete.isNew) {
+      setSubjects((prev) => prev.filter(s => s.id !== subjectId));
+      return;
+    }
+
+    setDeleteConfirmState({
+      isOpen: true,
+      subjectId,
+      subjectName: subjectToDelete.name || subjectToDelete.code
+    });
+  };
+
+  const confirmDeleteSubject = async () => {
+    const subjectId = deleteConfirmState.subjectId;
+    setDeleteConfirmState({ isOpen: false, subjectId: null, subjectName: '' });
+
+    setIsDeleting(true);
+    try {
+      const remainingInitial = (initialSubjectsRef.current || []).filter(s => s.id !== subjectId);
+      const remainingState = subjects.filter(s => s.id !== subjectId);
+
+      const regNo = (student.regNo || student.registerNumber || '').toString().trim();
+      const studentName = (student.name || student.studentName || '').toString().trim();
+      const semester = (student.semester || student.currentSemester || '').toString().trim();
+      const year = (student.year || student.currentYear || '').toString().trim();
+      const recordId = student._id || student.recordId || student.semesterRecordId || student.id || location.state?.semesterRecord?._id || persistedState?.semesterRecord?._id || '';
+
+      const normalizedSubjects = remainingInitial.map((sub) => {
+        const grade = sub.grade || 'U';
+        const isFail = grade === 'U' || grade === 'RA' || grade === 'WD';
+        const subYear = (sub.year || year).toString().trim();
+        const subSemester = (sub.semester || semester).toString().trim();
+        return {
+          courseCode: (sub.code || sub.courseCode || sub.id || '').toString().trim().toUpperCase(),
+          courseName: (sub.name || sub.courseName || sub.subjectName || '').toString().trim(),
+          credits: Number(sub.credits) || 0,
+          grade,
+          result: isFail ? 'F' : 'P',
+          year: subYear || undefined,
+          semester: subSemester || undefined
+        };
+      });
+
+      const newSgpa = calculateSgpaForSubjects(remainingInitial);
+
+      const payload = {
+        _id: recordId,
+        regNo,
+        registerNumber: regNo,
+        studentName,
+        year,
+        semester,
+        sgpa: newSgpa,
+        cgpa: newSgpa,
+        subjects: normalizedSubjects
+      };
+
+      const authToken = localStorage.getItem('authToken') || localStorage.getItem('token');
+      const response = await fetch(`${API_BASE_URL}/semester/update`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(authToken ? { Authorization: `Bearer ${authToken}` } : {})
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error(data?.error || data?.message || 'Failed to delete subject');
+      }
+
+      setSubjects(remainingState);
+      initialSubjectsRef.current = normalizeSubjects(remainingInitial);
+      showSuccess('Deleted', 'Subject deleted successfully.');
+    } catch (err) {
+      showError('Delete failed', err.message || 'Failed to delete subject');
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const handleToggleEdit = (subjectId) => {
@@ -269,9 +477,9 @@ function AdminSemesterMarksheetEdit({ onLogout, onViewChange }) {
       if (s.id !== subjectId) return s;
 
       if (s.isEditing) {
-        const orig = (initialSubjectsRef.current || []).find(o => o.id === s.id || o.code === s.code) || null;
+        const orig = (initialSubjectsRef.current || []).find(o => o.id === s.id) || null;
         if (orig) {
-          return { ...s, name: orig.name || '', code: orig.code || '', credits: orig.credits ?? '', grade: orig.grade || 'U', isEditing: false, isNew: false };
+          return { ...s, name: orig.name || '', code: orig.code || '', credits: orig.credits ?? '', grade: orig.grade || 'U', year: orig.year || '', semester: orig.semester || '', isEditing: false, isNew: false };
         }
         return { ...s, isEditing: false };
       }
@@ -286,6 +494,11 @@ function AdminSemesterMarksheetEdit({ onLogout, onViewChange }) {
     setShowConfirmation(false);
     setChangedSubjects([]);
     setShowUnsavedToast(false);
+    if (isBackNavigationPending) {
+      setIsBackNavigationPending(false);
+      setSubjects(initialSubjectsRef.current);
+      handleDiscard();
+    }
   };
 
   const performSave = async () => {
@@ -312,12 +525,16 @@ function AdminSemesterMarksheetEdit({ onLogout, onViewChange }) {
     const normalizedSubjects = subjects.map((subject) => {
       const grade = subject.grade || 'U';
       const isFail = grade === 'U' || grade === 'RA' || grade === 'WD';
+      const subYear = (subject.year || year).toString().trim();
+      const subSemester = (subject.semester || semester).toString().trim();
       return {
         courseCode: (subject.code || subject.courseCode || subject.id || '').toString().trim().toUpperCase(),
         courseName: (subject.name || subject.courseName || subject.subjectName || '').toString().trim(),
         credits: Number(subject.credits) || 0,
         grade,
-        result: isFail ? 'F' : 'P'
+        result: isFail ? 'F' : 'P',
+        year: subYear || undefined,
+        semester: subSemester || undefined
       };
     });
 
@@ -353,23 +570,14 @@ function AdminSemesterMarksheetEdit({ onLogout, onViewChange }) {
 
       setSaveMessage('Semester record updated successfully.');
       showSuccess('Updated', 'Semester record updated successfully.');
-      
+
+      const savedSubjects = subjects.map((s) => ({ ...s, isEditing: false, isNew: false }));
+      setSubjects(savedSubjects);
+      initialSubjectsRef.current = normalizeSubjects(savedSubjects);
+
       setShowConfirmation(false);
       setChangedSubjects([]);
       setShowUnsavedToast(false);
-
-      setTimeout(() => {
-        navigate(`/admin-semester-marksheet-view/${studentId}`, {
-          state: {
-            student: {
-              ...student,
-              regNo,
-              semester,
-              year
-            }
-          }
-        });
-      }, 800);
     } catch (error) {
       const message = error.message || 'Failed to update semester record';
       setSaveError(message);
@@ -412,28 +620,89 @@ function AdminSemesterMarksheetEdit({ onLogout, onViewChange }) {
   const activeGrade = activeSubject?.grade || 'U';
   const isFailGrade = activeGrade === 'U' || activeGrade === 'RA';
 
+  const displayProgramme = useMemo(() => {
+    const record = location.state?.semesterRecord || persistedState?.semesterRecord || {};
+    const dept = record.department || student.department || student.programme || '';
+    const cleanDept = dept.toString().trim();
+    if (!cleanDept || cleanDept.toLowerCase() === 'course name' || cleanDept.toLowerCase() === 'programme') {
+      return 'B.E-CSE';
+    }
+    const cleanDeptUpper = cleanDept.toUpperCase();
+    if (cleanDeptUpper.startsWith('B.E') || cleanDeptUpper.startsWith('B.TECH')) {
+      return cleanDeptUpper;
+    }
+    return `B.E-${cleanDeptUpper}`;
+  }, [student, location.state?.semesterRecord, persistedState?.semesterRecord]);
+
   return (
     <div className={styles.page}>
       <Navbar Adminicon={Adminicon} onToggleSidebar={handleToggleSidebar} />
-      <SuccessAlert
-        isOpen={alerts.success.isOpen}
-        onClose={() => closeAlert('success')}
-        title={alerts.success.title}
-        message={alerts.success.message}
-      />
+      <div className={styles.popupWrapper}>
+        <SuccessPopup
+          isOpen={alerts.success.isOpen}
+          onClose={() => {
+            const isUpdate = alerts.success.title === 'Updated';
+            closeAlert('success');
+            if (isUpdate) {
+              handleDiscard();
+            }
+          }}
+          title={alerts.success.title || "Updated!"}
+          heading={alerts.success.title || "Changes Saved \u2714"}
+          message={alerts.success.message || "Successfully saved in the Portal"}
+        />
+      </div>
       <ErrorAlert
         isOpen={alerts.error.isOpen}
         onClose={() => closeAlert('error')}
         title={alerts.error.title}
         message={alerts.error.message}
       />
+      {deleteConfirmState.isOpen && (
+        <div className={styles.confirmOverlay}>
+          <div className={styles.confirmCard}>
+            <div className={styles.confirmHeader}>
+              Delete Subject
+            </div>
+            <div className={styles.confirmBody}>
+              <div className={styles.confirmIconWrapper}>
+                <span className={styles.confirmIconText}>!</span>
+              </div>
+              <h3 className={styles.confirmTitle}>Are you sure?</h3>
+              <p className={styles.confirmMessage}>
+                Delete "{deleteConfirmState.subjectName}"?
+              </p>
+            </div>
+            <div className={styles.confirmFooter}>
+              <button
+                type="button"
+                className={styles.confirmCancelBtn}
+                onClick={() => setDeleteConfirmState({ isOpen: false, subjectId: null, subjectName: '' })}
+              >
+                Discard
+              </button>
+              <button
+                type="button"
+                className={styles.confirmDeleteBtn}
+                onClick={confirmDeleteSubject}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <SemesterMarksheetConfirmation
         isOpen={showConfirmation}
-        onClose={() => setShowConfirmation(false)}
+        onClose={() => {
+          setShowConfirmation(false);
+          setIsBackNavigationPending(false);
+        }}
         onSave={performSave}
         onDiscard={handleConfirmationDiscard}
         changedSubjects={changedSubjects}
         isSaving={isSaving}
+        theme="admin"
       />
       <SemesterMarksheetConfirmation
         isOpen={showUnsavedToast}
@@ -443,6 +712,7 @@ function AdminSemesterMarksheetEdit({ onLogout, onViewChange }) {
         onDiscard={() => { handleConfirmationDiscard(); setShowUnsavedToast(false); }}
         changedSubjects={changedSubjects}
         isSaving={isSaving}
+        theme="admin"
       />
       <div className={styles.main}>
         <Sidebar isOpen={isSidebarOpen} onLogout={onLogout} currentView="student-database" onViewChange={handleViewChange} />
@@ -456,7 +726,7 @@ function AdminSemesterMarksheetEdit({ onLogout, onViewChange }) {
                   <h2 className={styles.profileName}>{student.name}</h2>
                   <span className={styles.profileReg}>- {student.regNo}</span>
                 </div>
-                <div className={styles.profileMeta}>{student.programme}</div>
+                <div className={styles.profileMeta}>{displayProgramme}</div>
                 <div className={styles.profileMeta}>{student.year} - {student.semester}</div>
                 <div className={styles.profileMeta}>{student.examDate}</div>
               </div>
@@ -472,7 +742,7 @@ function AdminSemesterMarksheetEdit({ onLogout, onViewChange }) {
                     {selectOptions.length ? (
                       selectOptions.map((subject) => (
                         <option key={subject.id} value={subject.id}>
-                          {buildSubjectLabel(subject)}
+                          {buildSubjectLabel(subject, isMobile)}
                         </option>
                       ))
                     ) : (
@@ -518,17 +788,22 @@ function AdminSemesterMarksheetEdit({ onLogout, onViewChange }) {
                     <div className={styles.subjectHeaderLeft}>
                       {activeSubject.isNew || activeSubject.isEditing ? (
                         <>
-                          <h3 className={styles.subjectTitle}>{activeSubject.isNew ? 'New Subject' : activeSubject.name}</h3>
+                          <div className={styles.subjectTitleRow}>
+                            <h3 className={styles.subjectTitle}>{activeSubject.isNew ? 'New Subject' : activeSubject.name}</h3>
+                            <span className={styles.currentGrade}>
+                              Current: {activeGrade} {isFailGrade ? '- (Fail)' : ''}
+                            </span>
+                          </div>
                           <div className={styles.newSubjectInputs}>
-                            <input
-                              ref={subjectNameRef}
-                              className={`${styles.subjectInput} ${styles.subjectInputTitle}`}
-                              type="text"
-                              value={activeSubject.name}
-                              placeholder="Enter Subject Name"
-                              onChange={(event) => handleSubjectFieldChange(activeSubject.id, 'name', event.target.value)}
-                            />
-                            <div className={styles.newSubjectRow}>
+                            <div className={styles.subjectEditTwoColRow}>
+                              <input
+                                ref={subjectNameRef}
+                                className={`${styles.subjectInput} ${styles.subjectInputTitle}`}
+                                type="text"
+                                value={activeSubject.name}
+                                placeholder="Enter Subject Name"
+                                onChange={(event) => handleSubjectFieldChange(activeSubject.id, 'name', event.target.value)}
+                              />
                               <input
                                 className={styles.subjectInput}
                                 type="text"
@@ -536,53 +811,98 @@ function AdminSemesterMarksheetEdit({ onLogout, onViewChange }) {
                                 placeholder="Enter Subject Code"
                                 onChange={(event) => handleSubjectFieldChange(activeSubject.id, 'code', event.target.value)}
                               />
-                              <input
+                            </div>
+                            <div className={styles.subjectEditThreeColRow}>
+                              <select
                                 className={`${styles.subjectInput} ${styles.subjectInputSmall}`}
-                                type="text"
-                                inputMode="numeric"
+                                value={activeSubject.year}
+                                onChange={(event) => handleSubjectFieldChange(activeSubject.id, 'year', event.target.value)}
+                              >
+                                <option value="">Select Year</option>
+                                {YEAR_OPTIONS.map((y) => (
+                                  <option key={y} value={y}>{y}</option>
+                                ))}
+                              </select>
+                              <select
+                                className={`${styles.subjectInput} ${styles.subjectInputSmall}`}
+                                value={activeSubject.semester}
+                                onChange={(event) => handleSubjectFieldChange(activeSubject.id, 'semester', event.target.value)}
+                                disabled={!activeSubject.year}
+                              >
+                                <option value="">Select Sem</option>
+                                {(YEAR_SEMESTER_MAP[activeSubject.year] || []).map((sem) => (
+                                  <option key={sem} value={sem}>{sem}</option>
+                                ))}
+                              </select>
+                              <select
+                                className={`${styles.subjectInput} ${styles.subjectInputSmall}`}
                                 value={activeSubject.credits}
-                                placeholder="Credits"
                                 onChange={(event) => handleSubjectFieldChange(activeSubject.id, 'credits', event.target.value)}
-                              />
+                              >
+                                <option value="">Credits</option>
+                                {['0', '1', '2', '3', '4', '5'].map((cr) => (
+                                  <option key={cr} value={cr}>{cr}</option>
+                                ))}
+                              </select>
                             </div>
                           </div>
-                          <div className={styles.subjectMeta}>
+                        </>
+                      ) : (
+                        <>
+                          <div className={styles.subjectTitleRow}>
+                            <h3 className={styles.subjectTitle}>{activeSubject.name}</h3>
                             <span className={styles.currentGrade}>
                               Current: {activeGrade} {isFailGrade ? '- (Fail)' : ''}
                             </span>
                           </div>
-                        </>
-                    ) : (
-                        <>
-                          <h3 className={styles.subjectTitle}>{activeSubject.name}</h3>
                           <div className={styles.subjectMeta}>
                             <span className={styles.subjectCode}>{activeSubject.code || activeSubject.id}</span>
-                            <span className={styles.currentGrade}>
-                              Current: {activeGrade} {isFailGrade ? '- (Fail)' : ''}
-                            </span>
-                            <span className={styles.credits}>Credits : {activeSubject.credits || '--'}</span>
+                            <span className={styles.credits}>Year: {activeSubject.year || '--'}</span>
+                            <span className={styles.credits}>Semester: {activeSubject.semester || '--'}</span>
+                            <span className={styles.credits}>Credits : {(activeSubject.credits !== '' && activeSubject.credits !== undefined && activeSubject.credits !== null) ? activeSubject.credits : '--'}</span>
                           </div>
                         </>
                       )}
                     </div>
 
-                    <button
-                      type="button"
-                      className={styles.editIconButton}
-                      title={activeSubject?.isEditing ? 'Discard edits' : 'Edit subject'}
-                      onClick={() => handleToggleEdit(activeSubject.id)}
-                    >
-                      {activeSubject?.isEditing ? (
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                          <path d="M18.3 5.71a1 1 0 0 0-1.41 0L12 10.59 7.11 5.7A1 1 0 0 0 5.7 7.11L10.59 12l-4.89 4.89a1 1 0 1 0 1.41 1.41L12 13.41l4.89 4.89a1 1 0 0 0 1.41-1.41L13.41 12l4.89-4.89a1 1 0 0 0 0-1.4z" fill="#fff" />
-                        </svg>
-                      ) : (
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                          <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z" fill="#fff"/>
-                          <path d="M20.71 7.04a1.003 1.003 0 0 0 0-1.42l-2.34-2.34a1.003 1.003 0 0 0-1.42 0l-1.83 1.83 3.75 3.75 1.84-1.82z" fill="#fff"/>
-                        </svg>
-                      )}
-                    </button>
+                    <div className={styles.subjectHeaderRight}>
+                      <button
+                        type="button"
+                        className={styles.editIconButton}
+                        title={activeSubject?.isEditing ? 'Discard edits' : 'Edit subject'}
+                        onClick={() => handleToggleEdit(activeSubject.id)}
+                      >
+                        {activeSubject?.isEditing ? (
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                            <path d="M18.3 5.71a1 1 0 0 0-1.41 0L12 10.59 7.11 5.7A1 1 0 0 0 5.7 7.11L10.59 12l-4.89 4.89a1 1 0 1 0 1.41 1.41L12 13.41l4.89 4.89a1 1 0 0 0 1.41-1.41L13.41 12l4.89-4.89a1 1 0 0 0 0-1.4z" fill="#fff" />
+                          </svg>
+                        ) :
+                          (
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                              <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z" fill="#fff" />
+                              <path d="M20.71 7.04a1.003 1.003 0 0 0 0-1.42l-2.34-2.34a1.003 1.003 0 0 0-1.42 0l-1.83 1.83 3.75 3.75 1.84-1.82z" fill="#fff" />
+                            </svg>
+                          )}
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.deleteButton}
+                        title="Delete subject"
+                        onClick={() => handleDeleteSubject(activeSubject.id)}
+                      >
+                        {/* <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                          <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" fill="#fff" />
+                        </svg> */}
+                        Delete
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.backButton}
+                        onClick={handleBackButtonClick}
+                      >
+                        Back
+                      </button>
+                    </div>
 
                   </div>
 
@@ -603,19 +923,29 @@ function AdminSemesterMarksheetEdit({ onLogout, onViewChange }) {
                   </div>
 
                   <div className={styles.cardActions}>
-                    <button type="button" className={styles.discardButton} onClick={handleDiscard}>
+                    <button
+                      type="button"
+                      className={styles.discardButton}
+                      onClick={handleBackButtonClick}
+                      disabled={isSaving || isDeleting || changedSubjects.length === 0}
+                    >
                       Discard
                     </button>
-                    <button type="button" className={styles.updateButton} onClick={handleUpdate} disabled={isSaving}>
+                    <button
+                      type="button"
+                      className={styles.updateButton}
+                      onClick={handleUpdate}
+                      disabled={isSaving || isDeleting || changedSubjects.length === 0}
+                    >
                       {isSaving ? 'Updating...' : 'Update'}
                     </button>
                   </div>
 
-                  {(saveMessage || saveError) && (
+                  {/* {(saveMessage || saveError) && (
                     <div className={saveError ? styles.saveError : styles.saveMessage}>
                       {saveError || saveMessage}
                     </div>
-                  )}
+                  )} */}
                 </div>
               )
             )}

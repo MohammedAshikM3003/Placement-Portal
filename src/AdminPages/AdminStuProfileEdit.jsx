@@ -402,7 +402,7 @@ const SuccessPopup = ({ isOpen, onClose }) => {
 
                     <h2 style={{ margin: "1rem 0 0.5rem 0", fontSize: "24px", color: "#000", fontWeight: "700" }}>
 
-                        Changes Saved âœ“
+                        Changes Saved {"\u2714"}
 
                     </h2>
 
@@ -496,7 +496,7 @@ const FileSizeErrorPopup = ({ isOpen, onClose, fileSizeKB }) => {
 
                     </div>
 
-                    <h2>Image Size Exceeded âœ—</h2>
+                    <h2>Image Size Exceeded {"\u2717"}</h2>
 
                     <p className={styles.imageSizePopupLine}>
 
@@ -615,6 +615,16 @@ const toPdfBlobUrl = (fileData, mimeType = 'application/pdf') => {
 };
 
 
+
+const cleanMobileNumber = (val) => {
+    if (!val) return '';
+    let str = String(val).replace(/\D/g, '');
+    while (str.startsWith('91') && str.length > 10) {
+        str = str.slice(2);
+    }
+    str = str.replace(/^0+/, '');
+    return str.substring(0, 10);
+};
 
 const resolveResumeFileUrl = (value) => {
 
@@ -1586,11 +1596,11 @@ const CropImageModal = ({ isOpen, imageSrc, onCrop, onClose, onDiscard }) => {
 
                             <div className={styles.rotateControl}>
 
-                                <button onClick={() => setRotation((r) => (r - 10 + 360) % 360)} className={styles.rotateBtn} title="Rotate left">â†º</button>
+                                <button onClick={() => setRotation((r) => (r - 10 + 360) % 360)} className={styles.rotateBtn} title="Rotate left">{"\u21b6"}</button>
 
-                                <span className={styles.angleValue}>{rotation}Â°</span>
+                                <span className={styles.angleValue}>{rotation}{"\u00b0"}</span>
 
-                                <button onClick={() => setRotation((r) => (r + 10) % 360)} className={styles.rotateBtn} title="Rotate right">â†»</button>
+                                <button onClick={() => setRotation((r) => (r + 10) % 360)} className={styles.rotateBtn} title="Rotate right">{"\u21b7"}</button>
 
                             </div>
 
@@ -1808,7 +1818,7 @@ const URLValidationErrorPopup = ({ isOpen, onClose, urlType, invalidUrl }) => {
 
                     {renderIcon()}
 
-                    <h2>Invalid {urlType} Link âœ—</h2>
+                    <h2>Invalid {urlType} Link {"\u2717"}</h2>
 
                     {invalidUrl && (
 
@@ -1984,7 +1994,7 @@ function AdminFieldUpdateBanner({ isVisible, updatedFields = [] }) {
 
 
 
-    const fieldText = updatedFields.join('  â€¢  ');
+    const fieldText = updatedFields.join('  \u2022  ');
 
     const shouldScroll = updatedFields.length > 1;
 
@@ -2309,6 +2319,77 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
     const [pendingNavView, setPendingNavView] = useState(null);
 
     const [availableSemesters, setAvailableSemesters] = useState([]);
+    const [hasResume, setHasResume] = useState(false);
+    const [certificateCount, setCertificateCount] = useState(0);
+
+    useEffect(() => {
+        let isMounted = true;
+        const checkResumeAndCertificates = async () => {
+            const idToUse = studentData?._id || studentId;
+            if (!idToUse) {
+                if (isMounted) {
+                    setHasResume(false);
+                    setCertificateCount(0);
+                }
+                return;
+            }
+
+            let resumeFound = Boolean(
+                studentData?.resumeUrl || 
+                studentData?.resume || 
+                studentData?.resumeFile || 
+                studentData?.resumeFileName || 
+                studentData?.resumeData || 
+                studentData?.gridfsFileId
+            );
+
+            if (!resumeFound) {
+                try {
+                    const resDoc = await getResumeDocument(idToUse);
+                    if (resDoc && (resDoc.url || resDoc.fileName || resDoc.name || resDoc.gridfsFileId || resDoc.resumeData)) {
+                        resumeFound = true;
+                    }
+                } catch (err) {
+                    resumeFound = false;
+                }
+            }
+
+            if (isMounted) {
+                setHasResume(resumeFound);
+            }
+
+            try {
+                const certRes = await mongoDBService.getCertificatesByStudentId(idToUse);
+                let certList = [];
+                if (Array.isArray(certRes)) {
+                    certList = certRes;
+                } else if (Array.isArray(certRes?.certificates)) {
+                    certList = certRes.certificates;
+                } else if (Array.isArray(certRes?.data)) {
+                    certList = certRes.data;
+                }
+
+                if (certList.length === 0 && Array.isArray(studentData?.certificates)) {
+                    certList = studentData.certificates;
+                }
+
+                const approvedCount = certList.filter(cert => (cert.status || '').toLowerCase() === 'approved').length;
+
+                if (isMounted) {
+                    setCertificateCount(approvedCount);
+                }
+            } catch (err) {
+                if (isMounted) {
+                    const fallbackCerts = Array.isArray(studentData?.certificates) ? studentData.certificates : [];
+                    const approvedCount = fallbackCerts.filter(cert => (cert.status || '').toLowerCase() === 'approved').length;
+                    setCertificateCount(approvedCount);
+                }
+            }
+        };
+
+        checkResumeAndCertificates();
+        return () => { isMounted = false; };
+    }, [studentId, studentData?._id, studentData?.resumeUrl, studentData?.resume, studentData?.certificates]);
 
     const [showLoginPassword, setShowLoginPassword] = useState(false);
 
@@ -3650,7 +3731,15 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
 
             currentYear: data.currentYear || data.year || '',
 
-            currentSemester: data.currentSemester || data.semester || ''
+            currentSemester: data.currentSemester || data.semester || '',
+
+            mobileNo: cleanMobileNumber(data.mobileNo || data.MobileNo || data.mobile || ''),
+
+            fatherMobile: cleanMobileNumber(data.fatherMobile || data.FatherMobile || ''),
+
+            motherMobile: cleanMobileNumber(data.motherMobile || data.MotherMobile || ''),
+
+            guardianMobile: cleanMobileNumber(data.guardianMobile || data.GuardianMobile || data.guardianNumber || '')
 
         };
 
@@ -3776,9 +3865,9 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
 
         try {
 
-            const completeData = await fastDataService.getCompleteStudentData(studentId);
+            const completeData = await fastDataService.getCompleteStudentData(studentId, false);
 
-            console.log('ðŸ” API Response - completeData:', {
+            console.log('ðŸ”  API Response - completeData:', {
 
                 exists: !!completeData,
 
@@ -3797,6 +3886,13 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
                 didPopulate = true;
 
                 populateFormFields(completeData.student);
+
+                const approvedCount = completeData.certificates 
+                    ? completeData.certificates.filter(cert => (cert.status || '').toLowerCase() === 'approved').length 
+                    : 0;
+                setCertificateCount(approvedCount);
+
+                setHasResume(!!completeData.resume);
 
 
 
@@ -3922,7 +4018,7 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
 
         if (studentId) {
 
-            console.log('ðŸ” Admin viewing student:', studentId, '- Loading fresh data from API');
+            console.log('ðŸ”  Admin viewing student:', studentId, '- Loading fresh data from API');
 
             loadStudentData();
 
@@ -3932,7 +4028,7 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
 
             const storedStudentData = JSON.parse(localStorage.getItem('studentData') || 'null');
 
-            console.log('âš ï¸ No studentId in URL - falling back to localStorage:', {
+            console.log('âš ï¸  No studentId in URL - falling back to localStorage:', {
 
                 exists: !!storedStudentData,
 
@@ -3980,7 +4076,7 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
 
         if (studentId) {
 
-            console.log('ðŸ” Admin view - auto-sync disabled (use manual refresh to see updates)');
+            console.log('ðŸ”  Admin view - auto-sync disabled (use manual refresh to see updates)');
 
             return; // Don't run auto-sync for admin viewing students
 
@@ -4420,7 +4516,7 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
 
                     console.log('ðŸ”„ Uploading profile photo to GridFS...');
 
-                    console.log('ðŸ“ Upload details:', {
+                    console.log('ðŸ“  Upload details:', {
 
                         studentId: studentId,
 
@@ -4558,21 +4654,21 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
 
                 primaryEmail: formData.get('primaryEmail') || studentData?.primaryEmail || '',
 
-                mobileNo: formData.get('mobileNo') || studentData?.mobileNo || '',
+                mobileNo: cleanMobileNumber(formData.get('mobileNo') || studentData?.mobileNo || ''),
 
                 fatherOccupation: formData.get('fatherOccupation') || studentData?.fatherOccupation || '',
 
-                fatherMobile: formData.get('fatherMobile') || studentData?.fatherMobile || '',
+                fatherMobile: cleanMobileNumber(formData.get('fatherMobile') || studentData?.fatherMobile || ''),
 
                 motherOccupation: formData.get('motherOccupation') || studentData?.motherOccupation || '',
 
-                motherMobile: formData.get('motherMobile') || studentData?.motherMobile || '',
+                motherMobile: cleanMobileNumber(formData.get('motherMobile') || studentData?.motherMobile || ''),
 
                 section: formData.get('section') || studentData?.section || '',
 
                 guardianName: formData.get('guardianName') || studentData?.guardianName || '',
 
-                guardianMobile: formData.get('guardianMobile') || studentData?.guardianMobile || '',
+                guardianMobile: cleanMobileNumber(formData.get('guardianMobile') || studentData?.guardianMobile || ''),
 
                 bloodGroup: formData.get('bloodGroup') || studentData?.bloodGroup || '',
 
@@ -4720,7 +4816,7 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
 
                         const timeout = setTimeout(() => {
 
-                            console.log('âš ï¸ Image preload timeout, continuing anyway');
+                            console.log('âš ï¸  Image preload timeout, continuing anyway');
 
                             resolve();
 
@@ -4742,7 +4838,7 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
 
                             clearTimeout(timeout);
 
-                            console.log('âš ï¸ Image preload failed, continuing anyway');
+                            console.log('âš ï¸  Image preload failed, continuing anyway');
 
                             resolve(); // Don't reject, just continue
 
@@ -4856,6 +4952,60 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
 
 
 
+    const handleFormKeyDown = (e) => {
+
+        if (e.key === 'Enter') {
+
+            if (e.defaultPrevented) return;
+
+
+
+            const tagName = e.target.tagName.toLowerCase();
+
+            const type = e.target.type ? e.target.type.toLowerCase() : '';
+
+
+
+            // Do not intercept Enter inside buttons, textareas, or submit inputs
+
+            if (tagName === 'textarea' || tagName === 'button' || type === 'submit') {
+
+                return;
+
+            }
+
+
+
+            e.preventDefault();
+
+
+
+            const form = formRef.current;
+
+            if (form) {
+
+                const selector = 'input:not([disabled]):not([type="hidden"]):not([readonly]):not([type="submit"]):not([type="button"]):not([type="file"]), select:not([disabled]), textarea:not([disabled])';
+
+                const focusableElements = Array.from(form.querySelectorAll(selector));
+
+                
+
+                const index = focusableElements.indexOf(e.target);
+
+                if (index > -1 && index < focusableElements.length - 1) {
+
+                    focusableElements[index + 1].focus();
+
+                }
+
+            }
+
+        }
+
+    };
+
+
+
 
 
 
@@ -4864,25 +5014,13 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
 
         let value = e.target.value;
 
-        // Remove leading zeros
-
-        value = value.replace(/^0+/, '');
-
-        // Only allow digits
-
-        value = value.replace(/\D/g, '');
-
-        // First digit must be 6, 7, 8, or 9
+        value = cleanMobileNumber(value);
 
         if (value.length > 0 && !/^[6789]/.test(value)) {
 
             value = '';
 
         }
-
-        // Limit to 10 digits
-
-        value = value.substring(0, 10);
 
         setStudentData(prev => ({ ...prev, [fieldName]: value }));
 
@@ -5352,7 +5490,7 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
 
                 <div className={styles.dashboardArea}>
 
-                    <form ref={formRef} onSubmit={handleSave}>
+                    <form ref={formRef} onSubmit={handleSave} onKeyDown={handleFormKeyDown}>
 
                         {/* --- PERSONAL INFO --- */}
 
@@ -5440,15 +5578,31 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
 
                                                 type="text"
 
+                                                maxLength={4}
+
                                                 value={studentData?.batch ? (studentData.batch.split('-')[0] || '') : ''}
 
                                                 placeholder="Start"
 
                                                 onChange={(e) => {
 
-                                                    const endYear = studentData?.batch ? (studentData.batch.split('-')[1] || '') : '';
+                                                    const startVal = e.target.value.replace(/[^\d]/g, '').slice(0, 4);
 
-                                                    setStudentData(prev => ({ ...prev, batch: `${e.target.value}-${endYear}` }));
+                                                    let endYear = studentData?.batch ? (studentData.batch.split('-')[1] || '') : '';
+
+                                                    if (startVal.length === 4) {
+
+                                                        const startNum = parseInt(startVal, 10);
+
+                                                        if (!isNaN(startNum)) {
+
+                                                            endYear = (startNum + 4).toString();
+
+                                                        }
+
+                                                    }
+
+                                                    setStudentData(prev => ({ ...prev, batch: `${startVal}-${endYear}` }));
 
                                                 }}
 
@@ -5464,15 +5618,19 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
 
                                                 type="text"
 
+                                                maxLength={4}
+
                                                 value={studentData?.batch ? (studentData.batch.split('-')[1] || '') : ''}
 
                                                 placeholder="End"
 
                                                 onChange={(e) => {
 
+                                                    const endVal = e.target.value.replace(/[^\d]/g, '').slice(0, 4);
+
                                                     const startYear = studentData?.batch ? (studentData.batch.split('-')[0] || '') : '';
 
-                                                    setStudentData(prev => ({ ...prev, batch: `${startYear}-${e.target.value}` }));
+                                                    setStudentData(prev => ({ ...prev, batch: `${startYear}-${endVal}` }));
 
                                                 }}
 
@@ -5844,7 +6002,7 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
 
                                             <div className={styles.countryCode}>+91</div>
 
-                                            <input type="tel" name="mobileNo" placeholder="Enter Mobile No." value={studentData?.mobileNo || ''} onChange={(e) => handleMobileChange(e, 'mobileNo')} disabled={isSaving} className={styles.mobileNumberInput} />
+                                            <input type="tel" name="mobileNo" placeholder="Enter Mobile No." value={cleanMobileNumber(studentData?.mobileNo)} onChange={(e) => handleMobileChange(e, 'mobileNo')} disabled={isSaving} className={styles.mobileNumberInput} />
 
                                         </div>
 
@@ -5888,7 +6046,7 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
 
                                             <div className={styles.countryCode}>+91</div>
 
-                                            <input type="tel" name="fatherMobile" placeholder="Enter Father Mobile No." value={studentData?.fatherMobile || ''} onChange={(e) => handleMobileChange(e, 'fatherMobile')} disabled={isSaving} className={styles.mobileNumberInput} />
+                                            <input type="tel" name="fatherMobile" placeholder="Enter Father Mobile No." value={cleanMobileNumber(studentData?.fatherMobile)} onChange={(e) => handleMobileChange(e, 'fatherMobile')} disabled={isSaving} className={styles.mobileNumberInput} />
 
                                         </div>
 
@@ -5932,7 +6090,7 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
 
                                             <div className={styles.countryCode}>+91</div>
 
-                                            <input type="tel" name="motherMobile" placeholder="Enter Mother Mobile No." value={studentData?.motherMobile || ''} onChange={(e) => handleMobileChange(e, 'motherMobile')} disabled={isSaving} className={styles.mobileNumberInput} />
+                                            <input type="tel" name="motherMobile" placeholder="Enter Mother Mobile No." value={cleanMobileNumber(studentData?.motherMobile)} onChange={(e) => handleMobileChange(e, 'motherMobile')} disabled={isSaving} className={styles.mobileNumberInput} />
 
                                         </div>
 
@@ -5952,7 +6110,7 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
 
                                         <label>&nbsp;</label>
 
-                                        <button type="button" className={styles.fieldButton} onClick={openResumePopup}>
+                                        <button type="button" className={styles.fieldButton} onClick={openResumePopup} disabled={!hasResume}>
 
                                             Resume
 
@@ -5964,7 +6122,7 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
 
                                         <label>&nbsp;</label>
 
-                                        <button type="button" className={styles.fieldButton} onClick={() => navigate(`/admin-student-certificates/${studentId}`, { state: { studentData } })}>
+                                        <button type="button" className={styles.fieldButton} onClick={() => navigate(`/admin-student-certificates/${studentData?._id || studentId}`, { state: { studentData } })} disabled={certificateCount < 1}>
 
                                             Certificate
 
@@ -5996,7 +6154,7 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
 
                                                     onError={(e) => {
 
-                                                        console.error('âŒ Profile image failed to load:', profileImage);
+                                                        console.error('â Œ Profile image failed to load:', profileImage);
 
                                                         console.error('Image error event:', e);
 
@@ -6198,7 +6356,7 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
 
                                             <div className={styles.countryCode}>+91</div>
 
-                                            <input type="tel" name="guardianMobile" placeholder="Enter Guardian Number" value={studentData?.guardianMobile || ''} onChange={(e) => handleMobileChange(e, 'guardianMobile')} disabled={isSaving} className={styles.mobileNumberInput} />
+                                            <input type="tel" name="guardianMobile" placeholder="Enter Guardian Number" value={cleanMobileNumber(studentData?.guardianMobile)} onChange={(e) => handleMobileChange(e, 'guardianMobile')} disabled={isSaving} className={styles.mobileNumberInput} />
 
                                         </div>
 
@@ -6662,7 +6820,7 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
 
                                                 className={styles.viewMarksheetBtn}
 
-                                                onClick={() => navigate(`/admin-semester-marksheet-view/${studentId}`, {
+                                                onClick={() => navigate(`/admin-semester-marksheet-view/${studentData?._id || studentId}`, {
 
                                                     state: {
 
@@ -7078,7 +7236,7 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
 
                                                 <span className={`${styles.anlsPlacedBadge} ${isStudentPlaced ? styles.anlsPlacedBadgePlaced : styles.anlsPlacedBadgeNotPlaced}`}><span className={`${styles.anlsPlacedDot} ${isStudentPlaced ? styles.anlsPlacedDotPlaced : styles.anlsPlacedDotNotPlaced}`} />{isStudentPlaced ? 'Placed' : 'Not placed'}</span>
 
-                                                <button type="button" className={styles.anlsBackBtn} onClick={() => setShowAnalysis(false)}>Back â†©</button>
+                                                <button type="button" className={styles.anlsBackBtn} onClick={() => setShowAnalysis(false)}>Back {"\u21a9"}</button>
 
                                             </div>
 
@@ -7216,7 +7374,7 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
 
                                                         >
 
-                                                            âœ• Clear Selection
+                                                            {"\u2716"} Clear Selection
 
                                                         </button>
 
@@ -7334,7 +7492,7 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
 
                                                                 <ul className={styles.anlsStatList}>
 
-                                                                    {driveAnalytics.workOn.map((item) => <li key={item}><span className={styles.anlsArrow}>â†’</span>{item}</li>)}
+                                                                    {driveAnalytics.workOn.map((item) => <li key={item}><span className={styles.anlsArrow}>{"\u2192"}</span>{item}</li>)}
 
                                                                 </ul>
 
@@ -7356,7 +7514,7 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
 
                                                                 <ul className={styles.anlsStatList}>
 
-                                                                    {driveAnalytics.bestAt.map((item) => <li key={item}><span className={styles.anlsArrow}>â†’</span>{item}</li>)}
+                                                                    {driveAnalytics.bestAt.map((item) => <li key={item}><span className={styles.anlsArrow}>{"\u2192"}</span>{item}</li>)}
 
                                                                 </ul>
 
@@ -7378,7 +7536,7 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
 
                                                                 <div className={styles.anlsGoodBadHeader}>
 
-                                                                    <span className={styles.anlsGoodIcon}>ðŸ‘</span>
+                                                                    <span className={styles.anlsGoodIcon}>{"\uD83D\uDC4D"}</span>
 
                                                                     <span className={styles.anlsGoodLabel}>GOOD</span>
 
@@ -7388,7 +7546,7 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
 
                                                                     <div key={i} className={styles.anlsGoodItem}>
 
-                                                                        <span className={styles.anlsCheckIcon}>âœ…</span>
+                                                                        <span className={styles.anlsCheckIcon}>{"\u2705"}</span>
 
                                                                         <span>{g}</span>
 
@@ -7402,7 +7560,7 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
 
                                                                 <div className={styles.anlsGoodBadHeader}>
 
-                                                                    <span className={styles.anlsGoodIcon}>ðŸ‘Ž</span>
+                                                                    <span className={styles.anlsGoodIcon}>{"\uD83D\uDC4E"}</span>
 
                                                                     <span className={styles.anlsBadLabel}>BAD</span>
 
@@ -7412,7 +7570,7 @@ function AdminStuProfileEdit({ onLogout, onViewChange }) {
 
                                                                     <div key={i} className={styles.anlsBadItem}>
 
-                                                                        <span className={styles.anlsCheckIcon}>âŒ</span>
+                                                                        <span className={styles.anlsCheckIcon}>{"\u274C"}</span>
 
                                                                         <span>{b}</span>
 
