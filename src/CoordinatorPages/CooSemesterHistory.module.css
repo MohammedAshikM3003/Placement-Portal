@@ -219,7 +219,7 @@
   background: #fff;
   border-radius: 12px;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-  overflow: hidden;
+  overflow: visible;
   font-family: 'Poppins', sans-serif;
   animation: msPopupScaleIn 0.25s ease-out;
 }
@@ -232,6 +232,8 @@
   font-weight: 700;
   text-align: center;
   letter-spacing: 0.02em;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
 }
 
 .ms-popup-body {
@@ -250,6 +252,8 @@
   gap: 32px;
   flex-wrap: wrap;
   border-top: none;
+  border-bottom-left-radius: 12px;
+  border-bottom-right-radius: 12px;
 }
 
 .warning-icon-wrapper {
@@ -874,4 +878,54 @@
   color: #1f2937;
   font-weight: 600;
   font-size: 0.95rem;
+}
+
+@media (max-width: 760px) {
+  .semester-main-content {
+    padding: 10px 10px 80px 10px !important;
+  }
+
+  .co-history-filter-header-container {
+    position: relative !important;
+    display: block !important;
+    width: 100% !important;
+  }
+
+  .co-history-filter-header {
+    margin: 0 auto !important;
+    display: block !important;
+    width: 155px !important;
+  }
+
+  .co-history-clear-btn {
+    position: absolute !important;
+    right: 0px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    height: 24px !important;
+    line-height: 24px !important;
+    padding: 0 10px !important;
+    font-size: 0.75rem !important;
+    border-radius: 12px !important;
+  }
+
+  .co-history-action-card {
+    padding: 10px 12px !important;
+  }
+  
+  .co-history-action-card h4 {
+    width: 80px !important;
+    font-size: 1rem !important;
+  }
+  
+  .co-history-action-description {
+    margin: 0 8px !important;
+    font-size: 0.8rem !important;
+  }
+  
+  .co-history-action-btn {
+    width: 90px !important;
+    padding: 8px 10px !important;
+    font-size: 0.8rem !important;
+  }
 }

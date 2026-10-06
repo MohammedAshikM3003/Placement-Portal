@@ -4,7 +4,6 @@ import useCoordinatorAuth from '../utils/useCoordinatorAuth';
 import Navbar from "../components/Navbar/Conavbar.js";
 import Sidebar from "../components/Sidebar/Cosidebar.js";
 import styles from './Coo_ManageStudents.module.css';
-import achStyles from '../StudentPages/Achievements.module.css';
 import Adminicon from "../assets/Adminicon.png";
 import mongoDBService from "../services/mongoDBService.jsx";
 import { createBlockNotifications } from '../services/blockNotificationService.jsx';
@@ -285,58 +284,6 @@ const StudentDeletedPopup = ({ isOpen, onClose }) => {
     );
 };
 
-// --- NEW: Blocked Popup Component ---
-const BlockedPopup = ({ isOpen, onClose }) => {
-    if (!isOpen) return null;
-    return (
-        <div className={styles["co-ms-StuProfile-popup-overlay"]}>
-            <div className={styles["co-ms-StuProfile-popup-container"]}>
-                <div className={cx(styles["co-ms-StuProfile-popup-header"], styles["block-popup-header"])}>Blocked !</div>
-                <div className={styles["co-ms-StuProfile-popup-body"]}>
-                    <div className={achStyles['Achievement-status-icon']}>
-                        <svg viewBox="0 0 72 72" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                            <circle cx="36" cy="36" r="24" stroke="#D23B42" strokeWidth="6" fill="none" strokeLinecap="round" />
-                            <line x1="22" y1="22" x2="50" y2="50" stroke="#D23B42" strokeWidth="6" strokeLinecap="round" />
-                        </svg>
-                    </div>
-                    <h2 className={achStyles['Achievement-status-title']}>Student Blocked ✓</h2>
-                    <p className={achStyles['Achievement-status-text']}>The selected Student has been Blocked Successfully!</p>
-                </div>
-                <div className={styles["co-ms-StuProfile-popup-footer"]}>
-                    <button onClick={onClose} className={styles["co-ms-StuProfile-popup-close-btn"]}>Close</button>
-                </div>
-            </div>
-        </div>
-    );
-};
-
-// --- NEW: Unblocked Popup Component ---
-const UnblockedPopup = ({ isOpen, onClose }) => {
-    if (!isOpen) return null;
-    return (
-        <div className={styles["co-ms-StuProfile-popup-overlay"]}>
-            <div className={styles["co-ms-StuProfile-popup-container"]}>
-                <div className={cx(styles["co-ms-StuProfile-popup-header"], styles["unblock-popup-header"])}>Unblocked !</div>
-                <div className={styles["co-ms-StuProfile-popup-body"]}>
-                    <div className={achStyles['Achievement-status-icon']}>
-                        <svg viewBox="0 0 72 72" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                            <circle cx="36" cy="36" r="24" stroke="#D2AF3B" strokeWidth="6" fill="none" strokeLinecap="round" />
-                            <line x1="22" y1="50" x2="31" y2="41" stroke="#D2AF3B" strokeWidth="6" strokeLinecap="round" />
-                            <line x1="41" y1="31" x2="50" y2="22" stroke="#D2AF3B" strokeWidth="6" strokeLinecap="round" />
-                        </svg>
-                    </div>
-                    <h2 className={achStyles['Achievement-status-title']}>Student Unblocked ✓</h2>
-                    <p className={achStyles['Achievement-status-text']}>The selected Student has been Unblocked Successfully!</p>
-                </div>
-                <div className={styles["co-ms-StuProfile-popup-footer"]}>
-                    <button onClick={onClose} className={styles["co-ms-StuProfile-popup-close-btn"]}>Close</button>
-                </div>
-            </div>
-        </div>
-    );
-};
-
-
 function Comanagestud({ onLogout, currentView, onViewChange  }) {
     useCoordinatorAuth(); // JWT authentication verification
     const navigate = useNavigate();
@@ -447,12 +394,9 @@ function Comanagestud({ onLogout, currentView, onViewChange  }) {
         setFilterSection('');
     };
 
-    // 1. ADD NEW POPUP STATES
-    const [isDeleteWarningOpen, setDeleteWarningOpen] = useState(false); // New state for delete warning
+    // 1. POPUP & ACTION STATES
+    const [isDeleteWarningOpen, setDeleteWarningOpen] = useState(false); // State for delete warning
     const [isStudentDeletedPopupOpen, setStudentDeletedPopupOpen] = useState(false);
-    // Removed isStudentBlocked as it's not a general popup state.
-    const [isBlockedPopupOpen, setIsBlockedPopupOpen] = useState(false);
-    const [isUnblockedPopupOpen, setIsUnblockedPopupOpen] = useState(false); // State for Unblock success popup
     const [blockInProgress, setBlockInProgress] = useState(false);
     const [unblockInProgress, setUnblockInProgress] = useState(false);
     const [deleteInProgress, setDeleteInProgress] = useState(false);
@@ -688,7 +632,7 @@ function Comanagestud({ onLogout, currentView, onViewChange  }) {
     const hasUnblockedSelection = selectedStudents.some(student => !student.blocked);
     const isStudentSelected = selectedStudentIds.size > 0;
 
-    // 2. UPDATED handleBlock to show BlockedPopup with coordinator information
+    // 2. handleBlock - updates student block status with button feedback alone (no popups)
     const handleBlock = async () => {
         if (!selectedStudentIds.size || blockInProgress) return;
         const ids = Array.from(selectedStudentIds);
@@ -704,24 +648,27 @@ function Comanagestud({ onLogout, currentView, onViewChange  }) {
             const blockerCabin = coordinatorData?.cabin || 'N/A';
             const blockerIdentifier = coordinatorData?.coordinatorId || coordinatorData?.username || blockedByName;
             
-            await Promise.all(ids.map(id => mongoDBService.updateStudent(id, { 
-                blocked: true, 
-                isBlocked: true,
-                blockedBy: blockedByName,
-                blockedByRole: 'coordinator',
-                blockedByCabin: blockerCabin,
-                blockedByIdentifier: blockerIdentifier,
-                blockedAt: new Date().toISOString(),
-                blockedReason: 'Your account has been blocked by the placement coordinator. Please contact the placement office for more information.'
-            })));
+            await Promise.all([
+                Promise.all(ids.map(id => mongoDBService.updateStudent(id, { 
+                    blocked: true, 
+                    isBlocked: true,
+                    blockedBy: blockedByName,
+                    blockedByRole: 'coordinator',
+                    blockedByCabin: blockerCabin,
+                    blockedByIdentifier: blockerIdentifier,
+                    blockedAt: new Date().toISOString(),
+                    blockedReason: 'Your account has been blocked by the placement coordinator. Please contact the placement office for more information.'
+                }))),
+                new Promise(resolve => setTimeout(resolve, 350))
+            ]);
 
             await publishBlockNotifications('blocked', ids.map(id => activeStudentSource.find(student => student.id === id)).filter(Boolean));
             setStudents(prev => prev.map(student => ids.includes(student.id) ? { ...student, blocked: true } : student));
             if (aiFilterActive) {
                 setAiFilteredStudents(prev => prev.map(student => ids.includes(student.id) ? { ...student, blocked: true } : student));
             }
+
             setSelectedStudentIds(new Set());
-            setIsBlockedPopupOpen(true);
         } catch (error) {
             console.error('Failed to block students:', error);
             setActionError(error.message || 'Failed to block student(s). Please try again.');
@@ -731,7 +678,7 @@ function Comanagestud({ onLogout, currentView, onViewChange  }) {
     };
 
     
-    // 3. UPDATED handleUnblock to show UnblockedPopup
+    // 3. handleUnblock - updates student unblock status with button feedback alone (no popups)
     const handleUnblock = async () => {
         if (!selectedStudentIds.size || unblockInProgress) return;
         const ids = Array.from(selectedStudentIds);
@@ -739,7 +686,10 @@ function Comanagestud({ onLogout, currentView, onViewChange  }) {
         setActionError(null);
 
         try {
-            await Promise.all(ids.map(id => mongoDBService.updateStudent(id, { blocked: false, isBlocked: false })));
+            await Promise.all([
+                Promise.all(ids.map(id => mongoDBService.updateStudent(id, { blocked: false, isBlocked: false }))),
+                new Promise(resolve => setTimeout(resolve, 350))
+            ]);
             
             // 🔄 FIXED: Clear fastDataService cache for unblocked students
             // This ensures they get fresh data when they login
@@ -760,8 +710,8 @@ function Comanagestud({ onLogout, currentView, onViewChange  }) {
             if (aiFilterActive) {
                 setAiFilteredStudents(prev => prev.map(student => ids.includes(student.id) ? { ...student, blocked: false } : student));
             }
+
             setSelectedStudentIds(new Set());
-            setIsUnblockedPopupOpen(true);
         } catch (error) {
             console.error('Failed to unblock students:', error);
             setActionError(error.message || 'Failed to unblock student(s). Please try again.');
@@ -803,12 +753,10 @@ function Comanagestud({ onLogout, currentView, onViewChange  }) {
         }
     };
 
-    // 6. FUNCTION to close all action popups
+    // 6. FUNCTION to close action popups
     const handleCloseActionPopup = () => {
         setDeleteWarningOpen(false);
         setStudentDeletedPopupOpen(false);
-        setIsBlockedPopupOpen(false);
-        setIsUnblockedPopupOpen(false);
         setActionError(null);
     };
     useEffect(() => {
@@ -1292,8 +1240,9 @@ function Comanagestud({ onLogout, currentView, onViewChange  }) {
                                     className={cx(styles["co-ms-action-btn"], styles["co-ms-block-btn"])} 
                                     onClick={handleBlock}
                                     disabled={selectedStudentIds.size < 1 || blockInProgress || hasBlockedSelection}
+                                    style={{ whiteSpace: 'nowrap' }}
                                 >
-                                    {blockInProgress ? 'Block..' : 'Block'}
+                                    {blockInProgress ? 'Blocking...' : 'Block'}
                                 </button>
                             </div>
                             
@@ -1306,8 +1255,9 @@ function Comanagestud({ onLogout, currentView, onViewChange  }) {
                                     className={cx(styles["co-ms-action-btn"], styles["co-ms-unblock-btn"])} 
                                     onClick={handleUnblock}
                                     disabled={selectedStudentIds.size < 1 || unblockInProgress || hasUnblockedSelection}
+                                    style={{ whiteSpace: 'nowrap' }}
                                 >
-                                    {unblockInProgress ? 'Unblock...' : 'Unblock'}
+                                    {unblockInProgress ? 'Unblocking...' : 'Unblock'}
                                 </button>
                             </div>
                             
@@ -1413,7 +1363,7 @@ function Comanagestud({ onLogout, currentView, onViewChange  }) {
                                             <span
                                                 onClick={(e) => {
                                                     e.stopPropagation();
-                                                    navigate(`/coo-manage-students/view/${row.id}`, { state: { mode: 'view' } });
+                                                    navigate(`/coo-manage-students/view/${row.id}`, { state: { mode: 'view', student: row } });
                                                 }}
                                                 style={{ cursor: 'pointer', display: 'inline-flex' }}
                                             >
@@ -1458,15 +1408,7 @@ function Comanagestud({ onLogout, currentView, onViewChange  }) {
             exportType={exportType}
             color="#d23b42"
           />  
-             {/* 8. Render Block/Unblock/Delete Popups */}
-            <BlockedPopup
-                isOpen={isBlockedPopupOpen}
-                onClose={handleCloseActionPopup}
-            />
-            <UnblockedPopup
-                isOpen={isUnblockedPopupOpen}
-                onClose={handleCloseActionPopup}
-            />
+             {/* 8. Render Delete Popups */}
             <DeleteWarningPopup
                 isOpen={isDeleteWarningOpen}
                 onBack={handleCloseActionPopup}

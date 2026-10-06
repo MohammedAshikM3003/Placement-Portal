@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import useCoordinatorAuth from '../utils/useCoordinatorAuth';
 import Viewicon from "../assets/Viewicon.png";
 import Dashcompanydrive from '../assets/Dashcompanydrive.png';
@@ -20,6 +20,7 @@ import CooCalendar from '../components/Calendar/Coo_Calendar.jsx';
 function CoEligiblestudents({ onLogout, currentView, onViewChange }) {
     useCoordinatorAuth(); // JWT authentication verification
     const navigate = useNavigate();
+    const location = useLocation();
     
     // START: MODIFIED/NEW STATE FOR EXPORT POPUPS
     const [showDropdown, setShowDropdown] = useState(false);
@@ -28,16 +29,41 @@ function CoEligiblestudents({ onLogout, currentView, onViewChange }) {
     const [exportType, setExportType] = useState('Excel');
     // END: MODIFIED/NEW STATE FOR EXPORT POPUPS
 
-    const [filterData, setFilterData] = useState({
-        companyName: '',
-        jobRole: '',
-        startDate: '',
-        endDate: ''
+    const [filterData, setFilterData] = useState(() => {
+        const incoming = location.state?.filterData || location.state?.selectedDrive || location.state?.company || null;
+        const normalizeDate = (value) => {
+            const trimmed = (value || '').toString().trim();
+            if (!trimmed) return '';
+            if (/^\d{4}-\d{2}-\d{2}/.test(trimmed)) return trimmed.slice(0, 10);
+            const parsed = new Date(trimmed);
+            if (Number.isNaN(parsed.getTime())) return trimmed;
+            const y = parsed.getFullYear();
+            const m = String(parsed.getMonth() + 1).padStart(2, '0');
+            const d = String(parsed.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        };
+
+        if (incoming) {
+            return {
+                companyName: incoming.companyName || incoming.company || '',
+                jobRole: incoming.jobRole || incoming.role || incoming.jobs || '',
+                startDate: normalizeDate(incoming.startDate || incoming.driveStartDate || incoming.startingDate || incoming.companyDriveDate || incoming.visitDate || ''),
+                endDate: normalizeDate(incoming.endDate || incoming.driveEndDate || incoming.endingDate || incoming.startDate || incoming.driveStartDate || incoming.startingDate || '')
+            };
+        }
+        return {
+            companyName: '',
+            jobRole: '',
+            startDate: '',
+            endDate: ''
+        };
     });
     const [isLoading, setIsLoading] = useState(true);
     const [coordinatorBranchLabel, setCoordinatorBranchLabel] = useState('Students');
     const [companyDrives, setCompanyDrives] = useState([]);
+    const [rawScheduledDrives, setRawScheduledDrives] = useState([]);
     const [studentsData, setStudentsData] = useState([]);
+    const [selectedStudentForSkills, setSelectedStudentForSkills] = useState(null);
     const tableRef = useRef(null);
 
     const formatDateDisplay = (value) => {
@@ -107,10 +133,16 @@ function CoEligiblestudents({ onLogout, currentView, onViewChange }) {
                     coordinatorData?.dept
                 );
 
-                const [eligibleResponse, allStudents] = await Promise.all([
+                const [eligibleResponse, allStudents, scheduledDrivesResponse] = await Promise.all([
                     mongoDBService.getCoordinatorEligibleStudents(),
-                    mongoDBService.getStudents({ includeArchived: 'true' })
+                    mongoDBService.getStudents({ includeArchived: 'true' }),
+                    mongoDBService.getCompanyDrives ? mongoDBService.getCompanyDrives().catch(() => []) : Promise.resolve([])
                 ]);
+
+                const allScheduled = Array.isArray(scheduledDrivesResponse)
+                    ? scheduledDrivesResponse
+                    : (scheduledDrivesResponse?.drives || scheduledDrivesResponse?.data || []);
+                setRawScheduledDrives(allScheduled);
 
                 const branchFromApi = toNormalized(
                     eligibleResponse?.coordinator?.branch ||
@@ -126,12 +158,38 @@ function CoEligiblestudents({ onLogout, currentView, onViewChange }) {
                 const studentByRegNo = new Map();
                 studentList.forEach((student) => {
                     if (student?._id) studentById.set(String(student._id), student);
-                    if (student?.regNo) studentByRegNo.set(String(student.regNo), student);
+                    if (student?.regNo) studentByRegNo.set(String(student.regNo).toUpperCase().trim(), student);
                 });
 
-                const eligibleEntries = Array.isArray(eligibleResponse?.eligibleStudents)
-                    ? eligibleResponse.eligibleStudents
-                    : [];
+                let eligibleEntries = [];
+                if (Array.isArray(eligibleResponse)) {
+                    eligibleEntries = eligibleResponse;
+                } else if (Array.isArray(eligibleResponse?.eligibleStudents)) {
+                    eligibleEntries = eligibleResponse.eligibleStudents;
+                } else if (Array.isArray(eligibleResponse?.data)) {
+                    eligibleEntries = eligibleResponse.data;
+                }
+
+                // If coordinator eligible students is empty, fetch all eligible students and filter by coordinator branch
+                if (eligibleEntries.length === 0) {
+                    try {
+                        const allEligibleResp = await mongoDBService.getAllEligibleStudents();
+                        const allList = Array.isArray(allEligibleResp) 
+                            ? allEligibleResp 
+                            : (allEligibleResp?.eligibleStudents || allEligibleResp?.data || []);
+                        const branchName = (branchLabel || fallbackBranch || 'CSE').trim().toUpperCase();
+                        
+                        eligibleEntries = allList.map(entry => {
+                            const filteredStudents = (entry.students || []).filter(st => {
+                                const stBranch = (st.branch || st.department || '').trim().toUpperCase();
+                                return !branchName || stBranch === branchName || stBranch.includes(branchName) || branchName.includes(stBranch);
+                            });
+                            return { ...entry, students: filteredStudents };
+                        }).filter(entry => (entry.students || []).length > 0);
+                    } catch (allErr) {
+                        console.warn('Fallback eligible students fetch failed:', allErr);
+                    }
+                }
 
                 const companyMap = new Map();
                 const flatRows = [];
@@ -141,6 +199,7 @@ function CoEligiblestudents({ onLogout, currentView, onViewChange }) {
                     const endDate = normalizeDate(entry.driveEndDate || entry.driveStartDate || entry.companyDriveDate || '');
                     const companyName = entry.companyName || 'N/A';
                     const roleKey = `${entry.driveId || entry._id || ''}::${entry.jobRole || 'N/A'}::${startDate}::${endDate}`;
+                    const entryRounds = entry.rounds || entry.numberOfRounds || entry.round || (Array.isArray(entry.roundDetails) ? entry.roundDetails.length : null);
 
                     if (!companyMap.has(companyName)) {
                         companyMap.set(companyName, {
@@ -156,13 +215,14 @@ function CoEligiblestudents({ onLogout, currentView, onViewChange }) {
                             driveId: entry.driveId || entry._id || '',
                             jobRole: entry.jobRole || 'N/A',
                             startDate,
-                            endDate
+                            endDate,
+                            rounds: entryRounds
                         });
                     }
 
                     (entry.students || []).forEach((student) => {
                         const resolved = (student?.studentId && studentById.get(String(student.studentId)))
-                            || (student?.regNo && studentByRegNo.get(String(student.regNo)))
+                            || (student?.regNo && studentByRegNo.get(String(student.regNo).toUpperCase().trim()))
                             || null;
 
                         const fullName = `${resolved?.firstName || ''} ${resolved?.lastName || ''}`.trim();
@@ -173,6 +233,9 @@ function CoEligiblestudents({ onLogout, currentView, onViewChange }) {
                             student?.skills ||
                             'N/A';
 
+                        const tenth = resolved?.tenthPercentage || student?.tenthPercentage || resolved?.tenthPercent || student?.tenthPercent || resolved?.tenthMark || student?.tenthMark || 'N/A';
+                        const twelfth = resolved?.twelfthPercentage || student?.twelfthPercentage || resolved?.twelfthPercent || student?.twelfthPercent || resolved?.twelfthMark || student?.twelfthMark || resolved?.hscPercentage || resolved?.diplomaPercentage || 'N/A';
+
                         flatRows.push({
                             id: `${entry.driveId || entry._id || 'drive'}-${student.studentId || student.regNo || Math.random()}`,
                             studentId: student?.studentId || (resolved?._id ? String(resolved._id) : ''),
@@ -181,10 +244,13 @@ function CoEligiblestudents({ onLogout, currentView, onViewChange }) {
                             jobRole: entry.jobRole || 'N/A',
                             startDate,
                             endDate,
+                            rounds: entryRounds,
                             name: student?.name || fullName || 'N/A',
                             registerNo: student?.regNo || resolved?.regNo || 'N/A',
                             batch: student?.batch || resolved?.batch || 'N/A',
                             section: student?.section || resolved?.section || 'N/A',
+                            tenthPercentage: tenth,
+                            twelfthPercentage: twelfth,
                             cgpa: student?.cgpa || resolved?.overallCGPA || 'N/A',
                             skills: skillsValue,
                             status: statusFromStudent(student),
@@ -214,33 +280,83 @@ function CoEligiblestudents({ onLogout, currentView, onViewChange }) {
         fetchCoordinatorEligibleStudents();
     }, []);
 
+    // Sync filterData with navigation state once companyDrives is fetched
+    useEffect(() => {
+        const incoming = location.state?.filterData || location.state?.selectedDrive || location.state?.company;
+        if (!incoming) return;
+
+        const normalizeDate = (value) => {
+            const trimmed = (value || '').toString().trim();
+            if (!trimmed) return '';
+            if (/^\d{4}-\d{2}-\d{2}/.test(trimmed)) return trimmed.slice(0, 10);
+            const parsed = new Date(trimmed);
+            if (Number.isNaN(parsed.getTime())) return trimmed;
+            const y = parsed.getFullYear();
+            const m = String(parsed.getMonth() + 1).padStart(2, '0');
+            const d = String(parsed.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        };
+
+        const compName = incoming.companyName || incoming.company || '';
+        const jRole = incoming.jobRole || incoming.role || incoming.jobs || '';
+        let sDate = normalizeDate(incoming.startDate || incoming.driveStartDate || incoming.startingDate || incoming.companyDriveDate || incoming.visitDate || '');
+        let eDate = normalizeDate(incoming.endDate || incoming.driveEndDate || incoming.endingDate || sDate);
+
+        if (companyDrives.length > 0 && compName) {
+            const matchedCompany = companyDrives.find(d => (d.companyName || '').toLowerCase().trim() === compName.toLowerCase().trim());
+            if (matchedCompany && matchedCompany.jobRoles.length > 0) {
+                const matchedRole = matchedCompany.jobRoles.find(r => 
+                    (!jRole || (r.jobRole || '').toLowerCase().trim() === jRole.toLowerCase().trim()) &&
+                    (!sDate || r.startDate === sDate)
+                ) || matchedCompany.jobRoles.find(r => (!jRole || (r.jobRole || '').toLowerCase().trim() === jRole.toLowerCase().trim())) || matchedCompany.jobRoles[0];
+
+                if (matchedRole) {
+                    setFilterData({
+                        companyName: matchedCompany.companyName,
+                        jobRole: matchedRole.jobRole || jRole,
+                        startDate: matchedRole.startDate || sDate,
+                        endDate: matchedRole.endDate || eDate || matchedRole.startDate || sDate
+                    });
+                    return;
+                }
+            }
+        }
+
+        setFilterData(prev => ({
+            companyName: compName || prev.companyName,
+            jobRole: jRole || prev.jobRole,
+            startDate: sDate || prev.startDate,
+            endDate: eDate || prev.endDate
+        }));
+    }, [location.state, companyDrives]);
+
     const companyOptions = useMemo(() => {
         return Array.from(new Set(companyDrives.map((d) => d.companyName))).sort((a, b) => a.localeCompare(b));
     }, [companyDrives]);
 
     const jobRoleOptions = useMemo(() => {
-        const selectedCompany = companyDrives.find(d => d.companyName === filterData.companyName);
+        const selectedCompany = companyDrives.find(d => (d.companyName || '').toLowerCase().trim() === (filterData.companyName || '').toLowerCase().trim());
         if (!selectedCompany) return [];
         return Array.from(new Set(selectedCompany.jobRoles.map((j) => j.jobRole))).sort((a, b) => a.localeCompare(b));
     }, [companyDrives, filterData.companyName]);
 
     const startDateOptions = useMemo(() => {
-        const selectedCompany = companyDrives.find(d => d.companyName === filterData.companyName);
+        const selectedCompany = companyDrives.find(d => (d.companyName || '').toLowerCase().trim() === (filterData.companyName || '').toLowerCase().trim());
         if (!selectedCompany) return [];
         const selectedJobRole = filterData.jobRole;
         const relevant = selectedJobRole
-            ? selectedCompany.jobRoles.filter(j => j.jobRole === selectedJobRole)
+            ? selectedCompany.jobRoles.filter(j => (j.jobRole || '').toLowerCase().trim() === selectedJobRole.toLowerCase().trim())
             : selectedCompany.jobRoles;
         return Array.from(new Set(relevant.map((j) => j.startDate).filter(Boolean))).sort((a, b) => a.localeCompare(b));
     }, [companyDrives, filterData.companyName, filterData.jobRole]);
 
     const endDateOptions = useMemo(() => {
-        const selectedCompany = companyDrives.find(d => d.companyName === filterData.companyName);
+        const selectedCompany = companyDrives.find(d => (d.companyName || '').toLowerCase().trim() === (filterData.companyName || '').toLowerCase().trim());
         if (!selectedCompany) return [];
         const selectedJobRole = filterData.jobRole;
         const selectedStartDate = filterData.startDate;
         const relevant = selectedCompany.jobRoles.filter(j => {
-            if (selectedJobRole && j.jobRole !== selectedJobRole) return false;
+            if (selectedJobRole && (j.jobRole || '').toLowerCase().trim() !== selectedJobRole.toLowerCase().trim()) return false;
             if (selectedStartDate && j.startDate !== selectedStartDate) return false;
             return true;
         });
@@ -268,15 +384,15 @@ function CoEligiblestudents({ onLogout, currentView, onViewChange }) {
 
     const handleStartDateChange = (value) => {
         setFilterData(prev => {
-            const selectedCompany = companyDrives.find(d => d.companyName === prev.companyName);
+            const selectedCompany = companyDrives.find(d => (d.companyName || '').toLowerCase().trim() === (prev.companyName || '').toLowerCase().trim());
             const drive = selectedCompany?.jobRoles.find(j => {
-                if (prev.jobRole && j.jobRole !== prev.jobRole) return false;
+                if (prev.jobRole && (j.jobRole || '').toLowerCase().trim() !== prev.jobRole.toLowerCase().trim()) return false;
                 return j.startDate === value;
             });
             return {
                 ...prev,
                 startDate: value,
-                endDate: drive?.endDate || ''
+                endDate: drive?.endDate || prev.endDate || ''
             };
         });
     };
@@ -289,25 +405,27 @@ function CoEligiblestudents({ onLogout, currentView, onViewChange }) {
     };
 
     const hasCompleteFilterSelection = useMemo(() => (
-        Boolean(filterData.companyName && filterData.jobRole && filterData.startDate && filterData.endDate)
-    ), [filterData.companyName, filterData.jobRole, filterData.startDate, filterData.endDate]);
+        Boolean(filterData.companyName)
+    ), [filterData.companyName]);
 
     const displayStudents = useMemo(() => {
-        if (!hasCompleteFilterSelection) return [];
+        if (!filterData.companyName) return [];
 
         const filtered = studentsData.filter(student => {
             const companyMatch =
                 !filterData.companyName ||
-                (student.companyName ?? '').toLowerCase() === filterData.companyName.toLowerCase().trim();
+                (student.companyName ?? '').toLowerCase().trim() === filterData.companyName.toLowerCase().trim();
             const jobRoleMatch =
                 !filterData.jobRole ||
-                (student.jobRole ?? '').toLowerCase() === filterData.jobRole.toLowerCase().trim();
+                (student.jobRole ?? '').toLowerCase().trim() === filterData.jobRole.toLowerCase().trim();
             const startDateMatch =
                 !filterData.startDate ||
-                (student.startDate ?? '').toLowerCase() === filterData.startDate.toLowerCase().trim();
+                !student.startDate ||
+                (student.startDate ?? '').toLowerCase().trim() === filterData.startDate.toLowerCase().trim();
             const endDateMatch =
                 !filterData.endDate ||
-                (student.endDate ?? '').toLowerCase() === filterData.endDate.toLowerCase().trim();
+                !student.endDate ||
+                (student.endDate ?? '').toLowerCase().trim() === filterData.endDate.toLowerCase().trim();
             return companyMatch && jobRoleMatch && startDateMatch && endDateMatch;
         });
 
@@ -318,7 +436,7 @@ function CoEligiblestudents({ onLogout, currentView, onViewChange }) {
             seen.add(dedupeKey);
             return true;
         });
-    }, [studentsData, filterData, hasCompleteFilterSelection]);
+    }, [studentsData, filterData]);
 
     const [activeItem, setActiveItem] = useState("Eligible Students");
 
@@ -337,11 +455,44 @@ function CoEligiblestudents({ onLogout, currentView, onViewChange }) {
         </svg>
     );
 
+    // Helper to get array of skills
+    const getSkillsArray = (skillsValue) => {
+        if (!skillsValue || skillsValue === 'N/A') return [];
+        if (Array.isArray(skillsValue)) return skillsValue.filter(Boolean);
+        return String(skillsValue)
+            .split(',')
+            .map(s => s.trim())
+            .filter(Boolean);
+    };
+
+    // Render skills:
+    // If <= 3 skills: plain static text (no popup, no hover color)
+    // If > 3 skills: first 3 skills followed by clickable "..." to open popup
+    const renderSkills = (student) => {
+        const skillsArray = getSkillsArray(student.skills);
+        if (skillsArray.length === 0) return 'N/A';
+        if (skillsArray.length <= 3) {
+            return <span>{skillsArray.join(', ')}</span>;
+        }
+
+        return (
+            <span>
+                {skillsArray.slice(0, 3).join(', ')}
+                <span
+                    className={styles['co-es-skills-dots']}
+                    onClick={() => setSelectedStudentForSkills(student)}
+                    title="Click to view all skills"
+                >
+                    ...
+                </span>
+            </span>
+        );
+    };
+
     // =========================================================================
-    // !!! START: NEW/MODIFIED EXPORT LOGIC (Copied/Adapted from Coo_CompanyDrive.js) !!!
+    // !!! START: EXPORT LOGIC WITH COMPLETE UNTRUNCATED DATA AND NEW COLUMNS !!!
     // =========================================================================
 
-    // Function to simulate progress and handle export
     const simulateExport = async (operation, exportFunction) => {
         setShowDropdown(false);
 
@@ -381,15 +532,17 @@ function CoEligiblestudents({ onLogout, currentView, onViewChange }) {
 
     const exportToExcel = () => {
         try {
-            const header = ["S.No", "Student Name", "Register Number", "Batch", "Section", "CGPA", "Skills", "Placement status"];
+            const header = ["S.No", "Student Name", "Register Number", "Batch", "Section", "10th %", "12th %", "CGPA", "Skills", "Placement status"];
             const data = displayStudents.map((item, index) => [
                 index + 1,
                 item.name,
                 item.registerNo,
                 item.batch,
                 item.section,
+                item.tenthPercentage,
+                item.twelfthPercentage,
                 item.cgpa,
-                item.skills,
+                item.skills, // Complete untruncated skills
                 item.status
             ]);
             const ws = XLSX.utils.aoa_to_sheet([header, ...data]);
@@ -404,32 +557,30 @@ function CoEligiblestudents({ onLogout, currentView, onViewChange }) {
 
     const exportToPDF = () => {
         try {
-            const doc = new jsPDF();
+            const doc = new jsPDF({ orientation: 'landscape' });
 
-            // Define the table headers
-            const tableColumn = ["S.No", "Student Name", "Register Number", "Batch", "Section", "CGPA", "Skills", "Placement status"];
+            const tableColumn = ["S.No", "Student Name", "Register Number", "Batch", "Section", "10th %", "12th %", "CGPA", "Skills", "Placement status"];
 
-            // Prepare the data rows from your filtered data
             const tableRows = displayStudents.map((item, index) => [
                 index + 1,
                 item.name,
                 item.registerNo,
                 item.batch,
                 item.section,
+                item.tenthPercentage,
+                item.twelfthPercentage,
                 item.cgpa,
-                item.skills,
+                item.skills, // Complete untruncated skills
                 item.status
             ]);
 
-            // Add a title to the PDF
             doc.setFontSize(16);
             doc.text("Eligible Students Report", 14, 15);
 
-            // Generate the table using autoTable
             autoTable(doc, {
                 head: [tableColumn],
                 body: tableRows,
-                startY: 20, // Start the table 20mm from the top
+                startY: 20,
                 styles: {
                     fontSize: 8,
                     cellPadding: 2,
@@ -439,24 +590,25 @@ function CoEligiblestudents({ onLogout, currentView, onViewChange }) {
                     minCellHeight: 8
                 },
                 headStyles: {
-                    fillColor: [215, 61, 61], // Red color for header
-                    textColor: 255, // White text
+                    fillColor: [210, 59, 66],
+                    textColor: 255,
                     fontStyle: 'bold'
                 },
                 columnStyles: {
-                    0: { halign: 'center', cellWidth: 10 },
-                    1: { halign: 'left', cellWidth: 30 },
-                    2: { halign: 'center', cellWidth: 30 },
-                    3: { halign: 'center', cellWidth: 20 },
-                    4: { halign: 'center', cellWidth: 15 },
-                    5: { halign: 'center', cellWidth: 15 },
-                    6: { halign: 'left', cellWidth: 30 },
-                    7: { halign: 'center', cellWidth: 'auto' }
+                    0: { halign: 'center', cellWidth: 12 },
+                    1: { halign: 'left', cellWidth: 32 },
+                    2: { halign: 'center', cellWidth: 28 },
+                    3: { halign: 'center', cellWidth: 18 },
+                    4: { halign: 'center', cellWidth: 16 },
+                    5: { halign: 'center', cellWidth: 18 },
+                    6: { halign: 'center', cellWidth: 18 },
+                    7: { halign: 'center', cellWidth: 18 },
+                    8: { halign: 'left', cellWidth: 50 },
+                    9: { halign: 'center', cellWidth: 25 }
                 },
-                margin: { top: 20 },
+                margin: { top: 20, left: 14, right: 14 },
             });
 
-            // Save the PDF
             doc.save("eligible_students.pdf");
             setShowDropdown(false);
         } catch (error) {
@@ -472,7 +624,7 @@ function CoEligiblestudents({ onLogout, currentView, onViewChange }) {
         simulateExport('excel', exportToExcel);
     };
     // =======================================================================
-    // !!! END: NEW/MODIFIED EXPORT LOGIC !!!
+    // !!! END: EXPORT LOGIC !!!
     // =======================================================================
 
     const handleCardClick = (view) => {
@@ -500,12 +652,15 @@ function CoEligiblestudents({ onLogout, currentView, onViewChange }) {
                     batch: student.batch,
                     branch: student.branch,
                     section: student.section,
+                    tenthPercentage: student.tenthPercentage,
+                    twelfthPercentage: student.twelfthPercentage,
                     overallCGPA: student.cgpa,
                     skillSet: student.skills
                 }
             }
         });
     };
+
     const hasActiveFilters = useMemo(() => {
         return Boolean(
             filterData.companyName ||
@@ -524,13 +679,68 @@ function CoEligiblestudents({ onLogout, currentView, onViewChange }) {
         });
     };
 
+    // Calculate real scheduled rounds for selected company drive & job role
     const totalRoundsCount = useMemo(() => {
-        const keySet = new Set(
-            displayStudents.map((student) => `${student.companyName}|${student.jobRole}|${student.startDate}`)
-        );
-        return keySet.size;
-    }, [displayStudents]);
+        if (!filterData.companyName) return 0;
+        
+        const selectedCompany = (filterData.companyName || '').toLowerCase().trim();
+        const selectedRole = (filterData.jobRole || '').toLowerCase().trim();
+        const selectedStart = filterData.startDate || '';
+
+        // 1. Try exact match from scheduled company drives (company + role + start date)
+        let matched = rawScheduledDrives.find(d => {
+            const compMatch = (d.companyName || '').toLowerCase().trim() === selectedCompany;
+            const roleMatch = !selectedRole || (d.jobRole || d.role || d.jobs || '').toLowerCase().trim() === selectedRole;
+            const dStart = d.startingDate || d.driveStartDate || d.companyDriveDate || '';
+            const startMatch = !selectedStart || !dStart || (new Date(dStart).toISOString().split('T')[0] === new Date(selectedStart).toISOString().split('T')[0]);
+            return compMatch && roleMatch && startMatch;
+        });
+
+        // 2. Match with company + role
+        if (!matched) {
+            matched = rawScheduledDrives.find(d => {
+                const compMatch = (d.companyName || '').toLowerCase().trim() === selectedCompany;
+                const roleMatch = !selectedRole || (d.jobRole || d.role || d.jobs || '').toLowerCase().trim() === selectedRole;
+                return compMatch && roleMatch;
+            });
+        }
+
+        // 3. Match with company
+        if (!matched) {
+            matched = rawScheduledDrives.find(d => (d.companyName || '').toLowerCase().trim() === selectedCompany);
+        }
+
+        if (matched) {
+            const r = parseInt(matched.rounds) || parseInt(matched.numberOfRounds) || parseInt(matched.round) || (Array.isArray(matched.roundDetails) ? matched.roundDetails.length : 0);
+            if (r > 0) return r;
+        }
+
+        // 4. Try from companyDrives state
+        const companyObj = companyDrives.find(c => (c.companyName || '').toLowerCase().trim() === selectedCompany);
+        if (companyObj) {
+            const roleObj = companyObj.jobRoles.find(r => {
+                const rMatch = !selectedRole || (r.jobRole || '').toLowerCase().trim() === selectedRole;
+                const sMatch = !selectedStart || !r.startDate || r.startDate === selectedStart;
+                return rMatch && sMatch;
+            }) || companyObj.jobRoles[0];
+
+            if (roleObj && roleObj.rounds) {
+                const r = parseInt(roleObj.rounds);
+                if (r > 0) return r;
+            }
+        }
+
+        // 5. Fallback from student rows
+        const studentRowMatch = displayStudents.find(s => s.rounds);
+        if (studentRowMatch && parseInt(studentRowMatch.rounds) > 0) {
+            return parseInt(studentRowMatch.rounds);
+        }
+
+        return 1;
+    }, [filterData, rawScheduledDrives, companyDrives, displayStudents]);
+
     const eligibleCount = displayStudents.length;
+
     return (
         <div className={styles['co-es-page-wrapper']}>
             <Navbar onToggleSidebar={toggleSidebar} />
@@ -690,15 +900,17 @@ function CoEligiblestudents({ onLogout, currentView, onViewChange }) {
                         <div className={styles['co-es-table-wrapper']}>
                             <table className={styles['co-es-table']} ref={tableRef}>
                                 <colgroup>
-                                    <col style={{ width: '60px' }} />
-                                    <col style={{ width: '180px' }} />
-                                    <col style={{ width: '150px' }} />
-                                    <col style={{ width: '100px' }} />
-                                    <col style={{ width: '80px' }} />
-                                    <col style={{ width: '90px' }} />
-                                    <col style={{ width: '200px' }} />
+                                    <col style={{ width: '50px' }} />
                                     <col style={{ width: '160px' }} />
-                                    <col style={{ width: '60px' }} />
+                                    <col style={{ width: '130px' }} />
+                                    <col style={{ width: '80px' }} />
+                                    <col style={{ width: '70px' }} />
+                                    <col style={{ width: '75px' }} />
+                                    <col style={{ width: '75px' }} />
+                                    <col style={{ width: '75px' }} />
+                                    <col style={{ width: '170px' }} />
+                                    <col style={{ width: '130px' }} />
+                                    <col style={{ width: '55px' }} />
                                 </colgroup>
                                 <thead>
                                     <tr>
@@ -707,6 +919,8 @@ function CoEligiblestudents({ onLogout, currentView, onViewChange }) {
                                         <th>Register Number</th>
                                         <th>Batch</th>
                                         <th>Section</th>
+                                        <th>10th %</th>
+                                        <th>12th %</th>
                                         <th>CGPA</th>
                                         <th>Skills</th>
                                         <th>Placement status</th>
@@ -716,7 +930,7 @@ function CoEligiblestudents({ onLogout, currentView, onViewChange }) {
                                 <tbody>
                                     {isLoading ? (
                                         <tr className={styles['co-es-loading-row']}>
-                                            <td colSpan="9" className={styles['co-es-loading-cell']}>
+                                            <td colSpan="11" className={styles['co-es-loading-cell']}>
                                                 <div className={styles['co-es-loading-wrapper']}>
                                                     <div className={styles['co-es-spinner']}></div>
                                                     <span className={styles['co-es-loading-text']}>Loading eligible students...</span>
@@ -725,13 +939,13 @@ function CoEligiblestudents({ onLogout, currentView, onViewChange }) {
                                         </tr>
                                     ) : !hasCompleteFilterSelection ? (
                                         <tr>
-                                            <td colSpan="9" className={styles['co-es-empty']}>
+                                            <td colSpan="11" className={styles['co-es-empty']}>
                                                 Select Company, Job Role, Start Date and End Date to view students.
                                             </td>
                                         </tr>
                                     ) : displayStudents.length === 0 ? (
                                         <tr>
-                                            <td colSpan="9" className={styles['co-es-empty']}>
+                                            <td colSpan="11" className={styles['co-es-empty']}>
                                                 No eligible students found for this coordinator branch.
                                             </td>
                                         </tr>
@@ -742,8 +956,12 @@ function CoEligiblestudents({ onLogout, currentView, onViewChange }) {
                                             <td data-label="Register Number">{student.registerNo}</td>
                                             <td data-label="Batch">{student.batch}</td>
                                             <td data-label="Section">{student.section}</td>
+                                            <td data-label="10th %">{student.tenthPercentage}</td>
+                                            <td data-label="12th %">{student.twelfthPercentage}</td>
                                             <td data-label="CGPA">{student.cgpa}</td>
-                                            <td data-label="Skills">{student.skills}</td>
+                                            <td data-label="Skills" className={styles['co-es-skills-cell']}>
+                                                {renderSkills(student)}
+                                            </td>
                                             <td data-label="Placement status">
                                                 <span className={student.status === 'Placed' ? styles['co-es-status-badge-one'] : styles['co-es-status-badge-two']}>
                                                     {student.status}
@@ -766,7 +984,62 @@ function CoEligiblestudents({ onLogout, currentView, onViewChange }) {
                     </div>
                 </main>
             </div>
-            {/* START: NEW EXPORT POPUP RENDERING */}
+
+            {/* Skills Details Popup Modal in Coordinator Red Theme */}
+            {selectedStudentForSkills && (
+                <div
+                    className={styles['co-es-modal-overlay']}
+                    onClick={() => setSelectedStudentForSkills(null)}
+                >
+                    <div
+                        className={styles['co-es-modal-card']}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className={styles['co-es-modal-header']}>
+                            <h3 className={styles['co-es-modal-title']}>Student Skills</h3>
+                            <button
+                                type="button"
+                                className={styles['co-es-modal-close-btn']}
+                                onClick={() => setSelectedStudentForSkills(null)}
+                                title="Close"
+                            >
+                                &times;
+                            </button>
+                        </div>
+                        <div className={styles['co-es-modal-body']}>
+                            <div className={styles['co-es-modal-student-info']}>
+                                <div className={styles['co-es-modal-student-name']}>{selectedStudentForSkills.name}</div>
+                                <div className={styles['co-es-modal-student-reg']}>
+                                    Reg. No: {selectedStudentForSkills.registerNo} | Section: {selectedStudentForSkills.section} | Batch: {selectedStudentForSkills.batch}
+                                </div>
+                            </div>
+                            <div>
+                                <label style={{ fontSize: '0.88rem', fontWeight: 600, color: '#555', marginBottom: '8px', display: 'block' }}>
+                                    All Skills ({getSkillsArray(selectedStudentForSkills.skills).length}):
+                                </label>
+                                <div className={styles['co-es-skills-tag-container']}>
+                                    {getSkillsArray(selectedStudentForSkills.skills).map((skill, i) => (
+                                        <span key={i} className={styles['co-es-skill-pill']}>
+                                            {skill}
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                        <div className={styles['co-es-modal-footer']}>
+                            <button
+                                type="button"
+                                className={styles['co-es-modal-action-btn']}
+                                onClick={() => setSelectedStudentForSkills(null)}
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* START: EXPORT POPUP RENDERING */}
             <ExportProgressAlert
                 isOpen={exportPopupState === 'progress'}
                 onClose={() => { }}
@@ -787,7 +1060,7 @@ function CoEligiblestudents({ onLogout, currentView, onViewChange }) {
                 exportType={exportType}
                 color="#d23b42"
             />
-            {/* END: NEW EXPORT POPUP RENDERING */}
+            {/* END: EXPORT POPUP RENDERING */}
         </div>
     );
 }

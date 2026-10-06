@@ -1,12 +1,13 @@
 // Forced rewrite to trigger React HMR
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import Navbar from "../components/Navbar/Conavbar.js";
 import Sidebar from "../components/Sidebar/Cosidebar.js";
 import styles from './Coo_ManageStudentSemesterMarksheetView.module.css';
 import Adminicon from '../assets/BlueAdminicon.png';
 import { API_BASE_URL } from '../utils/apiConfig';
 import mongoDBService from '../services/mongoDBService.jsx';
+import fastDataService from '../services/fastDataService.jsx';
 
 // Grade to grade-point mapping
 const GRADE_POINTS = {
@@ -48,10 +49,11 @@ const formatExamDate = (value) => {
 function Coo_ManageStudentSemesterMarksheetView({ onLogout, onViewChange }) {
     const location = useLocation();
     const navigate = useNavigate();
+    const { studentId } = useParams();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-    const [studentData, setStudentData] = useState(location.state?.student || null);
+    const [studentData, setStudentData] = useState(location.state?.student || location.state?.studentData || null);
     const [isInitialLoading, setIsInitialLoading] = useState(false);
-    const [extractedData, setExtractedData] = useState(location.state?.student || null); // Initialize with student data
+    const [extractedData, setExtractedData] = useState(location.state?.student || location.state?.studentData || null); // Initialize with student data
     const [semesterLoading, setSemesterLoading] = useState(false);
     const [semesterError, setSemesterError] = useState('');
 
@@ -96,13 +98,78 @@ function Coo_ManageStudentSemesterMarksheetView({ onLogout, onViewChange }) {
         navigate('/coo-ms-semester-detail');
     };
 
-    useEffect(() => {
-        // If data is passed from a previous page, use it directly
-        if (location.state?.student) {
-            setStudentData(location.state.student);
-            setExtractedData(location.state.student); // Use this for display
+    const fetchLatestStudentMarksheet = useCallback(async (reg, sem, yr) => {
+        if (!reg || !sem) return;
+        setSemesterLoading(true);
+        setSemesterError('');
+        try {
+            const response = await mongoDBService.getSemesterMarksheetByRegNo(reg, sem, yr);
+            let record = response?.marksheet
+                || response?.record
+                || (Array.isArray(response?.records) ? response.records[0] : null);
+
+            if (!record && yr) {
+                const fallbackResponse = await mongoDBService.getSemesterMarksheetByRegNo(reg, sem, '');
+                record = fallbackResponse?.marksheet
+                    || fallbackResponse?.record
+                    || (Array.isArray(fallbackResponse?.records) ? fallbackResponse.records[0] : null);
+            }
+
+            if (record) {
+                setExtractedData(record);
+            }
+        } catch (error) {
+            console.error('Error fetching semester marksheet:', error);
+            setSemesterError('Failed to fetch marksheet.');
+        } finally {
+            setSemesterLoading(false);
         }
-    }, [location.state]);
+    }, []);
+
+    useEffect(() => {
+        const loadStudentData = async () => {
+            let activeStudent = location.state?.student || location.state?.studentData || null;
+
+            if (!activeStudent && studentId) {
+                setIsInitialLoading(true);
+                try {
+                    const completeData = await fastDataService.getCompleteStudentData(studentId);
+                    if (completeData && completeData.student) {
+                        activeStudent = completeData.student;
+                    } else {
+                        const fallbackData = await mongoDBService.getStudentById(studentId);
+                        if (fallbackData) {
+                            activeStudent = fallbackData;
+                        }
+                    }
+                } catch (err) {
+                    console.error('Failed to fetch student:', err);
+                } finally {
+                    setIsInitialLoading(false);
+                }
+            }
+
+            if (activeStudent) {
+                if (!activeStudent.name && (activeStudent.firstName || activeStudent.lastName)) {
+                    activeStudent.name = `${activeStudent.firstName || ''} ${activeStudent.lastName || ''}`.trim();
+                }
+                setStudentData(activeStudent);
+                
+                // If it already has subjects, use it
+                if (activeStudent.subjects && activeStudent.subjects.length > 0) {
+                    setExtractedData(activeStudent);
+                } else {
+                    // Otherwise fetch the marksheet
+                    const reg = activeStudent.regNo || activeStudent.registerNumber || '';
+                    const sem = activeStudent.currentSemester || activeStudent.semester || '';
+                    const yr = activeStudent.currentYear || activeStudent.year || '';
+                    fetchLatestStudentMarksheet(reg, sem, yr);
+                }
+            }
+        };
+
+        loadStudentData();
+    }, [location.state, studentId, fetchLatestStudentMarksheet]);
 
     if (isInitialLoading) {
         return (

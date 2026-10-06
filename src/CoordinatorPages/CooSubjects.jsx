@@ -596,7 +596,7 @@ function CooSubjects({ onLogout, onViewChange }) {
                   <div className={styles['form-group']}>
                     <label>Credits</label>
                     <Dropdown
-                      options={['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10']}
+                      options={['0', '1', '2', '3', '4', '5']}
                       selectedOption={popupData.credits}
                       onSelect={(val) => setPopupData(prev => ({ ...prev, credits: val || '3' }))}
                       placeholder="Select Credits"

@@ -626,10 +626,9 @@ function  ReportAnalysisCW({ onLogout, onViewChange }) {
         <div className={styles["co-main-content"]}>
           <div className={styles["co-ras-filter-box"]}>
             <div className={styles["co-ras-tab-container"]}>
-              {/* Note: The 'Round wise' tab label is kept but its functionality is now removed */}
-              <div className={styles["co-ras-tab-inactive"]} onClick={() => handleCardClick('report-analysis-rw')}>Round&nbsp;wise<br /> Analysis</div>
-              <div className={styles["co-ras-tab-active"]}>Company&nbsp;wise<br />Analysis</div>
-              <div className={styles["co-ras-tab-inactive"]} onClick={() => handleCardClick('report-analysis-sw')}>Student&nbsp;wise<br /> Analysis</div>
+              <div className={styles["co-ras-tab-inactive"]} onClick={() => handleCardClick('report-analysis-rw')}>Round Wise Analysis</div>
+              <div className={styles["co-ras-tab-active"]}>Company Wise Analysis</div>
+              <div className={styles["co-ras-tab-inactive"]} onClick={() => handleCardClick('report-analysis-sw')}>Student Wise Analysis</div>
             </div>
 
             <div className={styles["co-ras-filter-inputs"]}>
@@ -743,9 +742,12 @@ function  ReportAnalysisCW({ onLogout, onViewChange }) {
                             {student.Rounds || 'N/A'}
                           </span>
                         </td>
-                        <td style={{ textAlign: 'center', padding: '8px', cursor: 'pointer' }} onClick={() => {
-                          if (student.studentId) {
-                            navigate(`/coo-profile/${student.studentId}`);
+                        <td style={{ textAlign: 'center', verticalAlign: 'middle', padding: '8px', cursor: 'pointer' }} onClick={() => {
+                          const targetStudentId = student.studentId || student._id || student.id || student["Register No."];
+                          if (targetStudentId) {
+                            navigate(`/coo-manage-students/view/${targetStudentId}`, {
+                              state: { mode: 'view', from: 'report-analysis' }
+                            });
                           }
                         }}>
                           <EyeIcon />

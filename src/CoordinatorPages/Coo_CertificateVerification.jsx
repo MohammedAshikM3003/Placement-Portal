@@ -1,5 +1,4 @@
 import React, { useState, useMemo, useEffect, useCallback } from "react";
-
 import Navbar from "../components/Navbar/Conavbar.js";
 import Sidebar from "../components/Sidebar/Cosidebar.js";
 import styles from './Coo_CertificateVerification.module.css';
@@ -8,7 +7,6 @@ import pendingCertificateIcon from "../assets/CoodCertificateVerifyPenCertificat
 import approvedCertificateIcon from "../assets/CoodCertificateVerifyApprovedCertificate.svg";
 import Dropdown from '../components/common/Dropdown/Dropdown.jsx';
 import AdCalendar from '../components/Calendar/Ad_Calendar.jsx';
-
 import { FaRegEye, FaSearch, FaMapMarkerAlt, FaImage, FaWindowMaximize } from "react-icons/fa";
 import { IoClose } from "react-icons/io5";
 import certificateService from "../services/certificateService.jsx";
@@ -345,13 +343,35 @@ const Coo_Certificate = ({ onLogout, onViewChange }) => {
         setLoadError(null);
 
         try {
-            const certificates = await certificateService.getCertificatesByDepartment(coordinatorDepartment, {
-                status: 'pending'
+            const [certificates, studentsResponse] = await Promise.all([
+                certificateService.getCertificatesByDepartment(coordinatorDepartment, {}),
+                mongoDBService.getStudents({ includeArchived: 'true' })
+            ]);
+
+            const studentsList = Array.isArray(studentsResponse) ? studentsResponse : (studentsResponse?.students || studentsResponse?.data || []);
+            const studentMap = new Map();
+            studentsList.forEach(s => {
+                if (s._id) studentMap.set(String(s._id), s);
+                if (s.regNo) studentMap.set(String(s.regNo).toUpperCase().trim(), s);
             });
-            const normalized = certificates
-                .map(mapCertificateRecord)
-                .filter(Boolean)
-                .filter((item) => item.rawStatus === 'pending');
+
+            const normalized = (certificates || [])
+                .map(cert => {
+                    const mapped = mapCertificateRecord(cert);
+                    if (!mapped) return null;
+                    const student = (mapped.studentId && studentMap.get(String(mapped.studentId))) ||
+                                    (mapped.regNo && studentMap.get(String(mapped.regNo).toUpperCase().trim())) ||
+                                    null;
+                    const currentSem = student?.currentSemester || student?.semester || cert.currentSemester || mapped.semester || '';
+                    return {
+                        ...mapped,
+                        currentSemester: currentSem ? String(currentSem).trim() : '',
+                        studentYear: student?.currentYear || student?.year || mapped.year || '',
+                        studentSection: student?.section || mapped.section || ''
+                    };
+                })
+                .filter(Boolean);
+
             setCertData(normalized);
             return normalized;
         } catch (error) {
@@ -376,10 +396,17 @@ const Coo_Certificate = ({ onLogout, onViewChange }) => {
         () => certData.filter((item) => item.rawStatus === "pending").length,
         [certData]
     );
-    const approvedCount = useMemo(
-        () => certData.filter((item) => item.rawStatus === "approved").length,
-        [certData]
-    );
+
+    const approvedCount = useMemo(() => {
+        return certData.filter((item) => {
+            if (item.rawStatus !== "approved") return false;
+            // Check if certificate belongs to student's current semester
+            if (item.currentSemester && item.semester) {
+                return String(item.semester).trim() === String(item.currentSemester).trim();
+            }
+            return true;
+        }).length;
+    }, [certData]);
 
     const filteredData = useMemo(() => {
         const normalize = (value) => (value ? value.toString().trim().toLowerCase() : "");
@@ -408,11 +435,11 @@ const Coo_Certificate = ({ onLogout, onViewChange }) => {
         return certData.filter((item) => {
             const name = (item.name || "").toLowerCase();
             const reg = (item.regNo || "").toLowerCase();
-            const section = (item.section || "").toLowerCase();
+            const section = (item.section || item.studentSection || "").toLowerCase();
             const statusDisplay = (item.status || "").toLowerCase();
             const competition = (item.certName || item.comp || "").toLowerCase();
             const prize = (item.prize || "").toLowerCase();
-            const yearRoman = toRomanYear(item.year);
+            const yearRoman = toRomanYear(item.year || item.studentYear);
             const dateStr = item.date || "";
 
             const matchesSearch =
@@ -421,10 +448,27 @@ const Coo_Certificate = ({ onLogout, onViewChange }) => {
                 reg.includes(filters.searchTerm);
             const matchesYear = !filters.year || yearRoman === filters.year;
             const matchesSection = !filters.section || section.includes(filters.section);
-            const matchesStatus =
-                !filters.status ||
-                statusDisplay.includes(filters.status) ||
-                item.rawStatus.includes(filters.status);
+            
+            let matchesStatus = true;
+            if (filters.status) {
+                if (filters.status === 'approved' || filters.status === 'accepted') {
+                    matchesStatus = item.rawStatus === 'approved';
+                    // If viewing approved certificates, show current semester approved certificates
+                    if (matchesStatus && item.currentSemester && item.semester) {
+                        matchesStatus = String(item.semester).trim() === String(item.currentSemester).trim();
+                    }
+                } else if (filters.status === 'pending') {
+                    matchesStatus = item.rawStatus === 'pending';
+                } else if (filters.status === 'rejected') {
+                    matchesStatus = item.rawStatus === 'rejected';
+                } else {
+                    matchesStatus = statusDisplay.includes(filters.status) || item.rawStatus.includes(filters.status);
+                }
+            } else {
+                // By default show pending certificates for coordinator review
+                matchesStatus = item.rawStatus === 'pending';
+            }
+
             const matchesCompetition = !filters.competition || competition.includes(filters.competition);
             const matchesPrize = !filters.prize || prize.includes(filters.prize);
             const matchesDate = !filters.date || dateStr.startsWith(filters.date);
@@ -466,37 +510,17 @@ const Coo_Certificate = ({ onLogout, onViewChange }) => {
 
         setFilterInputs(pendingFilters);
         setActiveFilters(pendingFilters);
+    }, [filterInputs]);
 
-        if (!coordinatorDepartment) {
-            return;
-        }
-
-        const fetchPending = async () => {
-            setIsLoading(true);
-            setLoadError(null);
-
-            try {
-                const certificates = await certificateService.getCertificatesByDepartment(coordinatorDepartment, {
-                    status: 'pending',
-                    regNo: pendingFilters.searchTerm,
-                    search: pendingFilters.competition || pendingFilters.prize,
-                });
-
-                const pendingNormalized = certificates
-                    .map(mapCertificateRecord)
-                    .filter(Boolean)
-                    .filter((item) => item.rawStatus === 'pending');
-                setCertData(pendingNormalized);
-            } catch (error) {
-                console.error('Failed to load pending certificates:', error);
-                setLoadError(error.message || 'Failed to load pending certificates');
-            } finally {
-                setIsLoading(false);
-            }
+    const handleApprovedCardClick = useCallback(() => {
+        const approvedFilters = {
+            ...filterInputs,
+            status: "Approved",
         };
 
-        fetchPending();
-    }, [coordinatorDepartment, filterInputs]);
+        setFilterInputs(approvedFilters);
+        setActiveFilters(approvedFilters);
+    }, [filterInputs]);
 
     const handleManageStudentsClick = () => {
         onViewChange?.("manage-students");
@@ -522,26 +546,8 @@ const Coo_Certificate = ({ onLogout, onViewChange }) => {
                 payload.verifiedBy = coordinatorIdentifier;
             }
             try {
-                const updated = await certificateService.updateCertificateStatus(certificateId, payload);
-                // Backend automatically sets notificationRead: false when status â†’ approved/rejected
-                // GlobalNotificationChecker on student side will pick it up within 5 seconds
-
-                setCertData((prev) =>
-                    prev.filter((item) => item.certificateId !== certificateId)
-                );
-
-                if (coordinatorDepartment) {
-                    const certificates = await certificateService.getCertificatesByDepartment(coordinatorDepartment, {
-                        status: 'pending',
-                        regNo: filterInputs.searchTerm,
-                        search: filterInputs.competition || filterInputs.prize,
-                    });
-                    const pendingNormalized = certificates
-                        .map(mapCertificateRecord)
-                        .filter(Boolean)
-                        .filter((item) => item.rawStatus === 'pending');
-                    setCertData(pendingNormalized);
-                }
+                await certificateService.updateCertificateStatus(certificateId, payload);
+                await refreshCertificates();
             } catch (error) {
                 console.error('Failed to update certificate status:', error);
                 setLoadError(error.message || 'Failed to update certificate status');
@@ -553,7 +559,7 @@ const Coo_Certificate = ({ onLogout, onViewChange }) => {
                 });
             }
         },
-        [activeFilters.status, coordinatorDepartment, coordinatorIdentifier, filterInputs, refreshCertificates]
+        [coordinatorIdentifier, refreshCertificates]
     );
 
     const handlePreviewCertificate = useCallback(async (certificateRecord) => {
@@ -1013,7 +1019,18 @@ const Coo_Certificate = ({ onLogout, onViewChange }) => {
                                 </div>
                                 <div className={styles["co-cert-status-count"]}>{pendingCount}</div>
                             </div>
-                            <div className={styles["co-cert-status-card"]}>
+                            <div
+                                className={styles["co-cert-status-card"]}
+                                role="button"
+                                tabIndex={0}
+                                onClick={handleApprovedCardClick}
+                                onKeyDown={(event) => {
+                                    if (event.key === "Enter" || event.key === " ") {
+                                        event.preventDefault();
+                                        handleApprovedCardClick();
+                                    }
+                                }}
+                            >
                                 <div className={styles["co-cert-status-icon"]}>
                                     <img src={approvedCertificateIcon} alt="Approved Certificates" />
                                 </div>

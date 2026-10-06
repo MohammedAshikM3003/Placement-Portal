@@ -515,9 +515,9 @@ function ReportAnalysisSW({ onLogout, onViewChange }) {
         <div className={styles["co-main-content"]}>
           <div className={styles["co-rat-filter-box"]}>
             <div className={styles["co-rat-tab-container"]}>
-              <div className={styles["co-rat-tab-inactive"]} onClick={navigateToRoundAnalysis}>Round&nbsp;wise<br /> Analysis</div>
-              <div className={styles["co-rat-tab-inactive"]} onClick={navigateToCompanyAnalysis}>Company&nbsp;wise<br /> Analysis</div>
-              <div className={styles["co-rat-tab-active"]}>Student&nbsp;wise<br /> Analysis</div>
+              <div className={styles["co-rat-tab-inactive"]} onClick={navigateToRoundAnalysis}>Round Wise Analysis</div>
+              <div className={styles["co-rat-tab-inactive"]} onClick={navigateToCompanyAnalysis}>Company Wise Analysis</div>
+              <div className={styles["co-rat-tab-active"]}>Student Wise Analysis</div>
             </div>
 
             {/* First Search Row - Company, Job Role, Dates */}
@@ -653,9 +653,12 @@ function ReportAnalysisSW({ onLogout, onViewChange }) {
                         <td>{student.Rounds}</td>
                         <td>{student["Mobile No."]}</td>
                         <td>{student.Email}</td>
-                        <td style={{ textAlign: 'center', padding: '8px', cursor: 'pointer' }} onClick={() => {
-                          if (student.studentId) {
-                            navigate(`/coordinator-profile/${student.studentId}`);
+                        <td style={{ textAlign: 'center', verticalAlign: 'middle', padding: '8px', cursor: 'pointer' }} onClick={() => {
+                          const targetStudentId = student.studentId || student._id || student.id || student["Register No."];
+                          if (targetStudentId) {
+                            navigate(`/coo-manage-students/view/${targetStudentId}`, {
+                              state: { mode: 'view', from: 'report-analysis' }
+                            });
                           }
                         }}>
                           <EyeIcon />

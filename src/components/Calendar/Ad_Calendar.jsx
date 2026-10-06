@@ -88,17 +88,7 @@ const Ad_Calendar = forwardRef(function Ad_Calendar({
     }
   }, [selMonth, selYear]);
 
-  const displayVal = useMemo(() => {
-    if (selDay === null || selMonth === null || selYear === null || isNaN(selDay) || isNaN(selMonth) || isNaN(selYear)) {
-      return '';
-    }
-    const dd = String(selDay).padStart(2, '0');
-    const mm = String(selMonth + 1).padStart(2, '0');
-    const yyyy = String(selYear);
-    return `${dd}-${mm}-${yyyy}`;
-  }, [selDay, selMonth, selYear]);
-
-  const currentYearForPicker = today.getFullYear();
+  const currentYearForPicker = (maxDateValue || today).getFullYear();
   const startYear = currentYearForPicker - 100;
   const years = Array.from({ length: 101 }, (_, i) => startYear + i);
   const yearListRef    = useRef(null);

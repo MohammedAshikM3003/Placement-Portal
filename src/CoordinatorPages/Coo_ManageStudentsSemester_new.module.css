@@ -394,7 +394,7 @@
     height: calc(100vh - 65px) !important;
     overflow-y: auto !important;
     overflow-x: hidden !important;
-    padding: 15px !important;
+    padding: 15px 15px 80px 15px !important;
     display: flex !important;
     flex-direction: column !important;
     justify-content: flex-start !important;
@@ -548,7 +548,7 @@
   background: #fff;
   border-radius: 12px;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-  overflow: hidden;
+  overflow: visible;
   font-family: 'Poppins', sans-serif;
 }
 
@@ -559,6 +559,8 @@
   font-size: 1.55rem;
   font-weight: 700;
   text-align: center;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
 }
 
 .ms-popup-body {
@@ -573,10 +575,12 @@
 
 .ms-popup-footer {
   padding: 1.2rem 1.5rem 1.5rem;
+  background-color: #f7f7f7;
   display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  background: #fafafa;
+  justify-content: center;
+  gap: 32px;
+  border-bottom-left-radius: 12px;
+  border-bottom-right-radius: 12px;
 }
 
 .ms-popup-close-btn {

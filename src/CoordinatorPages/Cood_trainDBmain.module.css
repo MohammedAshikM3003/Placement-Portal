@@ -8,7 +8,7 @@
 .coordinator-main-layout {
   display: flex;
   flex: 1;
-  margin-top: 0;
+  margin-top: 30px;
 }
 
 .coordinator-content-area {
@@ -23,7 +23,7 @@
   background: #f8f8fb;
   height: 100vh;
   overflow: hidden;
-  margin-top: 0;
+  margin-top: -33px;
   width: 100%;
   position: relative;
 }
@@ -31,10 +31,10 @@
 /* Dashboard-area */
 .coo-training-dashboard-area {
   flex: 1;
-  padding: 10px 0 0 20px;
+  padding: 10px 0 0 25px;
   overflow-y: hidden;
-  height: calc(100vh - 65px);
-  margin-top: 65px;
+  height: calc(100vh - 63px);
+  margin-top: 63px;
   margin-right: 14px;
   margin-left: 270px;
   max-width: calc(100vw - 270px);
@@ -76,9 +76,15 @@
 
 .row1 {
   width: 100%;
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(200px, 240px) minmax(0, 1fr) minmax(200px, 240px);
   gap: 18px;
   align-items: stretch;
+}
+
+.row1 > .trainingSummaryCard,
+.row1 > .trainingFiltersCard {
+  height: 100%;
 }
 
 .row2 {
@@ -104,108 +110,45 @@
   box-sizing: border-box;
 }
 
-/* Manage Students Card (from Certificate Verification Page) */
-.manageCard {
-  background: #fff;
-  border-radius: 12px;
-  padding: 10px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  text-align: center;
+.trainingSummaryCard {
+  padding: 20px 18px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease-in-out;
-  border: 3px solid #e0e0e0;
-  cursor: pointer;
-  box-sizing: border-box;
-  width: 211px;
-  height: 245px;
-  flex-shrink: 0;
-}
-
-.manageCard:hover {
-  border-color: #d23b42;
-  box-shadow: 0 4px 12px rgba(210, 59, 66, 0.15);
-  transform: translateY(-5px);
-}
-
-.manageCard h2 {
-  font-size: 1.5rem;
-  font-weight: 600;
-  margin-bottom: 8px;
-  color: #000000;
-  margin-top: 0;
-  line-height: 1.2;
-}
-
-.manageCard p {
-  color: #666666;
-  font-size: 1rem;
-  margin-top: 8px;
-  font-weight: 400;
-  line-height: 1.4;
-  margin-bottom: 0;
-}
-
-.manageIconWrapper img {
-  width: 54px;
-  height: 54px;
-  margin-bottom: 10px;
-}
-
-.trainingStatusCard {
-  background: #fff;
-  border: 2px solid #808080;
-  border-radius: 12px;
-  padding: 10px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  gap: 10px;
+  border:  2px solid #808080;
   text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease-in-out;
-  min-height: 245px;
-  max-height: 245px;
-  max-width: 160px;
-  min-width: 160px;
-  gap: 8px;
-  box-sizing: border-box;
-  flex-shrink: 0;
+  min-height: 100%;
 }
 
-.trainingStatusIcon img {
-  width: 65px;
-  height: 65px;
-  margin-top: -7px;
-  object-fit: contain;
+.trainingSummaryOngoingCard {
+  background: linear-gradient(180deg, #ffffff 0%, #f7fbf8 100%);
+  border-color: rgba(88, 196, 124, 0.7);
 }
 
-.trainingStatusTitle {
-  font-size: 1.4rem;
-  font-weight: 600;
-  color: #333;
-  line-height: 1.05;
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+.trainingSummaryTotalCard {
+  background: linear-gradient(180deg, #ffffff 0%, #fbf7f7 100%);
+  border-color: rgba(210, 59, 66, 0.55);
 }
 
-.trainingStatusTitle span {
-  font-size: 1.4rem;
-  font-weight: 600;
-  color: #333;
-  line-height: 1.05;
-}
-
-.trainingStatusCount {
-  font-size: 3.4rem;
+.trainingSummaryLabel {
+  font-size: 1.05rem;
   font-weight: 700;
-  color: #9a9a9a;
+  color: #d23b42;
+  letter-spacing: 0.2px;
+}
+
+.trainingSummaryValue {
+  font-size: clamp(2.7rem, 4vw, 4rem);
+  font-weight: 800;
   line-height: 1;
-  margin-top: 5px;
+  color: #232323;
+}
+
+.trainingSummaryHint {
+  font-size: 0.9rem;
+  color: #6b7280;
 }
 
 .clickableCard {
@@ -218,122 +161,119 @@
 }
 
 .trainingFiltersCard {
-  background: #e8e8e8;
-  min-width: 330px;
-  max-width: 720px;
-  height: 245px;
-  border-radius: 18px;
-  box-shadow: 0px 2.5px 13px #e6e6e6c7;
-  padding: 20px;
+  padding: 20px 24px;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
-  align-items: stretch;
-  flex: 1.8;
-  box-sizing: border-box;
+  gap: 16px;
+  border: none;
+  background: #e8e8e8;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
-.trainingFilterHeaderContainer {
-  position: relative;
-  margin-bottom: 15px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.trainingFiltersHeaderContainer {
   width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  margin-bottom: 0;
 }
 
 .trainingFiltersTitle {
-  text-align: center;
-  font-size: 1rem;
-  font-weight: 500;
-  background-color: #d23b42;
-  color: white;
-  height: 35px;
-  line-height: 35px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #ffffff;
   margin: 0 auto;
-  border-radius: 30px;
-  display: block;
-  width: 228px;
+  background: #d23b42;
+  padding: 8px 24px;
+  border-radius: 20px;
+  display: inline-block;
   letter-spacing: 0.5px;
+  text-align: center;
 }
 
-.clearBtnHeader {
+.trainingFiltersClearBtn {
   position: absolute;
   right: 0px;
   top: 50%;
   transform: translateY(-50%);
-  height: 35px;
-  line-height: 35px;
+  height: 34px;
+  line-height: 34px;
   border: none;
-  border-radius: 30px;
+  border-radius: 20px;
   background-color: #dcdcdc;
   color: #333;
   padding: 0 16px;
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   font-weight: 600;
   cursor: pointer;
   transition: background-color 0.2s ease;
 }
 
-.clearBtnHeader:hover {
+.trainingFiltersClearBtn:hover {
   background-color: #c0c0c0;
 }
 
 .trainingFiltersGrid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   column-gap: 14px;
   row-gap: 12px;
   width: 100%;
-  min-width: 0;
-  flex-grow: 1;
-  align-content: center;
-  box-sizing: border-box;
 }
 
 .trainingFilterField {
   display: flex;
   flex-direction: column;
-  gap: 0px;
+  gap: 4px;
+  min-width: 0;
 }
 
 .trainingFilterLabel {
   font-size: 0.85rem;
   font-weight: 600;
-  color: #666;
-  margin-left: 5px;
-  display: block;
+  color: #333;
+  margin-left: 2px;
 }
 
-.trainingDropdownWrapper {
-  height: 45px !important;
-  width: 100% !important;
-  max-width: none !important;
-  min-width: 0 !important;
+.trainingFilterControl {
+  width: 100%;
+  height: 42px;
+  border: 1.5px solid #d0d0d0;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #333;
+  font-size: 0.9rem;
+  padding: 0 12px;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease;
 }
 
-.trainingDropdownHeader {
-  border: 3px solid #ccc !important;
-  border-radius: 8px !important;
-  height: 100% !important;
-  box-sizing: border-box !important;
-  font-size: 0.92rem !important;
-  padding: 0 12px !important;
-  line-height: 39px !important;
-  background-color: #ffffff !important;
+select.trainingFilterControl {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 30px;
 }
 
-.trainingDropdownHeader span {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  flex: 1;
-  min-width: 0;
-  text-align: left;
+.trainingFilterControl[readonly] {
+  background-color: #f9f9f9;
+  cursor: default;
 }
 
-.trainingDropdownWrapper:hover .trainingDropdownHeader {
-  border-color: #d23b42 !important;
+.trainingFilterControl:focus,
+.trainingFilterControl:hover {
+  border-color: #d23b42;
+}
+
+.trainingFilterControl:disabled {
+  color: #6b7280;
+  cursor: not-allowed;
 }
 
 .trainingsCard {
@@ -405,12 +345,24 @@
   background: #58c47c;
 }
 
+.trainingTileGreen .trainingIconCircle {
+  color: #58c47c;
+}
+
 .trainingTileTeal {
   background: #5cb6c2;
 }
 
+.trainingTileTeal .trainingIconCircle {
+  color: #5cb6c2;
+}
+
 .trainingTileBlue {
   background: #6d86c8;
+}
+
+.trainingTileBlue .trainingIconCircle {
+  color: #6d86c8;
 }
 
 .trainingIconCircle {
@@ -423,14 +375,10 @@
   justify-content: center;
   font-weight: 900;
   font-size: 24px;
-  color: #2f9a45;
+  color: inherit;
   flex-shrink: 0;
   margin-bottom: auto;
   align-self: center;
-}
-
-.trainingIconCircleAlt {
-  color: #1f8aa6;
 }
 
 .trainingTileText {
@@ -944,6 +892,60 @@
 
 
 @media (max-width: 900px) {
+  .coordinator-main-wrapper {
+    position: fixed !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    height: 100dvh !important;
+    overflow: hidden !important;
+    flex-direction: column !important;
+    background-color: #f8f8fb !important;
+  }
+
+  .coordinator-main-layout {
+    flex: 1 !important;
+    margin-top: 0 !important;
+    height: 100% !important;
+    overflow: hidden !important;
+    display: flex !important;
+    width: 100% !important;
+  }
+
+  .coordinator-content-area {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    height: 100% !important;
+    flex: 1 !important;
+    background: transparent !important;
+  }
+
+  .coo-training-container {
+    margin-top: 0 !important;
+    height: 100% !important;
+    width: 100% !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  .coo-training-dashboard-area {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    height: calc(100vh - 65px) !important;
+    height: calc(100dvh - 65px) !important;
+    margin-top: 65px !important;
+    padding: 12px 10px calc(env(safe-area-inset-bottom, 15px) + 50px) 10px !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    box-sizing: border-box !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
   .coo-tr-att-popup-grid {
     grid-template-columns: 1fr;
   }
@@ -952,58 +954,50 @@
     font-size: 1.15rem;
   }
 
-  .coo-training-dashboard-area {
-    margin-left: 0;
-    margin-right: 0;
-    max-width: 100%;
-    padding: 15px 15px 15px 15px;
-    height: calc(100vh - 65px);
-    margin-top: 65px;
-    overflow-y: auto;
-  }
-
   .row1 {
-    flex-direction: column !important;
-    gap: 15px !important;
-    width: 100% !important;
-    height: auto !important;
-    align-items: stretch !important;
-  }
-
-  .manageCard {
-    width: 100% !important;
-    max-width: none !important;
-    min-width: 0 !important;
-    height: auto !important;
-    min-height: 0 !important;
-    padding: 20px !important;
-    box-sizing: border-box !important;
-    flex: none !important;
-  }
-
-  .trainingFiltersCard {
-    width: 100% !important;
-    max-width: 100% !important;
-    min-width: 0 !important;
-    height: auto !important;
-    padding: 20px !important;
-    box-sizing: border-box !important;
-    flex: none !important;
-  }
-
-  .trainingStatusCard {
-    width: 100% !important;
-    max-width: none !important;
-    min-width: 0 !important;
-    height: auto !important;
-    min-height: 0 !important;
-    padding: 20px !important;
-    box-sizing: border-box !important;
-    flex: none !important;
+    grid-template-columns: 1fr;
+    gap: 12px;
   }
 
   .row2 {
-    margin-top: 15px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+  }
+
+  /* Filter header & clear button on mobile - side by side with no overlap */
+  .trainingFiltersHeaderContainer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    width: 100%;
+    gap: 8px;
+  }
+
+  .trainingFiltersTitle {
+    font-size: 0.85rem;
+    padding: 6px 14px;
+    margin-right: auto;
+    margin-left: 65px;
+    width: auto;
+    max-width: 160px;
+    height: 34px;
+    border-radius: 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+  }
+
+  .trainingFiltersClearBtn {
+    position: static;
+    transform: none;
+    height: 34px;
+    line-height: 34px;
+    padding: 0 14px;
+    font-size: 0.82rem;
+    border-radius: 20px;
+    flex-shrink: 0;
   }
 
   .trainingFiltersGrid {
@@ -1017,31 +1011,41 @@
 
 @media (max-width: 600px) {
   .coordinator-main-wrapper {
-    overflow: hidden;
-    height: 100vh;
+    position: fixed !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    height: 100dvh !important;
+    overflow: hidden !important;
+    flex-direction: column !important;
   }
 
   .coordinator-main-layout {
-    flex: 1;
-    overflow: hidden;
-    display: flex;
+    flex: 1 !important;
+    overflow: hidden !important;
+    display: flex !important;
+    height: 100% !important;
+    margin-top: 0 !important;
   }
 
   .coo-training-container {
-    height: 100%;
-    overflow: hidden;
+    height: 100% !important;
+    overflow: hidden !important;
+    margin-top: 0 !important;
   }
 
   .coo-training-dashboard-area {
-    margin-left: 0;
-    margin-right: 0;
-    max-width: 100%;
-    padding: 15px 10px 10px 10px;
-    height: calc(100vh - 65px);
-    overflow-y: auto;
-    overflow-x: hidden;
-    margin-top: 65px;
-    box-sizing: border-box;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    max-width: 100% !important;
+    padding: 12px 10px calc(env(safe-area-inset-bottom, 15px) + 50px) 10px !important;
+    height: calc(100vh - 65px) !important;
+    height: calc(100dvh - 65px) !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    margin-top: 65px !important;
+    box-sizing: border-box !important;
+    -webkit-overflow-scrolling: touch !important;
   }
 
   .row1,
@@ -1050,16 +1054,24 @@
     width: 100%;
   }
 
+  .row2 {
+    margin-bottom: 10px;
+  }
+
   .row3 {
     grid-template-columns: 1fr;
   }
 
   .trainingsCard,
   .filtersCard,
-  .trainingStatusCard,
+  .trainingSummaryCard,
   .topCard,
   .statCard {
     min-width: 0;
+  }
+
+  .trainingsCard {
+    margin-bottom: 15px !important;
   }
 
   .trainingFiltersGrid {
@@ -1073,26 +1085,28 @@
     margin-top: 0;
   }
 
+  .trainingSummaryCard {
+    width: 100%;
+    margin: 0 auto;
+    padding: 18px;
+  }
+
   /* Red scrollbar on mobile - smaller width, no arrows */
   .coo-training-dashboard-area::-webkit-scrollbar {
     width: 8px;
   }
-
   .coo-training-dashboard-area::-webkit-scrollbar-button {
     display: none;
   }
-
   .coo-training-dashboard-area::-webkit-scrollbar-track {
     background: #f0f2f5;
     border-radius: 20px;
   }
-
   .coo-training-dashboard-area::-webkit-scrollbar-thumb {
     background-color: #d23b42;
     border-radius: 20px;
     border: 2px solid #f0f2f5;
   }
-
   .coo-training-dashboard-area::-webkit-scrollbar-thumb:hover {
     background-color: #b32d34;
   }

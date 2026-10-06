@@ -74,3 +74,6 @@ __pycache__/
 .venv310/
 __pycache__/
 *.pyc
+
+# Archives
+*.zip

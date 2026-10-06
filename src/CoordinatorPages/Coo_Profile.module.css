@@ -1327,42 +1327,86 @@
         /* Re-add margin around border */
     }
 
-    /* Center the placeholder image too */
-    .co-profile-photo-card img[alt="Graduation Cap"] {
-        margin-top: 0 !important;
+    .co-profile-upload-info-container {
+        width: 100% !important;
+        max-width: 320px !important;
+        margin: 12px auto 6px auto !important;
+        padding: 10px 12px !important;
+        position: static !important;
+        top: auto !important;
+        box-sizing: border-box !important;
+        word-break: normal !important;
+        overflow-wrap: anywhere !important;
     }
 
-    .co-profile-upload-info-container,
-    .co-profile-upload-action-area {
-        width: 55%;
-        position: relative;
-        top: 13px;
+    .co-profile-upload-info-item {
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        font-size: 0.85rem !important;
+        color: #555 !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+
+    .co-profile-upload-info-item span {
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
     }
 
     .co-profile-upload-action-area {
-        width: 100%;
-        position: relative;
-        top: 0 !important;
+        width: 100% !important;
+        max-width: 320px !important;
+        margin: 8px auto 0 auto !important;
+        position: static !important;
+        top: auto !important;
     }
 
     .co-profile-upload-btn-wrapper {
-        gap: 8px;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 10px !important;
         width: 100% !important;
         margin-left: 0 !important;
-        justify-content: center !important;
     }
 
     .co-profile-profile-upload-btn {
-        height: 45px;
-        width: auto;
-        padding: 0.7rem 0.5rem;
-        font-size: 0.9rem;
+        flex: 1 !important;
+        height: 45px !important;
+        width: 100% !important;
+        padding: 0 12px !important;
+        font-size: 0.88rem !important;
+        box-sizing: border-box !important;
+        white-space: nowrap !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+
+    .co-profile-upload-btn-content {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 8px !important;
+        white-space: nowrap !important;
+        font-size: 0.88rem !important;
     }
 
     .co-profile-remove-image-btn {
-        width: 40px;
-        height: 40px;
-        font-size: 1.2rem;
+        width: 45px !important;
+        height: 45px !important;
+        font-size: 1.3rem !important;
+        flex-shrink: 0 !important;
+    }
+
+    .co-profile-upload-hint {
+        font-size: 0.78rem !important;
+        margin-top: 8px !important;
+        text-align: center !important;
+        white-space: normal !important;
     }
 
     .co-profile-status-message {

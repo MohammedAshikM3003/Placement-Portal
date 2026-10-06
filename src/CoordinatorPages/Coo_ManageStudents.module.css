@@ -20,24 +20,7 @@
      overflow: hidden;
  }
 
- /* Desktop scrollbar - red styling to match theme */
- .co-ms-students-table thead::-webkit-scrollbar {
-     width: 15px;
- }
 
- .co-ms-students-table thead::-webkit-scrollbar-track {
-     background: #f0f2f5;
- }
-
- .co-ms-students-table thead::-webkit-scrollbar-thumb {
-     background-color: #d23b42;
-     border-radius: 20px;
-     border: 3px solid #f0f2f5;
- }
-
- .co-ms-students-table thead::-webkit-scrollbar-thumb:hover {
-     background-color: #b32d34;
- }
 
  /* ---------------------------------------------------------------------- */
  /* Top Card (Filter and Actions) */
@@ -354,11 +337,11 @@
      color: #ff0000 !important;
  }
 
- .card-edit-active,
+ /* .card-edit-active,
  .card-block-active,
  .card-unblock-active,
  .card-delete-active,
- .card-semester-active {}
+ .card-semester-active {} */
 
  .co-ms-action-description {
      font-size: 0.95rem;
@@ -440,6 +423,13 @@
      --primary-light: rgba(210, 59, 66, 0.12);
  }
 
+ .co-ms-table-container {
+     flex-grow: 1;
+     min-height: 0;
+     display: flex;
+     flex-direction: column;
+ }
+
  .co-ms-table-header-row {
      display: flex;
      justify-content: space-between;
@@ -468,63 +458,15 @@
     display: inline-block !important;
 }
 
-/* Container that wraps the DataTable — must be a flex column so the
-   inner scroll area gets a bounded height and shows the scrollbar */
-.co-ms-table-container {
-    flex: 1 1 0;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-}
-
 .co-ms-table-scroll-area {
     width: 100%;
 }
 
 .co-ms-table-scroll-area table {
-    min-width: 900px;
+    min-width: 1200px;
 }
 
-/* Red vertical + horizontal scrollbar matching the action-cards red theme */
-.co-ms-table-scroll-area::-webkit-scrollbar {
-    width: 10px;
-    height: 8px;
-}
 
-.co-ms-table-scroll-area::-webkit-scrollbar-track {
-    background: #f0f2f5;
-    border-radius: 10px;
-}
-
-.co-ms-table-scroll-area::-webkit-scrollbar-thumb {
-    background: #d23b42;
-    border-radius: 10px;
-    border: 2px solid #f0f2f5;
-}
-
-.co-ms-table-scroll-area::-webkit-scrollbar-thumb:hover {
-    background: #b32d34;
-}
-
-/* ── Sticky header: freezes while vertical-scrolling ──────────── */
-.co-ms-table-scroll-area th {
-    position: sticky;
-    top: 0;
-    z-index: 10;
-    background-color: #ffffff;
-    /* subtle shadow so rows slide under the header cleanly */
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
-    /* tighter horizontal padding — kills the excess column gap */
-    padding-left: 5px;
-    padding-right: 5px;
-}
-
-/* Match reduced horizontal padding in data cells */
-.co-ms-table-scroll-area td {
-    padding-left: 5px;
-    padding-right: 5px;
-}
 
  .co-ms-table-title {
      font-size: 1.3rem;
@@ -594,40 +536,7 @@
      background-color: #f2f2f2;
  }
 
- .co-ms-students-table {
-     width: 100%;
-     border-collapse: separate;
-     border-spacing: 0;
-     font-size: 0.95rem;
-     display: flex;
-     flex-direction: column;
-     min-height: 100%;
- }
 
- /* ============================================================
-   Horizontal Scrollbar Styling (Grey theme)
-   Works for Chrome, Edge, Safari (WebKit)
-   ============================================================ */
-
- /* Target horizontal scrollbars ONLY */
- .co-ms-students-table::-webkit-scrollbar:horizontal {
-     height: 0 !important;
- }
-
- .co-ms-students-table::-webkit-scrollbar-track:horizontal,
- .co-ms-students-table::-webkit-scrollbar-thumb:horizontal {
-     background: transparent !important;
-     border: none !important;
- }
-
-
- /* Table Header */
- .co-ms-students-table thead {
-     display: block;
-     padding-right: 0;
-     box-sizing: border-box;
-     background-color: #ffffff;
- }
 
  .co-ms-table-head-row {
      border-bottom: 2px solid #e0e0e0;
@@ -645,46 +554,6 @@
      white-space: nowrap;
      font-size: 0.95rem;
      flex-shrink: 0;
- }
-
- /* Table Body for Vertical Scroll */
- .co-ms-students-table tbody {
-     flex-grow: 1;
-     display: block;
-     width: 100%;
-     box-sizing: border-box;
-     overflow-y: auto;
- }
-
- .co-ms-students-table tbody::-webkit-scrollbar {
-     width: 10px;
- }
-
- .co-ms-students-table tbody::-webkit-scrollbar-track {
-     background: #f0f2f5;
- }
-
- .co-ms-students-table tbody::-webkit-scrollbar-thumb {
-     background-color: #d23b42;
-     border-radius: 12px;
-     border: 2px solid #f0f2f5;
- }
-
- .co-ms-students-table tbody::-webkit-scrollbar-thumb:hover {
-     background-color: #b32d34;
- }
-
- .co-ms-students-table tbody::-webkit-scrollbar-button {
-     height: 0;
- }
-
- /* Keep header visible when tbody scrolls */
- .co-ms-students-table thead,
- .co-ms-table-head-row {
-     position: sticky;
-     top: 0;
-     z-index: 4;
-     background-color: #fff;
  }
 
  /* Table Data Rows */
@@ -1596,6 +1465,21 @@
      .co-ms-main-content::-webkit-scrollbar-thumb:hover {
          background-color: #b32d34;
      }
+     .co-ms-filter-header {
+     text-align: center;
+     font-size: 1rem;
+     font-weight: 500;
+     background-color: #d23b42;
+     /* coordinator red */
+     color: white;
+     padding: 6px 0px 9px 0px;
+     margin-top:-10px;
+     margin-left:0px;
+     border-radius: 30px;
+     display: block;
+     width: 228px;
+ }
+
  }
 
  @media (max-width: 768px) {}
@@ -1826,7 +1710,7 @@
  }
 
  /* AI Filter styles for Coordinator (Red Theme) */
- .co-ms-filter-section-ai-mode {}
+ /* .co-ms-filter-section-ai-mode {} */
 
  .co-ms-ai-toggle-btn {
      position: absolute;

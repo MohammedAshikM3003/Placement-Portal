@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react"; // Import useEffect an
 import { useNavigate } from "react-router-dom";
 import useCoordinatorAuth from '../utils/useCoordinatorAuth';
 import {
- FaUserCircle,  FaEye,
+  FaUserCircle, FaEye,
   FaUsers, FaBuilding, FaBriefcase, FaCertificate, FaUserCheck,
   FaCalendarAlt, FaUserGraduate, FaChartBar
 } from 'react-icons/fa';
@@ -15,7 +15,7 @@ import * as XLSX from "xlsx";
 import Navbar from "../components/Navbar/Conavbar.js";
 import Sidebar from "../components/Sidebar/Cosidebar.js";
 import mongoDBService from '../services/mongoDBService.jsx';
-import styles from "./Coo_PlacedStudents.module.css";  
+import styles from "./Coo_PlacedStudents.module.css";
 import { ExportProgressAlert, ExportSuccessAlert, ExportFailedAlert } from '../components/alerts';
 import Dropdown from '../components/common/Dropdown/Dropdown';
 
@@ -42,21 +42,21 @@ const resolveCoordinatorDepartment = (data) => {
     data.coordinatorDepartment ||
     data.assignedDepartment;
   return deptValue ? deptValue.toString().toUpperCase() : null;
-};  
+};
 // Component for the Bar Chart
 const BarChartComponent = ({ data }) => {
   return (
     <ResponsiveContainer width="100%" height={200}>
       <BarChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
         <CartesianGrid strokeDasharray="3 3" />
-        <XAxis 
-          dataKey="jobRole" 
+        <XAxis
+          dataKey="jobRole"
           angle={0}
           textAnchor="middle"
           height={30}
           tick={{ fontSize: 11 }}
         />
-        <YAxis 
+        <YAxis
           allowDecimals={false}
           domain={[0, 'dataMax + 1']}
           tick={{ fontSize: 11 }}
@@ -94,10 +94,9 @@ const PlacementDashboard = ({ onLogout, currentView, onViewChange }) => {
     batch: 'All Batches',
     company: 'All Companies',
     jobRole: 'All Job Roles',
-    package: 'All Packages',
   });
   const [searchTerm, setSearchTerm] = useState('');
-  
+
   // Stats state
   const [stats, setStats] = useState({
     totalPlaced: 0,
@@ -110,9 +109,9 @@ const PlacementDashboard = ({ onLogout, currentView, onViewChange }) => {
   const [exportPopupState, setExportPopupState] = useState('none'); // 'none' | 'progress' | 'success' | 'failed'
   const [exportProgress, setExportProgress] = useState(0);
   const [exportType, setExportType] = useState('Excel');
-  
+
   const [companyChartData, setCompanyChartData] = useState([]);
-  
+
   const [open, setOpen] = useState(false);
   const [activeItem, setActiveItem] = useState("Placed Students");
   const navigate = useNavigate();
@@ -120,8 +119,8 @@ const PlacementDashboard = ({ onLogout, currentView, onViewChange }) => {
 
   const EyeIcon = () => (
     <svg className={styles['co-ps-profile-eye-icon']} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-        <circle cx="12" cy="12" r="3"></circle>
+      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+      <circle cx="12" cy="12" r="3"></circle>
     </svg>
   );
 
@@ -133,7 +132,7 @@ const PlacementDashboard = ({ onLogout, currentView, onViewChange }) => {
     data.forEach(student => {
       const company = student.company;
       const jobRole = student.role;
-      
+
       if (company && jobRole) {
         if (!companyJobRoleCounts[company]) {
           companyJobRoleCounts[company] = {};
@@ -149,7 +148,7 @@ const PlacementDashboard = ({ onLogout, currentView, onViewChange }) => {
     // If a specific company is selected
     if (selectedCompany !== 'All Companies' && companyJobRoleCounts[selectedCompany]) {
       let jobRolesData;
-      
+
       // If a specific job role is also selected, show only that job role
       if (selectedJobRole !== 'All Job Roles' && companyJobRoleCounts[selectedCompany][selectedJobRole]) {
         jobRolesData = [{
@@ -163,7 +162,7 @@ const PlacementDashboard = ({ onLogout, currentView, onViewChange }) => {
           students: companyJobRoleCounts[selectedCompany][jobRole],
         })).sort((a, b) => a.jobRole.localeCompare(b.jobRole));
       }
-      
+
       setCompanyChartData(jobRolesData);
     } else {
       // If no specific company is selected, show first company's data
@@ -174,7 +173,7 @@ const PlacementDashboard = ({ onLogout, currentView, onViewChange }) => {
           jobRole: jobRole,
           students: companyJobRoleCounts[firstCompany][jobRole],
         })).sort((a, b) => a.jobRole.localeCompare(b.jobRole));
-        
+
         setCompanyChartData(jobRolesData);
       } else {
         setCompanyChartData([]);
@@ -185,7 +184,7 @@ const PlacementDashboard = ({ onLogout, currentView, onViewChange }) => {
   useEffect(() => {
     const coordinatorData = readStoredCoordinatorData();
     const branch = resolveCoordinatorDepartment(coordinatorData);
-    
+
     if (branch) {
       setCoordinatorBranch(branch);
       console.log('Coordinator branch:', branch);
@@ -200,30 +199,50 @@ const PlacementDashboard = ({ onLogout, currentView, onViewChange }) => {
   const fetchPlacedStudents = async (branch) => {
     try {
       setIsLoading(true);
-      const response = await mongoDBService.getPlacedStudents({ dept: branch });
-      
-      if (response.success && response.data) {
+      const [response, studentsResponse] = await Promise.all([
+        mongoDBService.getPlacedStudents({ dept: branch }),
+        mongoDBService.getStudents({ dept: branch, includeArchived: 'true', limit: 2000 }).catch(() => [])
+      ]);
+
+      const studentsList = Array.isArray(studentsResponse)
+        ? studentsResponse
+        : (studentsResponse?.students || studentsResponse?.data || []);
+
+      const studentMap = new Map();
+      studentsList.forEach(s => {
+        if (s._id) studentMap.set(String(s._id), s);
+        if (s.regNo) studentMap.set(String(s.regNo).toUpperCase().trim(), s);
+        if (s.registrationNumber) studentMap.set(String(s.registrationNumber).toUpperCase().trim(), s);
+      });
+
+      if (response && response.success && response.data) {
         // Map and add serial numbers
-        const mappedData = response.data.map((student, index) => ({
-          sno: index + 1,
-          name: student.name,
-          regNo:
-            student.registrationNumber ||
-            student.regNo ||
-            student.regno ||
-            student.rollNo ||
-            student.rollNumber ||
-            student.studentId ||
-            student._id ||
-            '',
-          dept: student.dept || student.department || student.branch || '',
-          batch: student.batch || student.batchYear || '',
-          company: student.company || student.companyName || '',
-          role: student.role || student.jobRole || student.designation || '',
-          pkg: student.pkg || student.package || student.salary || student.ctc || '',
-          status: student.status || 'Accepted'
-        }));
-        
+        const mappedData = response.data.map((student, index) => {
+          const rawRegNo = student.registrationNumber || student.regNo || student.regno || student.rollNo || student.rollNumber || '';
+          const cleanRegNo = String(rawRegNo || '').toUpperCase().trim();
+          const matchedStudent = (cleanRegNo && studentMap.get(cleanRegNo)) ||
+            (student.studentId && studentMap.get(String(student.studentId))) ||
+            null;
+
+          const resolvedId = matchedStudent?._id || matchedStudent?.id || student.studentId || cleanRegNo || student._id || '';
+
+          return {
+            sno: index + 1,
+            id: resolvedId,
+            studentId: resolvedId,
+            matchedStudentId: matchedStudent?._id || '',
+            name: matchedStudent?.name || student.name || `${student.firstName || ''} ${student.lastName || ''}`.trim(),
+            regNo: cleanRegNo || student.regNo || '',
+            dept: student.dept || student.department || student.branch || matchedStudent?.department || '',
+            batch: student.batch || student.batchYear || matchedStudent?.batch || '',
+            company: student.company || student.companyName || '',
+            role: student.role || student.jobRole || student.designation || '',
+            pkg: student.pkg || student.package || student.salary || student.ctc || '',
+            status: student.status || 'Accepted',
+            rawStudent: matchedStudent || student
+          };
+        });
+
         setAllStudentsData(mappedData);
         setDisplayedStudents(mappedData);
         calculateStats(mappedData);
@@ -258,7 +277,7 @@ const PlacementDashboard = ({ onLogout, currentView, onViewChange }) => {
     const packages = data.map(s => parseFloat(s.pkg) || 0);
     const total = data.length;
     const placed = acceptedStudents.length;
-    
+
     setStats({
       totalPlaced: placed,
       totalOffers: total,
@@ -277,36 +296,47 @@ const PlacementDashboard = ({ onLogout, currentView, onViewChange }) => {
     }));
   };
 
-  const handleClearFilters = () => {
-    setFilters({
-      batch: 'All Batches',
-      company: 'All Companies',
-      jobRole: 'All Job Roles',
-      package: 'All Packages',
-    });
-    setSearchTerm('');
-  };
-
   const handleCardClick = (view) => {
     if (onViewChange) {
       onViewChange(view);
     }
   };
-  
+
+  const handleViewStudent = (student) => {
+    const targetStudentId = student?.studentId || student?.id || student?.regNo || student?.rawStudent?._id || '';
+    if (!targetStudentId) {
+      console.warn('Unable to open student view: studentId missing', student);
+      return;
+    }
+
+    try {
+      sessionStorage.setItem('coo_student_view_from', 'placed-students');
+    } catch (_) {}
+
+    navigate(`/coo-manage-students/view/${targetStudentId}`, {
+      state: {
+        mode: 'view',
+        studentId: targetStudentId,
+        studentData: student.rawStudent || student,
+        from: 'placed-students',
+        fromPlacedStudents: true
+      }
+    });
+  };
+
   // Auto-apply filters when filter values change
   useEffect(() => {
     const filteredData = allStudentsData.filter(student => {
       const batchMatch = filters.batch === 'All Batches' || student.batch === filters.batch;
       const companyMatch = filters.company === 'All Companies' || student.company === filters.company;
       const jobRoleMatch = filters.jobRole === 'All Job Roles' || student.role === filters.jobRole;
-      const packageMatch = filters.package === 'All Packages' || student.pkg === filters.package;
-      
+
       const searchLower = searchTerm.trim().toLowerCase();
-      const searchMatch = !searchLower || 
+      const searchMatch = !searchLower ||
         (student.name || '').toLowerCase().includes(searchLower) ||
         (student.regNo || '').toLowerCase().includes(searchLower);
-      
-      return batchMatch && companyMatch && jobRoleMatch && packageMatch && searchMatch;
+
+      return batchMatch && companyMatch && jobRoleMatch && searchMatch;
     });
     setDisplayedStudents(filteredData);
     calculateStats(filteredData);
@@ -317,7 +347,6 @@ const PlacementDashboard = ({ onLogout, currentView, onViewChange }) => {
   const uniqueBatches = ['All Batches', ...new Set(allStudentsData.map(s => s.batch))].sort();
   const uniqueCompanies = ['All Companies', ...new Set(allStudentsData.map(s => s.company))].sort();
   const uniqueJobRoles = [...new Set(allStudentsData.map(s => s.role))].filter(Boolean).sort();
-  const uniquePackages = [...new Set(allStudentsData.map(s => s.pkg))].filter(Boolean).sort((a, b) => parseFloat(a) - parseFloat(b));
 
   const simulateExport = async (operation, exportFunction) => {
     setShowExportMenu(false);
@@ -342,7 +371,7 @@ const PlacementDashboard = ({ onLogout, currentView, onViewChange }) => {
           resolve();
         }, 2000);
       });
-      
+
       // Perform the actual export
       exportFunction();
 
@@ -360,14 +389,14 @@ const PlacementDashboard = ({ onLogout, currentView, onViewChange }) => {
   const exportToExcel = () => {
     try {
       const data = displayedStudents.map(student => [
-        student.sno, 
-        student.name, 
-        student.regNo, 
-        student.dept, 
+        student.sno,
+        student.name,
+        student.regNo,
+        student.dept,
         student.batch,
-        student.company, 
-        student.role, 
-        student.pkg, 
+        student.company,
+        student.role,
+        student.pkg,
         student.status,
       ]);
       const header = ["S .No", "Name", "Reg No", "Department", "Batch", "Company", "Job Role", "Package", "Status"];
@@ -385,23 +414,23 @@ const PlacementDashboard = ({ onLogout, currentView, onViewChange }) => {
     try {
       const doc = new jsPDF("landscape");
       const columns = [
-       " S .No", "Name", "Reg No", "Department", "Batch", "Company", "Job Role", "Package", "Status"
+        " S .No", "Name", "Reg No", "Department", "Batch", "Company", "Job Role", "Package", "Status"
       ];
-    
+
       const rows = displayedStudents.map(student => [
-        student.sno, 
-        student.name, 
-        student.regNo, 
-        student.dept, 
+        student.sno,
+        student.name,
+        student.regNo,
+        student.dept,
         student.batch,
-        student.company, 
-        student.role, 
-        student.pkg, 
+        student.company,
+        student.role,
+        student.pkg,
         student.status,
       ]);
-    
+
       doc.text("Placed Students Report", 14, 15);
-    
+
       // ✅ use the imported function directly
       autoTable(doc, {
         head: [columns],
@@ -409,7 +438,7 @@ const PlacementDashboard = ({ onLogout, currentView, onViewChange }) => {
         startY: 20,
         styles: { fontSize: 8 },
       });
-    
+
       doc.save("Placed_Students_Report.pdf");
     } catch (error) {
       throw error;
@@ -438,17 +467,17 @@ const PlacementDashboard = ({ onLogout, currentView, onViewChange }) => {
   return (
     <>
 
-      <Navbar onToggleSidebar={toggleSidebar} />                  
+      <Navbar onToggleSidebar={toggleSidebar} />
       <Sidebar isOpen={isSidebarOpen} onLogout={onLogout} currentView="placed-students" onViewChange={onViewChange}
-          onClose={() => setIsSidebarOpen(false)}
-        />
+        onClose={() => setIsSidebarOpen(false)}
+      />
       <div className={styles['co-ps-portal-container']}>
-    
-       
+
+
         {/* Main Content */}
         <main className={styles['co-ps-main-content']}>
-          
-          
+
+
           <div className={styles['co-ps-filters-container']}>
             {/* Batch Filter */}
             <Dropdown
@@ -460,7 +489,7 @@ const PlacementDashboard = ({ onLogout, currentView, onViewChange }) => {
               className={styles['co-ps-dropdown-wrapper']}
               headerClassName={styles['co-ps-dropdown-header']}
             />
-            
+
             {/* Company Filter */}
             <Dropdown
               options={uniqueCompanies}
@@ -471,7 +500,7 @@ const PlacementDashboard = ({ onLogout, currentView, onViewChange }) => {
               className={styles['co-ps-dropdown-wrapper']}
               headerClassName={styles['co-ps-dropdown-header']}
             />
-            
+
             {/* Job Role Filter */}
             <Dropdown
               options={['All Job Roles', ...uniqueJobRoles]}
@@ -482,33 +511,6 @@ const PlacementDashboard = ({ onLogout, currentView, onViewChange }) => {
               className={styles['co-ps-dropdown-wrapper']}
               headerClassName={styles['co-ps-dropdown-header']}
             />
-
-            {/* Package Filter */}
-            <Dropdown
-              options={['All Packages', ...uniquePackages]}
-              selectedOption={filters.package}
-              onSelect={(val) => handleFilterChange({ target: { name: 'package', value: val } })}
-              placeholder="All Packages"
-              role="coordinator"
-              className={styles['co-ps-dropdown-wrapper']}
-              headerClassName={styles['co-ps-dropdown-header']}
-            />
-
-            {/* Clear button */}
-            <button
-              type="button"
-              className={styles['co-ps-clear-btn']}
-              onClick={handleClearFilters}
-              disabled={
-                filters.batch === 'All Batches' &&
-                filters.company === 'All Companies' &&
-                filters.jobRole === 'All Job Roles' &&
-                filters.package === 'All Packages' &&
-                !searchTerm
-              }
-            >
-              Clear
-            </button>
           </div>
 
           <div className={styles['co-ps-dashboard-grid']}>
@@ -530,7 +532,7 @@ const PlacementDashboard = ({ onLogout, currentView, onViewChange }) => {
                 <div className={styles['co-ps-card-value']}>{stats.averagePackage.toFixed(1)} <span style={{ fontSize: '17px' }}>LPA</span></div>
               </div>
             </div>
-            
+
             {/* Company Job Roles Bar Chart */}
             <div className={styles['co-ps-chart-container']}>
               <div className={styles['co-ps-chart-header']}>
@@ -543,7 +545,7 @@ const PlacementDashboard = ({ onLogout, currentView, onViewChange }) => {
               </div>
             </div>
           </div>
-          
+
           <div className={styles['co-ps-table-container']}>
             <div className={styles['co-ps-table-header-row']}>
               <div className={styles['co-ps-table-header']}>PLACED STUDENTS DETAILS</div>
@@ -560,10 +562,10 @@ const PlacementDashboard = ({ onLogout, currentView, onViewChange }) => {
                     Print
                   </button>
                   {open && (
-                     <div className={styles['co-ps-dropdown-menu']}>
-                       <span onClick={handleExportToExcel}>Export to Excel</span>
-                       <span onClick={handleExportToPDF}>Save as PDF</span>
-                     </div>
+                    <div className={styles['co-ps-dropdown-menu']}>
+                      <span onClick={handleExportToExcel}>Export to Excel</span>
+                      <span onClick={handleExportToPDF}>Save as PDF</span>
+                    </div>
                   )}
                 </div>
               </div>
@@ -617,8 +619,8 @@ const PlacementDashboard = ({ onLogout, currentView, onViewChange }) => {
                         <td>{student.company}</td>
                         <td>{student.role}</td>
                         <td>{student.pkg}</td>
-                        <td 
-                          style={{ 
+                        <td
+                          style={{
                             color: String(student.status || '').trim().toLowerCase() === "accepted" ? '#00B728' : String(student.status || '').trim().toLowerCase() === "rejected" ? '#E62727' : '#888',
                             fontWeight: 'bold'
                           }}
@@ -629,7 +631,7 @@ const PlacementDashboard = ({ onLogout, currentView, onViewChange }) => {
                           <button
                             type="button"
                             style={{ border: 'none', background: 'transparent', padding: 0, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
-                            onClick={() => handleCardClick('placed-students-view')}
+                            onClick={() => handleViewStudent(student)}
                             aria-label={`View ${student.name}`}
                             title="View student profile"
                           >
@@ -648,7 +650,7 @@ const PlacementDashboard = ({ onLogout, currentView, onViewChange }) => {
 
       <ExportProgressAlert
         isOpen={exportPopupState === 'progress'}
-        onClose={() => {}}
+        onClose={() => { }}
         progress={exportProgress}
         exportType={exportType}
         color="#d23b42"

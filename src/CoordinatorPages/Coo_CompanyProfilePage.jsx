@@ -194,7 +194,7 @@ function CooCompanyProfilePage({ onLogout, onViewChange }) {
                             className={styles['Coo-cp-page-header-back-btn']}
                             onClick={handleBack}
                         >
-                            &#8592; Back
+                             Back
                         </button>
                     </div>
 

@@ -22,6 +22,29 @@ import { ExportProgressAlert, ExportSuccessAlert, ExportFailedAlert } from '../c
 import Dropdown from '../components/common/Dropdown/Dropdown.jsx';
 import CooCalendar from '../components/Calendar/Coo_Calendar.jsx';
 
+const readStoredCoordinatorData = () => {
+  if (typeof window === 'undefined') return null;
+  try {
+    const stored = localStorage.getItem('coordinatorData');
+    return stored ? JSON.parse(stored) : null;
+  } catch (error) {
+    console.error('Failed to parse coordinatorData:', error);
+    return null;
+  }
+};
+
+const resolveCoordinatorDepartment = (data) => {
+  if (!data) return '';
+  const deptValue =
+    data.department ||
+    data.branch ||
+    data.dept ||
+    data.departmentName ||
+    data.coordinatorDepartment ||
+    data.assignedDepartment;
+  return deptValue ? deptValue.toString().trim().toUpperCase() : '';
+};
+
 const sampleCompanyData = [
   {
     id: 1,
@@ -216,12 +239,88 @@ function CompanyProfile({ onLogout, currentView, onViewChange }) {
   const [exportProgress, setExportProgress] = useState(0);
   const [exportType, setExportType] = useState('Excel');
 
-  // Fetch companies from MongoDB
+  const [coordinatorBranch, setCoordinatorBranch] = useState(() => {
+    const stored = readStoredCoordinatorData();
+    return resolveCoordinatorDepartment(stored) || 'CSE';
+  });
+
+  // Fetch companies from MongoDB and filter by coordinator's department
   const fetchCompanies = useCallback(async () => {
     setIsLoading(true);
     try {
-      const data = await mongoDBService.getCompanies();
-      setCompanies(Array.isArray(data) ? data : []);
+      const stored = readStoredCoordinatorData();
+      const branch = resolveCoordinatorDepartment(stored) || 'CSE';
+      if (branch) setCoordinatorBranch(branch);
+
+      const [companiesData, drivesData] = await Promise.all([
+        mongoDBService.getCompanies().catch(() => []),
+        mongoDBService.getCompanyDrives().catch(() => [])
+      ]);
+
+      const allCompanies = Array.isArray(companiesData) ? companiesData : [];
+      const allDrives = Array.isArray(drivesData) ? drivesData : [];
+
+      // Map drive branches to company names for cross-referencing
+      const driveBranchMap = new Map();
+      allDrives.forEach((drive) => {
+        const cName = (drive.companyName || '').toString().trim().toLowerCase();
+        if (!cName) return;
+        const branches = (drive.eligibleBranches || drive.branch || drive.department || '')
+          .toString()
+          .split(/[,/| ]+/)
+          .map((b) => b.trim().toUpperCase())
+          .filter(Boolean);
+        if (!driveBranchMap.has(cName)) {
+          driveBranchMap.set(cName, new Set());
+        }
+        branches.forEach((b) => driveBranchMap.get(cName).add(b));
+      });
+
+      const targetDept = (branch || 'CSE').toUpperCase();
+      const deptFilteredCompanies = allCompanies.filter((company) => {
+        const cName = (company.company || company.companyName || '').toString().trim().toLowerCase();
+
+        // 1. Check branches from matching drives
+        if (driveBranchMap.has(cName)) {
+          const driveBranches = driveBranchMap.get(cName);
+          if (
+            driveBranches.has(targetDept) ||
+            Array.from(driveBranches).some((b) => b.includes(targetDept) || targetDept.includes(b))
+          ) {
+            return true;
+          }
+        }
+
+        // 2. Check branches directly on company record
+        const companyDepts = [
+          company.department,
+          company.branch,
+          ...(Array.isArray(company.departments) ? company.departments : [company.departments]),
+          ...(Array.isArray(company.branches) ? company.branches : [company.branches]),
+          ...(Array.isArray(company.eligibleBranches) ? company.eligibleBranches : [company.eligibleBranches]),
+          ...(Array.isArray(company.eligibleDepartments) ? company.eligibleDepartments : [company.eligibleDepartments]),
+        ]
+          .filter(Boolean)
+          .map((d) => d.toString().trim().toUpperCase());
+
+        if (companyDepts.length > 0) {
+          return companyDepts.some((d) => {
+            const tokens = d.split(/[,/| ]+/).map((t) => t.trim().toUpperCase()).filter(Boolean);
+            return tokens.includes(targetDept) || d === targetDept || d.includes(targetDept) || targetDept.includes(d);
+          });
+        }
+
+        // 3. Fallback check on domain / jobRole
+        const domainStr = (company.domain || company.companyType || company.jobRole || '').toString().toUpperCase();
+        const nonCseKeywords = ['MECHANICAL', 'AUTOMOTIVE', 'CIVIL', 'AEROSPACE', 'MEDICAL DEVICES'];
+        if (nonCseKeywords.some((k) => domainStr.includes(k))) {
+          return false;
+        }
+
+        return true;
+      });
+
+      setCompanies(deptFilteredCompanies);
     } catch (error) {
       console.error('Failed to fetch companies:', error);
       setCompanies([]);
@@ -461,94 +560,134 @@ function CompanyProfile({ onLogout, currentView, onViewChange }) {
 };
 
   const exportToExcel = () => {
-    try{
-    const header = ["S.No", "Company", "Domain", "Job Role", "HR Name", "HR Contact", "Bond Period", "Mode", "Status", "Visit Date", "Package", "Location"];
-    const data = filteredData.map((item, index) => [
+    try {
+      const header = [
+        "S.No",
+        "Company",
+        "Domain",
+        "Job Role",
+        "HR Name",
+        "HR Contact",
+        "Bond Period",
+        "Mode",
+        "Status",
+        "Visit Date",
+        "Package",
+        "Location"
+      ];
+      const data = filteredData.map((item, index) => [
         index + 1,
-        item.company,
-        item.domain,
-        item.jobRole,
-        item.hrName,
-        item.hrContact,
-        item.bondPeriod,
-        item.mode,
-        item.status,
-        item.visitDate,
-        item.package,
-        item.location
-    ]);
-    const ws = XLSX.utils.aoa_to_sheet([header, ...data]);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Company Profile");
-    XLSX.writeFile(wb, "CompanyProfile.xlsx");
-    setShowExportMenu(false);
-  }catch (error){
-    throw error;
-  }
+        item.company || item.companyName || "—",
+        item.companyType || item.domain || "—",
+        item.jobRole || "—",
+        item.hrName || "—",
+        item.hrContact || item.contact || item.mobileNumber || "—",
+        item.bondPeriod || item.bond || "—",
+        item.mode || "—",
+        item.status || "—",
+        formatDisplayDate((item.visitDate || '').slice(0, 10)),
+        item.package || item.packageLPA || item.ctc || "—",
+        item.location || "—"
+      ]);
+      const ws = XLSX.utils.aoa_to_sheet([header, ...data]);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Company Profile");
+      XLSX.writeFile(wb, "CompanyProfile.xlsx");
+      setShowExportMenu(false);
+    } catch (error) {
+      console.error("Export to Excel failed:", error);
+      throw error;
+    }
   };
 
   const exportToPDF = () => {
-    try{
-    const doc = new jsPDF();
-  
-    const tableColumn = [
-      "S.No",
-      "Company",
-      "Domain",
-      "Job Role",
-      "HR Name",
-      "HR Contact",
-      "Bond Period",
-      "Mode",
-      "Status",
-      "Visit Date",
-      "Package",
-      "Location",
-    ];
-  
-    const tableRows = filteredData.map((item, index) => [
-      index + 1,
-      item.company,
-      item.domain,
-      item.jobRole,
-      item.hrName,
-      item.hrContact,
-      item.bondPeriod,
-      item.mode,
-      item.status,
-      item.visitDate,
-      item.package,
-      item.location,
-    ]);
-  
-    doc.setFontSize(16);
-    doc.text("Company Profile Report", 5, 15);
-  
-    // 👇 Explicitly call the imported function and pass the doc instance
-    autoTable(doc, {
-      head: [tableColumn],
-      body: tableRows,
-      startY: 20,
-      styles: {
-        fontSize: 8,
-        cellPadding: 2,
-        overflow: "linebreak",
-        valign: "middle",
-        halign: "center",
-        minCellHeight: 8,
-      },
-      headStyles: {
-        fillColor: [215, 61, 61],
-        textColor: 255,
-        fontStyle: "bold",
-      },
-    });
-  
-    doc.save("CompanyProfile.pdf");
-    setShowExportMenu(false);
-  }catch (error){
-    throw error;
-  }
+    try {
+      const doc = new jsPDF({
+        orientation: "landscape",
+        unit: "mm",
+        format: "a4",
+      });
+
+      const tableColumn = [
+        "S.No",
+        "Company",
+        "Company Type",
+        "Job Role",
+        "HR Name",
+        "HR Contact",
+        "Bond",
+        "Mode",
+        "Status",
+        "Visit Date",
+        "Package",
+        "Location",
+      ];
+
+      const tableRows = filteredData.map((item, index) => [
+        index + 1,
+        item.company || item.companyName || "—",
+        item.companyType || item.domain || "—",
+        item.jobRole || "—",
+        item.hrName || "—",
+        item.hrContact || item.contact || item.mobileNumber || "—",
+        item.bondPeriod || item.bond || "—",
+        item.mode || "—",
+        item.status || "—",
+        formatDisplayDate((item.visitDate || '').slice(0, 10)),
+        item.package || item.packageLPA || item.ctc || "—",
+        item.location || "—",
+      ]);
+
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      doc.text("Company Profile Report", 14, 13);
+
+      autoTable(doc, {
+        head: [tableColumn],
+        body: tableRows,
+        startY: 18,
+        margin: { left: 10, right: 10 },
+        styles: {
+          fontSize: 7.5,
+          cellPadding: { top: 2.5, bottom: 2.5, left: 1.5, right: 1.5 },
+          overflow: "ellipsize",
+          valign: "middle",
+          halign: "center",
+          font: "helvetica",
+          lineWidth: 0.1,
+          lineColor: [220, 220, 220],
+        },
+        headStyles: {
+          fillColor: [210, 59, 66],
+          textColor: 255,
+          fontStyle: "bold",
+          fontSize: 8,
+          halign: "center",
+          valign: "middle",
+          minCellHeight: 8,
+        },
+        columnStyles: {
+          0: { cellWidth: 12, halign: "center" },   // S.No
+          1: { cellWidth: 34, halign: "center" },   // Company
+          2: { cellWidth: 26, halign: "center" },   // Company Type
+          3: { cellWidth: 28, halign: "center" },   // Job Role
+          4: { cellWidth: 26, halign: "center" },   // HR Name
+          5: { cellWidth: 24, halign: "center" },   // HR Contact
+          6: { cellWidth: 20, halign: "center" },   // Bond
+          7: { cellWidth: 16, halign: "center" },   // Mode
+          8: { cellWidth: 20, halign: "center" },   // Status
+          9: { cellWidth: 22, halign: "center" },   // Visit Date
+          10: { cellWidth: 22, halign: "center" },  // Package
+          11: { cellWidth: 27, halign: "center" },  // Location
+        },
+      });
+
+      doc.save("CompanyProfile.pdf");
+      setShowExportMenu(false);
+    } catch (error) {
+      console.error("Export to PDF failed:", error);
+      throw error;
+    }
   };
 
   const handleExportToPDF = () => {

@@ -431,7 +431,6 @@
 .suffixInput:read-only {
   cursor: default;
 }
-
 .suffixInput {
   flex: 1;
   height: 50.8px;

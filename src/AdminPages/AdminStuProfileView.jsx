@@ -3117,16 +3117,134 @@ function AdminStuProfileView({ onLogout, onViewChange }) {
                                             <div className={styles.skillLabelBox}>
                                                 {cat.category}
                                             </div>
+                                            <button
+                                                type="button"
+                                                className={styles.categoryRemoveBtn}
+                                                onClick={() => setSkills(prev => prev.filter((_, ci) => ci !== catIndex))}
+                                                title="Remove category"
+                                                disabled={isSaving}
+                                            >
+                                                ×
+                                            </button>
                                         </div>
                                         <div className={styles.skillsChipsContainer}>
                                             {cat.items.map((skill, i) => (
                                                 <span key={i} className={styles.skillChip}>
                                                     {skill}
+
+                                                    <button
+                                                        type="button"
+                                                        className={styles.skillChipRemove}
+                                                        onClick={() => {
+                                                            setSkills(prev => prev.map((c, ci) =>
+                                                                ci === catIndex ? { ...c, items: c.items.filter((_, si) => si !== i) } : c
+                                                            ));
+                                                        }}
+                                                        disabled={isSaving}
+                                                    >
+                                                        ×
+                                                    </button>
                                                 </span>
                                             ))}
+                                            {activeSkillCategory === catIndex && (
+                                                <input
+                                                    type="text"
+                                                    className={styles.skillNameInput}
+                                                    placeholder="Enter Skill"
+                                                    value={newSkillName}
+                                                    onChange={e => setNewSkillName(e.target.value)}
+                                                    autoFocus
+                                                    disabled={isSaving}
+                                                    onKeyDown={e => {
+                                                        if (e.key === 'Enter') {
+                                                            e.preventDefault();
+                                                            const val = newSkillName.trim();
+                                                            if (val && !cat.items.includes(val)) {
+                                                                setSkills(prev => prev.map((c, ci) =>
+                                                                    ci === catIndex ? { ...c, items: [...c.items, val] } : c
+                                                                ));
+                                                            }
+                                                            setNewSkillName('');
+                                                        }
+                                                        if (e.key === 'Escape') {
+                                                            setActiveSkillCategory(null);
+                                                            setNewSkillName('');
+                                                        }
+                                                    }}
+                                                    onBlur={() => {
+                                                        const val = newSkillName.trim();
+                                                        if (val && !cat.items.includes(val)) {
+                                                            setSkills(prev => prev.map((c, ci) =>
+                                                                ci === catIndex ? { ...c, items: [...c.items, val] } : c
+                                                            ));
+                                                        }
+                                                        setNewSkillName('');
+                                                        setActiveSkillCategory(null);
+                                                    }}
+                                                />
+                                            )}
+                                            <button
+                                                type="button"
+                                                className={styles.addChipBtn}
+                                                onClick={() => { setActiveSkillCategory(catIndex); setNewSkillName(''); }}
+                                                disabled={isSaving}
+                                            >
+                                                <span className={styles.addChipBtnIcon}>+</span>
+                                                Add Skill
+                                            </button>
                                         </div>
                                     </div>
                                 ))}
+
+                                {/* Add custom category */}
+                                <div style={{ marginTop: '16px' }}>
+                                    <div className={styles.skillsChipsContainer}>
+                                        {showAddCategory && (
+                                            <input
+                                                type="text"
+                                                className={styles.skillNameInput}
+                                                placeholder="Category Name"
+                                                value={newCategoryName}
+                                                onChange={e => setNewCategoryName(e.target.value)}
+                                                autoFocus
+                                                disabled={isSaving}
+                                                onKeyDown={e => {
+                                                    if (e.key === 'Enter') {
+                                                        e.preventDefault();
+                                                        const val = newCategoryName.trim();
+                                                        if (val && !skills.some(c => c.category === val)) {
+                                                            setSkills(prev => [...prev, { category: val, items: [] }]);
+                                                        }
+                                                        setNewCategoryName('');
+                                                        setShowAddCategory(false);
+                                                    }
+                                                    if (e.key === 'Escape') {
+                                                        setShowAddCategory(false);
+                                                        setNewCategoryName('');
+                                                    }
+                                                }}
+                                                onBlur={() => {
+                                                    const val = newCategoryName.trim();
+                                                    if (val && !skills.some(c => c.category === val)) {
+                                                        setSkills(prev => [...prev, { category: val, items: [] }]);
+                                                    }
+                                                    setNewCategoryName('');
+                                                    setShowAddCategory(false);
+                                                }}
+                                            />
+                                        )}
+                                        <button
+                                            type="button"
+                                            className={styles.addCategoryBtn}
+                                            onClick={() => { setShowAddCategory(true); setNewCategoryName(''); }}
+                                            disabled={isSaving}
+                                        >
+                                            <span className={styles.addChipBtnIcon}>+</span>
+                                            Add Category
+                                        </button>
+                                    </div>
+                                </div>
+
                             </div>
                         </div>
 

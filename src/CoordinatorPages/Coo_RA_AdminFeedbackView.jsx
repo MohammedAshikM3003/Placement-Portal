@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { FaStar, FaRegStar } from 'react-icons/fa';
 import mongoDBService from '../services/mongoDBService.jsx';
 
@@ -26,7 +26,7 @@ function SFPScrollTextarea({ value, height = 140, placeholder }) {
   );
 }
 
-export const CooRAFeedbackView = ({
+export const CooRAAdminFeedbackView = ({
   roundName,
   onClose,
   studentData = {},
@@ -37,10 +37,9 @@ export const CooRAFeedbackView = ({
   selectedCompany = null
 }) => {
   const [selectedDate, setSelectedDate] = useState('');
-  const [difficulty, setDifficulty] = useState('');
   const [feedback, setFeedback] = useState('');
-  const [suggestion, setSuggestion] = useState('');
   const [rating, setRating] = useState(1);
+  const [studentCount, setStudentCount] = useState(0);
   const [isLoadingFeedback, setIsLoadingFeedback] = useState(false);
   const [loadError, setLoadError] = useState('');
   const FIELD_HEIGHT = '50px';
@@ -49,6 +48,7 @@ export const CooRAFeedbackView = ({
     if (typeof window === 'undefined') return false;
     return window.innerWidth <= 768;
   });
+
   useEffect(() => {
     const onResize = () => setIsPopupMobile(window.innerWidth <= 768);
     window.addEventListener('resize', onResize);
@@ -66,59 +66,66 @@ export const CooRAFeedbackView = ({
   useEffect(() => {
     let isMounted = true;
 
-    const loadStudentFeedbackRecord = async () => {
-      const normalizedRegNo = String(studentData?.RegNo || '').trim();
-      const normalizedStudentId = String(studentData?.studentId || '').trim();
+    const loadAdminFeedbackRecord = async () => {
       const normalizedRound = Number.isFinite(Number(roundNumber))
         ? Number(roundNumber)
         : Number.parseInt(String(roundName || '').match(/round\s+(\d+)/i)?.[1] || '', 10);
 
-      if (!normalizedRegNo && !normalizedStudentId) {
-        return;
-      }
+      const targetDriveId = driveContext?._id || driveContext?.driveId || '';
+      const targetCompany = selectedCompany || driveContext?.companyName || '';
+      const targetJobRole = selectedJobRole || driveContext?.jobRole || '';
+      const targetStartDate = selectedStartDate || driveContext?.startingDate || '';
+      const studentResult = String(studentData?.Result || studentData?.status || '').toLowerCase();
+      const feedbackTypeFilter = studentResult === 'passed' ? 'passed' : studentResult === 'failed' ? 'failed' : '';
 
       setIsLoadingFeedback(true);
       setLoadError('');
 
       try {
-        const response = await mongoDBService.getStudentFeedback({
-          driveId: driveContext?._id || driveContext?.driveId || '',
-          companyName: selectedCompany || driveContext?.companyName || '',
-          jobRole: selectedJobRole || driveContext?.jobRole || '',
-          startingDate: selectedStartDate || driveContext?.startingDate || '',
+        const response = await mongoDBService.getFeedbackByDrive(targetDriveId, {
+          companyName: targetCompany,
+          jobRole: targetJobRole,
+          startingDate: targetStartDate,
           roundNumber: Number.isFinite(normalizedRound) ? normalizedRound : '',
-          studentId: normalizedStudentId,
-          regNo: normalizedRegNo
+          feedbackType: feedbackTypeFilter
         });
 
         if (!isMounted) return;
 
-        const records = Array.isArray(response?.data) ? response.data : [];
+        let records = Array.isArray(response?.data) ? response.data : [];
+
+        // If no records found with feedbackType filter, try without feedbackType filter
+        if (records.length === 0 && feedbackTypeFilter) {
+          const fallbackResponse = await mongoDBService.getFeedbackByDrive(targetDriveId, {
+            companyName: targetCompany,
+            jobRole: targetJobRole,
+            startingDate: targetStartDate,
+            roundNumber: Number.isFinite(normalizedRound) ? normalizedRound : ''
+          });
+          if (Array.isArray(fallbackResponse?.data) && fallbackResponse.data.length > 0) {
+            records = fallbackResponse.data;
+          }
+        }
+
         const latest = records[0] || null;
 
         if (!latest) {
-          setDifficulty('');
           setFeedback('');
-          setSuggestion('');
           return;
         }
 
-        const normalizedDifficulty = String(latest?.difficulty || '').trim();
-        const difficultyLabel = normalizedDifficulty
-          ? normalizedDifficulty.charAt(0).toUpperCase() + normalizedDifficulty.slice(1).toLowerCase()
-          : '';
-
-        setDifficulty(difficultyLabel);
         setFeedback((latest?.feedback || '').toString());
-        setSuggestion((latest?.suggestion || '').toString());
         if (latest?.selectedDate) {
           setSelectedDate(String(latest.selectedDate).slice(0, 10));
         }
         setRating(Number(latest?.rating) > 0 ? Number(latest.rating) : 1);
+        if (latest?.studentCount || latest?.eligibleStudentsCount) {
+          setStudentCount(Number(latest.studentCount || latest.eligibleStudentsCount) || 0);
+        }
       } catch (error) {
         if (!isMounted) return;
-        setLoadError('Unable to load student feedback.');
-        console.error('Coordinator report feedback load error:', error);
+        setLoadError('Unable to load admin feedback.');
+        console.error('Coordinator report admin feedback load error:', error);
       } finally {
         if (isMounted) {
           setIsLoadingFeedback(false);
@@ -126,23 +133,23 @@ export const CooRAFeedbackView = ({
       }
     };
 
-    loadStudentFeedbackRecord();
+    loadAdminFeedbackRecord();
 
     return () => {
       isMounted = false;
     };
-  }, [studentData?.RegNo, studentData?.studentId, roundNumber, roundName, driveContext?._id, driveContext?.driveId, driveContext?.companyName, driveContext?.jobRole, driveContext?.startingDate, selectedStartDate, selectedJobRole, selectedCompany]);
+  }, [roundNumber, roundName, driveContext?._id, driveContext?.driveId, driveContext?.companyName, driveContext?.jobRole, driveContext?.startingDate, selectedStartDate, selectedJobRole, selectedCompany, studentData?.Result, studentData?.status]);
 
   const color = {
-    header: '#197AFF',
-    badgeBg: '#E8F1FF',
-    badgeText: '#135BBB',
-    primary: '#197AFF',
-    primaryShadow: 'rgba(25,122,255,0.3)',
-    assessment: '#197AFF',
-    focus: '#197AFF',
-    focusRing: 'rgba(25,122,255,0.2)',
-    thumb: '#197AFF'
+    header: '#4EA24E',
+    badgeBg: '#E8F5E8',
+    badgeText: '#2a5a2a',
+    primary: '#4EA24E',
+    primaryShadow: 'rgba(78,162,78,0.3)',
+    assessment: '#4EA24E',
+    focus: '#4EA24E',
+    focusRing: 'rgba(78,162,78,0.2)',
+    thumb: '#4EA24E'
   };
 
   return (
@@ -186,7 +193,7 @@ export const CooRAFeedbackView = ({
             letterSpacing: '0.02em'
           }}
         >
-          Student Feedback View
+          Admin Feedback View
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'center', padding: '14px 16px 0' }}>
@@ -216,18 +223,22 @@ export const CooRAFeedbackView = ({
             position: 'relative'
           }}
         >
-
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '14px' }}>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', alignItems: 'center' }}>
               <div style={{ backgroundColor: color.badgeBg, color: color.badgeText, borderRadius: '999px', padding: '6px 14px', fontWeight: 700, fontSize: '0.92rem' }}>
-                {studentData.Name || 'Student Feedback'}
+                Admin Feedback
               </div>
-              {studentData.RegNo && (
+              {studentData?.Name && (
+                <div style={{ backgroundColor: '#f3f6fb', color: '#4f5b6b', borderRadius: '999px', padding: '6px 14px', fontWeight: 600, fontSize: '0.86rem' }}>
+                  Student: {studentData.Name}
+                </div>
+              )}
+              {studentData?.RegNo && (
                 <div style={{ backgroundColor: '#f3f6fb', color: '#4f5b6b', borderRadius: '999px', padding: '6px 14px', fontWeight: 600, fontSize: '0.86rem' }}>
                   Reg No: {studentData.RegNo}
                 </div>
               )}
-              {studentData.Result && (
+              {studentData?.Result && (
                 <div style={{ backgroundColor: '#f3f6fb', color: '#4f5b6b', borderRadius: '999px', padding: '6px 14px', fontWeight: 600, fontSize: '0.86rem' }}>
                   Result: {studentData.Result}
                 </div>
@@ -236,7 +247,7 @@ export const CooRAFeedbackView = ({
 
             <div style={{ display: 'flex', gap: '10px', alignItems: 'stretch', flexWrap: 'nowrap' }}>
               <div style={{ flex: '1 1 0', minWidth: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', border: '1px solid #d0e6ff', borderRadius: '8px', height: FIELD_HEIGHT, padding: '0 0.9rem', backgroundColor: '#f5f9ff', fontSize: '0.84rem', lineHeight: 1.2, userSelect: 'none', boxSizing: 'border-box', width: '100%' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', border: '1px solid #def4dd', borderRadius: '8px', height: FIELD_HEIGHT, padding: '0 0.9rem', backgroundColor: '#f9fff9', fontSize: '0.84rem', lineHeight: 1.2, userSelect: 'none', boxSizing: 'border-box', width: '100%' }}>
                   <span style={{ flex: 1, minWidth: 0, fontWeight: 600, color: '#1a1a1a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     {selectedDate ? (() => { const [y, m, d] = selectedDate.split('-'); return `${d}-${m}-${y}`; })() : 'DD-MM-YYYY'}
                   </span>
@@ -247,11 +258,13 @@ export const CooRAFeedbackView = ({
                     <line x1="3" y1="10" x2="21" y2="10" />
                   </svg>
                 </div>
-                <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '8px', border: '1px solid #d0e6ff', borderRadius: '8px', height: FIELD_HEIGHT, padding: '0 0.9rem', backgroundColor: '#f5f9ff', fontSize: '0.84rem', lineHeight: 1.2, userSelect: 'none', boxSizing: 'border-box', width: '100%' }}>
-                  <span style={{ flex: 1, minWidth: 0, fontWeight: 600, color: '#1a1a1a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {`Difficulty: ${difficulty || 'N/A'}`}
-                  </span>
-                </div>
+                {studentCount > 0 && (
+                  <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '8px', border: '1px solid #def4dd', borderRadius: '8px', height: FIELD_HEIGHT, padding: '0 0.9rem', backgroundColor: '#f9fff9', fontSize: '0.84rem', lineHeight: 1.2, userSelect: 'none', boxSizing: 'border-box', width: '100%' }}>
+                    <span style={{ flex: 1, minWidth: 0, fontWeight: 600, color: '#1a1a1a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {`Students Count: ${studentCount}`}
+                    </span>
+                  </div>
+                )}
               </div>
 
               <div style={{ flex: '1 1 0', minWidth: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -269,47 +282,16 @@ export const CooRAFeedbackView = ({
             </div>
           </div>
 
-          {isPopupMobile ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', paddingBottom: '20px' }}>
-              <div>
-                <div style={{ fontWeight: 700, fontSize: '0.95rem', marginBottom: '6px' }}>Feedback :</div>
-                <div style={{ position: 'relative' }}>
-                  <SFPScrollTextarea value={feedback} onChange={() => {}} readOnly={true} height={112} placeholder="No feedback submitted yet." />
-                </div>
-                {isLoadingFeedback && <div style={{ fontSize: '0.8rem', color: '#666', marginTop: '6px' }}>Loading feedback...</div>}
-                {!isLoadingFeedback && !feedback && !suggestion && !loadError && <div style={{ fontSize: '0.8rem', color: '#666', marginTop: '6px' }}>No student feedback found for this round.</div>}
-                {loadError && <div style={{ fontSize: '0.8rem', color: '#d32f2f', marginTop: '6px' }}>{loadError}</div>}
-              </div>
-
-              <div>
-                <div style={{ fontWeight: 700, fontSize: '0.95rem', marginBottom: '6px' }}>Suggestion :</div>
-                <div style={{ position: 'relative' }}>
-                  <SFPScrollTextarea value={suggestion} onChange={() => {}} readOnly={true} height={112} placeholder="No suggestion submitted yet." />
-                </div>
-              </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', paddingBottom: '10px' }}>
+            <div style={{ fontWeight: 700, fontSize: '0.95rem', marginBottom: '2px' }}>Feedback :</div>
+            <div style={{ position: 'relative' }}>
+              <SFPScrollTextarea value={feedback} height={158} placeholder="No admin feedback submitted for this round yet." />
             </div>
-          ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
-              <div>
-                <div style={{ fontWeight: 700, fontSize: '0.95rem', marginBottom: '6px' }}>Feedback :</div>
-                <div style={{ position: 'relative' }}>
-                  <SFPScrollTextarea value={feedback} onChange={() => {}} readOnly={true} height={158} placeholder="No feedback submitted yet." />
-                </div>
-                {isLoadingFeedback && <div style={{ fontSize: '0.8rem', color: '#666', marginTop: '6px' }}>Loading feedback...</div>}
-                {!isLoadingFeedback && !feedback && !suggestion && !loadError && <div style={{ fontSize: '0.8rem', color: '#666', marginTop: '6px' }}>No student feedback found for this round.</div>}
-                {loadError && <div style={{ fontSize: '0.8rem', color: '#d32f2f', marginTop: '6px' }}>{loadError}</div>}
-              </div>
-
-              <div>
-                <div style={{ fontWeight: 700, fontSize: '0.95rem', marginBottom: '6px' }}>Suggestion :</div>
-                <div style={{ position: 'relative' }}>
-                  <SFPScrollTextarea value={suggestion} onChange={() => {}} readOnly={true} height={158} placeholder="No suggestion submitted yet." />
-                </div>
-              </div>
-            </div>
-          )}
+            {isLoadingFeedback && <div style={{ fontSize: '0.8rem', color: '#666', marginTop: '4px' }}>Loading admin feedback...</div>}
+            {!isLoadingFeedback && !feedback && !loadError && <div style={{ fontSize: '0.8rem', color: '#666', marginTop: '4px' }}>No admin feedback found for this round.</div>}
+            {loadError && <div style={{ fontSize: '0.8rem', color: '#d32f2f', marginTop: '4px' }}>{loadError}</div>}
+          </div>
         </div>
-
 
         <div style={{ display: 'flex', justifyContent: 'center', padding: isPopupMobile ? '14px 24px calc(env(safe-area-inset-bottom, 20px) + 25px)' : '14px 24px 20px', background: '#fff', borderTop: '1px solid #eef1f7' }}>
           <button onClick={onClose} style={{ backgroundColor: '#7C7C7C', color: '#fff', border: 'none', borderRadius: '12px', padding: '10px 40px', fontWeight: 600, fontSize: '1rem', cursor: 'pointer', fontFamily: "'Poppins', sans-serif" }}>Close</button>
@@ -319,4 +301,4 @@ export const CooRAFeedbackView = ({
   );
 };
 
-export default CooRAFeedbackView;
+export default CooRAAdminFeedbackView;

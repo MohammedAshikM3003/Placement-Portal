@@ -3046,7 +3046,6 @@
     box-sizing: border-box;
     transition: all 0.2s ease;
     width: 100%;
-    
 }
 
 .inputWithSuffix:focus-within {
@@ -3065,8 +3064,8 @@
     font-size: 0.95rem;
     font-family: 'Poppins', sans-serif;
     color: #1f2933;
-    position:relative;
-    top:12px;
+    position: relative;
+    top: 12px;
 }
 
 .suffixChip {

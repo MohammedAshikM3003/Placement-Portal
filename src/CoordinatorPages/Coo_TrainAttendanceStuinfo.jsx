@@ -1,5 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 import useCoordinatorAuth from "../utils/useCoordinatorAuth";
 import Navbar from "../components/Navbar/Conavbar.js";
 import Sidebar from "../components/Sidebar/Cosidebar.js";
@@ -90,6 +92,7 @@ export default function CooTrainAttendanceStuinfo({ onLogout, onViewChange }) {
 
   const [statusFilter, setStatusFilter] = useState("all");
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+  const [showNoChangesPopup, setShowNoChangesPopup] = useState(false);
   const [isSavingAttendance, setIsSavingAttendance] = useState(false);
 
   const [exportPopupState, setExportPopupState] = useState("none");
@@ -393,6 +396,20 @@ export default function CooTrainAttendanceStuinfo({ onLogout, onViewChange }) {
   const handleUpdateClick = async () => {
     if (!hasPendingChanges || !activeAssignment || !activeBatchDate || isSavingAttendance) return;
 
+    const hasActualChanges = students.some((student) => {
+      const pending = pendingChanges[student.id];
+      if (pending === undefined || pending === null) return false;
+      const currentStatus = (student.status || "-").toString().trim().toLowerCase();
+      const newStatus = pending.toString().trim().toLowerCase();
+      return currentStatus !== newStatus;
+    });
+
+    if (!hasActualChanges) {
+      setPendingChanges({});
+      setShowNoChangesPopup(true);
+      return;
+    }
+
     const updatedStudents = students.map((student) => (
       pendingChanges[student.id] ? { ...student, status: pendingChanges[student.id] } : student
     ));
@@ -504,32 +521,50 @@ export default function CooTrainAttendanceStuinfo({ onLogout, onViewChange }) {
     }
   };
 
-  const exportToPDF = () => {
-    const printWindow = window.open("", "_blank");
-    const tableHTML = document.querySelector(`.${styles["attendance-table"]}`)?.outerHTML || "";
+  const exportToPDF = async () => {
+    try {
+      const doc = new jsPDF({ orientation: "landscape" });
+      const head = [[
+        "S.No",
+        "Name",
+        "Register Number",
+        "Department",
+        "Year",
+        "Section",
+        "Mobile",
+        "Status",
+      ]];
 
-    printWindow.document.write(`
-      <html>
-        <head>
-          <title>Attendance Report</title>
-          <style>
-            table { width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; }
-            th, td { padding: 10px; border: 1px solid #ddd; text-align: center; }
-            th { background-color: #f5f5f5; font-weight: 600; }
-            h2 { text-align: center; color: #333; font-family: Arial, sans-serif; margin-bottom: 20px; }
-          </style>
-        </head>
-        <body>
-          <h2>Attendance Details</h2>
-          ${tableHTML}
-        </body>
-      </html>
-    `);
+      const body = filteredStudents.map((student, index) => [
+        index + 1,
+        student.name || "-",
+        student.regNo || "-",
+        student.dept || "-",
+        student.year || "-",
+        student.section || "-",
+        student.mobile || "-",
+        (pendingChanges[student.id] || student.status || "-").toString(),
+      ]);
 
-    printWindow.document.close();
-    printWindow.focus();
-    setTimeout(() => printWindow.print(), 250);
-    return true;
+      const title = activeBatch ? `${activeBatch} - Attendance Report (${activeBatchDate || "All Dates"})` : "Training Attendance Report";
+      doc.text(title, 14, 15);
+
+      autoTable(doc, {
+        head,
+        body,
+        startY: 20,
+        styles: { fontSize: 8, cellPadding: 3 },
+        headStyles: { fillColor: [210, 59, 66], textColor: [255, 255, 255], fontStyle: "bold" },
+        alternateRowStyles: { fillColor: [248, 249, 250] },
+      });
+
+      const safeBatchName = (activeBatch || "Batch").replace(/[^a-zA-Z0-9_-]/g, "_");
+      doc.save(`Training_Attendance_${safeBatchName}.pdf`);
+      return true;
+    } catch (error) {
+      console.error("PDF export error:", error);
+      return false;
+    }
   };
 
   const handleExportExcel = () => simulateExport("Excel", exportToExcel);
@@ -807,6 +842,25 @@ export default function CooTrainAttendanceStuinfo({ onLogout, onViewChange }) {
             </div>
             <div className={styles["Edit-popup-footer"]}>
               <button onClick={() => setShowSuccessPopup(false)} className={styles["Edit-popup-close-btn"]}>Close</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showNoChangesPopup && (
+        <div className={styles["Edit-popup-overlay"]}>
+          <div className={styles["Edit-popup-container"]}>
+            <div className={styles["Edit-popup-header"]}>No Update!</div>
+            <div className={styles["Edit-popup-body"]}>
+              <svg className={styles["Edit-error-icon"]} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                <circle className={styles["Edit-error-icon--circle"]} cx="26" cy="26" r="25" fill="none" />
+                <path className={styles["Edit-error-icon--cross"]} fill="none" d="M16 16l20 20M36 16L16 36" />
+              </svg>
+              <h2 style={{ margin: "1rem 0 0.5rem 0", fontSize: "24px", color: "#000", fontWeight: "700" }}>No Changes Detected</h2>
+              <p style={{ margin: 0, color: "#888", fontSize: "16px" }}>No changes has been detected</p>
+            </div>
+            <div className={styles["Edit-popup-footer"]}>
+              <button onClick={() => setShowNoChangesPopup(false)} className={styles["Edit-popup-close-btn"]}>Close</button>
             </div>
           </div>
         </div>

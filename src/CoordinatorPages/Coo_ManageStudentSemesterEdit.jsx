@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import { normalizeSkillCategories, flattenSkillsToSkillSet } from '../utils/skillUtils';
 import Cropper from 'react-easy-crop';
@@ -264,7 +264,7 @@ const FileSizeErrorPopup = ({ isOpen, onClose, fileSizeKB }) => {
                             </g>
                         </svg>
                     </div>
-                    <h2>Image Size Exceeded âœ—</h2>
+                    <h2>Image Size Exceeded {"\u2716"}</h2>
                     <p className={styles.imageSizePopupLine}>
                         Maximum allowed: <strong>500KB</strong>
                     </p>
@@ -525,15 +525,15 @@ const CropImageModal = ({ isOpen, imageSrc, onCrop, onClose, onDiscard }) => {
                                     className={styles.rotateBtn}
                                     title="Rotate left"
                                 >
-                                    â†º
+                                    {"\u21BA"}
                                 </button>
-                                <span className={styles.angleValue}>{rotation}Â°</span>
+                                <span className={styles.angleValue}>{rotation}{"\u00B0"}</span>
                                 <button
                                     onClick={() => setRotation((r) => (r + 10) % 360)}
                                     className={styles.rotateBtn}
                                     title="Rotate right"
                                 >
-                                    â†»
+                                    {"\u21BB"}
                                 </button>
                             </div>
                             <input
@@ -677,7 +677,7 @@ const URLValidationErrorPopup = ({ isOpen, onClose, urlType, invalidUrl }) => {
                 <div className={styles.imageSizePopupHeader}>Invalid {urlType} URL!</div>
                 <div className={styles.imageSizePopupBody}>
                     {renderIcon()}
-                    <h2>Invalid {urlType} Link âœ—</h2>
+                    <h2>Invalid {urlType} Link {"\u2716"}</h2>
                     {invalidUrl && (
                         <p className={styles.imageSizePopupLine} style={{ wordBreak: 'break-all' }}>
                             You entered: <strong>{invalidUrl}</strong>
@@ -699,17 +699,33 @@ const URLValidationErrorPopup = ({ isOpen, onClose, urlType, invalidUrl }) => {
 };
 
 const toPdfBlobUrl = (fileData, mimeType = 'application/pdf') => {
-    const rawData = fileData.includes('base64,') ? fileData.split('base64,')[1] : fileData;
-    const byteCharacters = atob(rawData);
-    const byteNumbers = new Array(byteCharacters.length);
+    if (!fileData) return null;
+    try {
+        const rawData = fileData.includes('base64,') ? fileData.split('base64,')[1] : fileData;
+        const byteCharacters = atob(rawData);
+        const byteNumbers = new Array(byteCharacters.length);
 
-    for (let index = 0; index < byteCharacters.length; index += 1) {
-        byteNumbers[index] = byteCharacters.charCodeAt(index);
+        for (let index = 0; index < byteCharacters.length; index += 1) {
+            byteNumbers[index] = byteCharacters.charCodeAt(index);
+        }
+
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], { type: mimeType });
+        return window.URL.createObjectURL(blob);
+    } catch (e) {
+        console.error('Error creating PDF blob from base64:', e);
+        return null;
     }
+};
 
-    const byteArray = new Uint8Array(byteNumbers);
-    const blob = new Blob([byteArray], { type: mimeType });
-    return window.URL.createObjectURL(blob);
+const getResumeDocument = async (studentId) => {
+    try {
+        const response = await mongoDBService.getResume(studentId);
+        return response?.resume || response || null;
+    } catch (error) {
+        console.warn('Resume lookup failed:', error);
+        return null;
+    }
 };
 
 const ResumeChooserModal = ({ isOpen, onClose, onView, onDownload, isProcessing, activeAction }) => {
@@ -829,7 +845,7 @@ const EDITABLE_FIELD_LABELS = {
 function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
     const { studentId } = useParams(); // Get studentId from URL params
     const navigate = useNavigate();
-    const location = window.location;
+    const location = useLocation();
 
     // Check if we're in view mode (URL contains /view/)
     const isViewMode = location.pathname.includes('/view/');
@@ -905,6 +921,118 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
     const [loadingProgress, setLoadingProgress] = useState(15);
     const [showLoginPassword, setShowLoginPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [hasResume, setHasResume] = useState(false);
+    const [certificateCount, setCertificateCount] = useState(0);
+
+    useEffect(() => {
+        let isMounted = true;
+        const checkResumeAndCertificates = async () => {
+            const candidateIds = [
+                studentData?._id,
+                studentId,
+                studentData?.regNo,
+                studentData?.registerNumber,
+                studentData?.registerNo
+            ].filter(Boolean);
+
+            if (candidateIds.length === 0) {
+                if (isMounted) {
+                    setHasResume(false);
+                    setCertificateCount(0);
+                }
+                return;
+            }
+
+            let resumeFound = Boolean(
+                studentData?.resumeUrl || 
+                studentData?.resumeURL ||
+                studentData?.resumeFile || 
+                studentData?.resumeFileName || 
+                studentData?.resumeData || 
+                studentData?.gridfsFileId ||
+                (typeof studentData?.resume === 'string' && studentData.resume.length > 0) ||
+                (typeof studentData?.resume === 'object' && studentData.resume !== null) ||
+                (typeof studentData?.resume === 'boolean' && studentData.resume === true)
+            );
+
+            if (!resumeFound) {
+                for (const id of candidateIds) {
+                    try {
+                        const resDoc = await getResumeDocument(id);
+                        if (resDoc && (resDoc.url || resDoc.fileName || resDoc.name || resDoc.gridfsFileId || resDoc.resumeData || resDoc.fileData || resDoc.gridfsFileUrl || resDoc.resumeURL || resDoc.resumeUrl)) {
+                            resumeFound = true;
+                            break;
+                        }
+                    } catch (err) {}
+                }
+            }
+
+            if (!resumeFound) {
+                const authToken = localStorage.getItem('authToken') || localStorage.getItem('token');
+                for (const id of candidateIds) {
+                    try {
+                        const fallbackResponse = await fetch(joinApiUrl(`/resume-builder/pdf/${id}`), {
+                            headers: {
+                                'Content-Type': 'application/json',
+                                ...(authToken ? { Authorization: `Bearer ${authToken}` } : {})
+                            }
+                        });
+                        if (fallbackResponse.ok) {
+                            const result = await fallbackResponse.json();
+                            if (result?.success && (result?.resume?.url || result?.resume?.gridfsFileUrl || result?.resume?.name)) {
+                                resumeFound = true;
+                                break;
+                            }
+                        }
+                    } catch (e) {}
+                }
+            }
+
+            if (isMounted) {
+                setHasResume(resumeFound);
+            }
+
+            try {
+                let certList = [];
+                for (const id of candidateIds) {
+                    try {
+                        const certRes = await mongoDBService.getCertificatesByStudentId(id);
+                        if (Array.isArray(certRes) && certRes.length > 0) {
+                            certList = certRes;
+                            break;
+                        } else if (Array.isArray(certRes?.certificates) && certRes.certificates.length > 0) {
+                            certList = certRes.certificates;
+                            break;
+                        } else if (Array.isArray(certRes?.data) && certRes.data.length > 0) {
+                            certList = certRes.data;
+                            break;
+                        }
+                    } catch (e) {}
+                }
+
+                if (certList.length === 0 && Array.isArray(studentData?.certificates)) {
+                    certList = studentData.certificates;
+                } else if (certList.length === 0 && Array.isArray(studentData?.certificateList)) {
+                    certList = studentData.certificateList;
+                }
+
+                const approvedCount = certList.filter(cert => (cert.status || '').toLowerCase() === 'approved').length;
+
+                if (isMounted) {
+                    setCertificateCount(approvedCount);
+                }
+            } catch (err) {
+                if (isMounted) {
+                    setCertificateCount(0);
+                }
+            }
+        };
+
+        checkResumeAndCertificates();
+        return () => {
+            isMounted = false;
+        };
+    }, [studentData?._id, studentId, studentData?.regNo, studentData?.resumeUrl, studentData?.resumeURL, studentData?.resume, studentData?.resumeFile, studentData?.resumeFileName, studentData?.resumeData, studentData?.gridfsFileId, studentData?.certificates]);
 
     // Crop Modal State
     const [isCropModalOpen, setIsCropModalOpen] = useState(false);
@@ -1668,7 +1796,8 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
     const resolveResumeUrl = (resumeDoc) => {
         if (!resumeDoc) return '';
 
-        const rawUrl = resumeDoc.gridfsFileUrl
+        const rawUrl = (typeof resumeDoc === 'string' ? resumeDoc : '')
+            || resumeDoc.gridfsFileUrl
             || (resumeDoc.gridfsFileId ? `/api/file/${resumeDoc.gridfsFileId}` : '')
             || resumeDoc.url
             || resumeDoc.resumeURL
@@ -1677,15 +1806,27 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
             || resumeDoc.resumeData?.url
             || resumeDoc.resumeData?.resumeURL
             || resumeDoc.resumeData?.resumeUrl
+            || resumeDoc.resumeData?.fileUrl
+            || resumeDoc.resumeData?.pdfUrl
             || '';
 
-        if (!rawUrl) return '';
-        if (rawUrl.startsWith('http') || rawUrl.startsWith('data:') || rawUrl.startsWith('blob:')) return rawUrl;
-        if (rawUrl.startsWith('/api/file/')) return `${API_BASE_URL}${rawUrl.replace('/api', '')}`;
-        if (rawUrl.startsWith('/file/')) return `${API_BASE_URL}${rawUrl}`;
-        if (rawUrl.startsWith('/api/')) return `${API_BASE_URL.replace('/api', '')}${rawUrl}`;
-        if (rawUrl.startsWith('/')) return `${API_BASE_URL.replace('/api', '')}${rawUrl}`;
-        return rawUrl;
+        if (!rawUrl || rawUrl === '#') return '';
+        if (rawUrl.startsWith('http://') || rawUrl.startsWith('https://') || rawUrl.startsWith('data:') || rawUrl.startsWith('blob:')) {
+            return rawUrl;
+        }
+        if (rawUrl.startsWith('/api/file/') || /^[a-f0-9]{24}$/.test(rawUrl)) {
+            return gridfsService.getFileUrl(rawUrl);
+        }
+        if (rawUrl.startsWith('/file/')) {
+            return `${API_BASE_URL}${rawUrl}`;
+        }
+        if (rawUrl.startsWith('/api/')) {
+            return `${API_ORIGIN_URL}${rawUrl}`;
+        }
+        if (rawUrl.startsWith('/')) {
+            return `${API_ORIGIN_URL}${rawUrl}`;
+        }
+        return joinApiUrl(rawUrl);
     };
 
     const closeResumePopup = () => {
@@ -1704,81 +1845,154 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
     };
 
     const resolveResumeFile = async () => {
-        if (!studentId) {
+        const idList = [
+            studentData?._id,
+            studentId,
+            studentData?.regNo,
+            studentData?.registerNumber,
+            studentData?.registerNo
+        ].filter(Boolean);
+
+        if (idList.length === 0) {
             throw new Error('Student ID not found');
         }
 
-        try {
-            const resumeResponse = await mongoDBService.getResume(studentId);
-            const resumeDoc = resumeResponse?.resume || resumeResponse || null;
-            let resumeUrl = resolveResumeUrl(resumeDoc);
-            const resumeFileName = resumeDoc?.fileName || resumeDoc?.name || resumeDoc?.resumeData?.fileName || 'resume.pdf';
+        let resumeDoc = null;
 
-            if (!resumeUrl && resumeDoc?.fileData) {
-                resumeUrl = resumeDoc.fileData.startsWith('data:')
-                    ? resumeDoc.fileData
-                    : `data:${resumeDoc.fileType || 'application/pdf'};base64,${resumeDoc.fileData}`;
-            }
+        // 1. Check if studentData already has embedded resume object or url
+        if (studentData?.resume && typeof studentData.resume === 'object') {
+            resumeDoc = studentData.resume;
+        } else if (studentData?.resumeData && typeof studentData.resumeData === 'object') {
+            resumeDoc = studentData.resumeData;
+        } else if (studentData?.resumeUrl || studentData?.resumeURL || studentData?.resumeFile || studentData?.gridfsFileId) {
+            resumeDoc = {
+                url: studentData.resumeUrl || studentData.resumeURL || studentData.resumeFile,
+                gridfsFileId: studentData.gridfsFileId,
+                gridfsFileUrl: studentData.gridfsFileUrl,
+                fileName: studentData.resumeFileName || studentData.resumeName || 'resume.pdf'
+            };
+        } else if (typeof studentData?.resume === 'string' && studentData.resume.length > 5 && studentData.resume !== 'true') {
+            resumeDoc = {
+                url: studentData.resume,
+                fileName: studentData.resumeFileName || studentData.resumeName || 'resume.pdf'
+            };
+        }
 
-            if (!resumeUrl) {
-                const authToken = localStorage.getItem('authToken') || localStorage.getItem('token');
-                const fallbackResponse = await fetch(joinApiUrl(`/resume-builder/pdf/${studentId}`), {
-                    headers: {
-                        'Content-Type': 'application/json',
-                        ...(authToken ? { Authorization: `Bearer ${authToken}` } : {})
+        // 2. Query backend getResume for candidate IDs
+        if (!resumeDoc || (!resumeDoc.gridfsFileId && !resumeDoc.gridfsFileUrl && !resumeDoc.url && !resumeDoc.resumeURL && !resumeDoc.resumeUrl && !resumeDoc.fileData && !resumeDoc.fileContent)) {
+            for (const id of idList) {
+                try {
+                    const response = await mongoDBService.getResume(id);
+                    const doc = response?.resume || response || null;
+                    if (doc && (doc.gridfsFileId || doc.gridfsFileUrl || doc.url || doc.resumeURL || doc.resumeUrl || doc.fileData || doc.fileName || doc.resumeData)) {
+                        resumeDoc = doc;
+                        break;
                     }
-                });
-
-                if (fallbackResponse.ok) {
-                    const result = await fallbackResponse.json();
-                    resumeUrl = resolveResumeUrl(result?.resume || null);
+                } catch (e) {
+                    // Try next ID
                 }
             }
+        }
 
-            if (!resumeUrl) {
-                throw new Error('Resume not found for this student.');
-            }
-
-            if (resumeUrl.startsWith('data:')) {
-                return {
-                    blobUrl: toPdfBlobUrl(resumeUrl, resumeDoc?.fileType || 'application/pdf'),
-                    fileName: resumeFileName,
-                    shouldRevoke: true
-                };
-            }
-
-            if (resumeUrl.startsWith('blob:')) {
-                return {
-                    blobUrl: resumeUrl,
-                    fileName: resumeFileName,
-                    shouldRevoke: false
-                };
-            }
-
+        // 3. Fallback: try resume-builder/pdf/:id
+        let resumeUrl = resolveResumeUrl(resumeDoc);
+        if (!resumeUrl) {
             const authToken = localStorage.getItem('authToken') || localStorage.getItem('token');
-            const response = await fetch(resumeUrl, {
-                headers: authToken ? { Authorization: `Bearer ${authToken}` } : undefined,
-                credentials: 'include'
-            });
+            for (const id of idList) {
+                try {
+                    const fallbackResponse = await fetch(joinApiUrl(`/resume-builder/pdf/${id}`), {
+                        headers: {
+                            'Content-Type': 'application/json',
+                            ...(authToken ? { Authorization: `Bearer ${authToken}` } : {})
+                        }
+                    });
 
-            if (!response.ok) {
-                throw new Error(`Resume fetch failed with status ${response.status}`);
+                    if (fallbackResponse.ok) {
+                        const result = await fallbackResponse.json();
+                        if (result?.success && result?.resume) {
+                            resumeDoc = result.resume;
+                            resumeUrl = resolveResumeUrl(result.resume);
+                            if (resumeUrl) break;
+                        }
+                    }
+                } catch (e) {}
             }
+        }
 
-            const blob = await response.blob();
-            if (!blob.size || blob.type.includes('html')) {
-                throw new Error('Invalid resume response received');
+        let resumeFileName = resumeDoc?.fileName
+            || resumeDoc?.name
+            || resumeDoc?.resumeData?.fileName
+            || resumeDoc?.resumeData?.name
+            || (studentData?.firstName ? `${studentData.firstName}_Resume.pdf` : (studentData?.name ? `${studentData.name}_Resume.pdf` : 'resume.pdf'));
+
+        if (!resumeFileName.toLowerCase().endsWith('.pdf') && !resumeFileName.toLowerCase().endsWith('.doc') && !resumeFileName.toLowerCase().endsWith('.docx')) {
+            resumeFileName = `${resumeFileName}.pdf`;
+        }
+
+        // 4. If resumeDoc has base64 data
+        const base64Data = resumeDoc?.fileData
+            || resumeDoc?.fileContent
+            || resumeDoc?.resumeData?.fileData
+            || resumeDoc?.resumeData?.fileContent
+            || resumeDoc?.resumeData?.base64
+            || resumeDoc?.resumeData?.content
+            || studentData?.resumeFileData
+            || '';
+
+        if (!resumeUrl && base64Data) {
+            resumeUrl = base64Data.startsWith('data:')
+                ? base64Data
+                : `data:${resumeDoc?.fileType || 'application/pdf'};base64,${base64Data}`;
+        }
+
+        if (!resumeUrl) {
+            throw new Error('Resume not found for this student.');
+        }
+
+        if (resumeUrl.startsWith('data:')) {
+            const blobUrl = toPdfBlobUrl(resumeUrl, resumeDoc?.fileType || 'application/pdf');
+            if (!blobUrl) {
+                throw new Error('Failed to process resume data.');
             }
-
             return {
-                blobUrl: window.URL.createObjectURL(blob),
+                blobUrl,
                 fileName: resumeFileName,
                 shouldRevoke: true
             };
-        } catch (error) {
-            console.error('Failed to resolve resume:', error);
-            throw error;
         }
+
+        if (resumeUrl.startsWith('blob:')) {
+            return {
+                blobUrl: resumeUrl,
+                fileName: resumeFileName,
+                shouldRevoke: false
+            };
+        }
+
+        const authToken = localStorage.getItem('authToken') || localStorage.getItem('token');
+        const response = await fetch(resumeUrl, {
+            headers: authToken ? { Authorization: `Bearer ${authToken}` } : undefined,
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            throw new Error(`Resume fetch failed with status ${response.status}`);
+        }
+
+        const rawBlob = await response.blob();
+        if (!rawBlob.size || (rawBlob.type && rawBlob.type.includes('html'))) {
+            throw new Error('Invalid resume response received');
+        }
+
+        const pdfBlob = rawBlob.type && rawBlob.type !== 'application/octet-stream'
+            ? rawBlob
+            : new Blob([rawBlob], { type: 'application/pdf' });
+
+        return {
+            blobUrl: window.URL.createObjectURL(pdfBlob),
+            fileName: resumeFileName,
+            shouldRevoke: true
+        };
     };
 
     const handleResumeView = async () => {
@@ -1812,8 +2026,14 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
             shouldRevoke = result.shouldRevoke;
 
             const previewWindow = window.open(blobUrl, '_blank');
-            if (!previewWindow) {
-                throw new Error('Popup blocked');
+            if (!previewWindow || previewWindow.closed || typeof previewWindow.closed === 'undefined') {
+                const link = document.createElement('a');
+                link.href = blobUrl;
+                link.target = '_blank';
+                link.rel = 'noopener noreferrer';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
             }
 
             if (progressInterval) {
@@ -1823,7 +2043,7 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
             setTimeout(() => setResumePreviewPopupState('none'), 500);
 
             if (shouldRevoke && blobUrl) {
-                setTimeout(() => window.URL.revokeObjectURL(blobUrl), 1500);
+                setTimeout(() => window.URL.revokeObjectURL(blobUrl), 60000);
             }
         } catch (error) {
             console.error('Resume preview failed:', error);
@@ -1889,7 +2109,7 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
             setTimeout(() => setResumeDownloadPopupState('none'), 2500);
 
             if (shouldRevoke && blobUrl) {
-                setTimeout(() => window.URL.revokeObjectURL(blobUrl), 1500);
+                setTimeout(() => window.URL.revokeObjectURL(blobUrl), 30000);
             }
         } catch (error) {
             console.error('Resume download failed:', error);
@@ -2032,22 +2252,17 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
             setChangedFieldsList([]);
             setShowAnalysis(false);
 
-            let targetId = studentId;
-            if (!/^[a-f0-9]{24}$/i.test(studentId)) {
-                const studentsList = await mongoDBService.getStudents({ regNo: studentId });
-                if (Array.isArray(studentsList) && studentsList.length > 0) {
-                    const matched = studentsList[0];
-                    targetId = matched._id || matched.id || studentId;
-                }
-            }
-
-            const completeData = await fastDataService.getCompleteStudentData(targetId);
+            const completeData = await fastDataService.getCompleteStudentData(studentId);
 
             if (completeData && completeData.student) {
-                populateFormFields(completeData.student);
+                populateFormFields({
+                    ...completeData.student,
+                    resume: completeData.resume || completeData.student.resume,
+                    certificates: completeData.certificates || completeData.student.certificates
+                });
             } else {
                 // Fallback to mongoDBService if fastDataService fails
-                const fallbackData = await mongoDBService.getStudentById(targetId);
+                const fallbackData = await mongoDBService.getStudentById(studentId);
                 if (fallbackData) {
                     populateFormFields(fallbackData);
                 } else {
@@ -2491,21 +2706,7 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
     };
 
     const getChangedFields = () => {
-        if (!savedDataRef.current || !studentData) return [];
-        const saved = savedDataRef.current;
-        const changed = [];
-        for (const [key, label] of Object.entries(EDITABLE_FIELD_LABELS)) {
-            if (key === 'skills') {
-                const savedSkills = flattenSkillsToSkillSet(saved.skills);
-                const curSkills = flattenSkillsToSkillSet(skills);
-                if (savedSkills !== curSkills) changed.push(label);
-            } else if (key === 'profilePicURL') {
-                if (profilePhotoFile) changed.push(label);
-            } else {
-                if (String(saved[key] || '') !== String(studentData[key] || '')) changed.push(label);
-            }
-        }
-        return changed;
+        return changedFieldsList;
     };
 
     const handleViewChange = (view) => {
@@ -2521,7 +2722,7 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
     };
 
     const actionableChangedFields = getChangedFields();
-    const hasActionableChanges = actionableChangedFields.length > 0;
+    const hasActionableChanges = changedFieldsList.length > 0;
     const isPasswordMismatch = Boolean(
         studentData?.loginPassword &&
         studentData?.confirmPassword &&
@@ -2633,7 +2834,10 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                                 placeholder="Start"
                                                 onChange={(e) => {
                                                     const startPart = e.target.value.replace(/\D/g, '').slice(0, 4);
-                                                    const endPart = studentData?.batch ? (studentData.batch.split('-')[1] || '') : '';
+                                                    let endPart = studentData?.batch ? (studentData.batch.split('-')[1] || '') : '';
+                                                    if (startPart.length === 4) {
+                                                        endPart = String(parseInt(startPart, 10) + 4);
+                                                    }
                                                     const nextBatch = [startPart, endPart].filter(Boolean).join('-');
                                                     setStudentData(prev => ({ ...prev, batch: nextBatch }));
                                                 }}
@@ -2647,7 +2851,10 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                                 placeholder="End"
                                                 onChange={(e) => {
                                                     const endPart = e.target.value.replace(/\D/g, '').slice(0, 4);
-                                                    const startPart = studentData?.batch ? (studentData.batch.split('-')[0] || '') : '';
+                                                    let startPart = studentData?.batch ? (studentData.batch.split('-')[0] || '') : '';
+                                                    if (endPart.length === 4) {
+                                                        startPart = String(parseInt(endPart, 10) - 4);
+                                                    }
                                                     const nextBatch = [startPart, endPart].filter(Boolean).join('-');
                                                     setStudentData(prev => ({ ...prev, batch: nextBatch }));
                                                 }}
@@ -2879,13 +3086,23 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
 
                                     <div className={styles.field}>
                                         <label>&nbsp;</label>
-                                        <button type="button" className={styles.fieldButton} onClick={handleResumeOpen}>
+                                        <button
+                                            type="button"
+                                            className={styles.fieldButton}
+                                            onClick={handleResumeOpen}
+                                            disabled={!hasResume}
+                                        >
                                             Resume
                                         </button>
                                     </div>
                                     <div className={styles.field}>
                                         <label>&nbsp;</label>
-                                        <button type="button" className={styles.fieldButton} onClick={handleCertificateOpen}>
+                                        <button
+                                            type="button"
+                                            className={styles.fieldButton}
+                                            onClick={handleCertificateOpen}
+                                            disabled={certificateCount < 1}
+                                        >
                                             Certificate
                                         </button>
                                     </div>
@@ -3335,7 +3552,7 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                             <h3 className={styles.sectionHeader} style={{ marginBottom: 0, paddingBottom: '6px' }}>Analysis</h3>
                                             <div className={styles.anlsTitleRow}>
                                                 <span className={styles.anlsPlacedBadge}><span className={styles.anlsPlacedDot} />Placed</span>
-                                                <button type="button" className={styles.anlsBackBtn} onClick={() => setShowAnalysis(false)}>Back â†©</button>
+                                                <button type="button" className={styles.anlsBackBtn} onClick={() => setShowAnalysis(false)}>Back {"\u21A9"}</button>
                                             </div>
                                         </div>
 
@@ -3406,7 +3623,7 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                                             className={styles.anlsClearBtn}
                                                             onClick={() => { setSelectedRound(null); setHoveredRound(null); }}
                                                         >
-                                                            âœ• Clear Selection
+                                                            {"\u2715"} Clear Selection
                                                         </button>
                                                     </div>
                                                 )}
@@ -3465,7 +3682,7 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                                                     <span className={styles.anlsStatLabel}>Work On</span>
                                                                 </div>
                                                                 <ul className={styles.anlsStatList}>
-                                                                    {driveAnalytics.workOn.map((i) => <li key={i}><span className={styles.anlsArrow}>â†’</span>{i}</li>)}
+                                                                    {driveAnalytics.workOn.map((i) => <li key={i}><span className={styles.anlsArrow}>{"\u2192"}</span>{i}</li>)}
                                                                 </ul>
                                                             </div>
                                                             <div className={`${styles.anlsStatCard} ${styles.anlsCardMint}`}>
@@ -3476,7 +3693,7 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                                                     <span className={styles.anlsStatLabel}>Best</span>
                                                                 </div>
                                                                 <ul className={styles.anlsStatList}>
-                                                                    {driveAnalytics.bestAt.map((i) => <li key={i}><span className={styles.anlsArrow}>â†’</span>{i}</li>)}
+                                                                    {driveAnalytics.bestAt.map((i) => <li key={i}><span className={styles.anlsArrow}>{"\u2192"}</span>{i}</li>)}
                                                                 </ul>
                                                             </div>
                                                         </div>
@@ -3487,24 +3704,24 @@ function Coo_ManageStuEditPage({ onLogout, onViewChange }) {
                                                         <div className={styles.anlsAchievCol}>
                                                             <div className={styles.anlsGoodCard}>
                                                                 <div className={styles.anlsGoodBadHeader}>
-                                                                    <span className={styles.anlsGoodIcon}>ðŸ‘</span>
+                                                                    <span className={styles.anlsGoodIcon}>👍</span>
                                                                     <span className={styles.anlsGoodLabel}>GOOD</span>
                                                                 </div>
                                                                 {ROUND_DETAILS[selectedRound].good.map((g, i) => (
                                                                     <div key={i} className={styles.anlsGoodItem}>
-                                                                        <span className={styles.anlsCheckIcon}>âœ…</span>
+                                                                        <span className={styles.anlsCheckIcon}>{"\u2705"}</span>
                                                                         <span>{g}</span>
                                                                     </div>
                                                                 ))}
                                                             </div>
                                                             <div className={styles.anlsBadCard}>
                                                                 <div className={styles.anlsGoodBadHeader}>
-                                                                    <span className={styles.anlsGoodIcon}>ðŸ‘Ž</span>
+                                                                    <span className={styles.anlsGoodIcon}>{"\ud83d\udc4e"}</span>
                                                                     <span className={styles.anlsBadLabel}>BAD</span>
                                                                 </div>
                                                                 {ROUND_DETAILS[selectedRound].bad.map((b, i) => (
                                                                     <div key={i} className={styles.anlsBadItem}>
-                                                                        <span className={styles.anlsCheckIcon}>âŒ</span>
+                                                                        <span className={styles.anlsCheckIcon}>{"\u274c"}</span>
                                                                         <span>{b}</span>
                                                                     </div>
                                                                 ))}

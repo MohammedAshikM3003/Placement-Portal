@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { PDFDocument } from 'pdf-lib';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
@@ -11,6 +11,7 @@ import Previewicon from "../assets/Adminpreviewmarksheeticon.svg";
 import Adminicons from "../assets/AdmingreenCapicon.svg";
 import { CertificateDownloadProgressAlert } from '../components/alerts';
 import mongoDBService from '../services/mongoDBService.jsx';
+import fastDataService from '../services/fastDataService.jsx';
 import { API_BASE_URL } from '../utils/apiConfig';
 
 const emptyStudent = {
@@ -35,10 +36,13 @@ const MIN_LOADING_DURATION_MS = 900;
 const CoordinatorManageStudentView = ({ onLogout, onViewChange }) => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { studentId: paramStudentId } = useParams();
   const loadStartedAtRef = useRef(Date.now());
-  const studentData = location.state?.student || null;
+  const studentData = location.state?.student || location.state?.studentData || null;
   const initialSubjects = Array.isArray(location.state?.subjects) ? location.state.subjects : [];
   const initialSemesterRecord = location.state?.semesterRecord || null;
+  
+  const [fetchedStudent, setFetchedStudent] = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [semesterRecord, setSemesterRecord] = useState(initialSemesterRecord);
@@ -57,8 +61,8 @@ const CoordinatorManageStudentView = ({ onLogout, onViewChange }) => {
   const [progress, setProgress] = useState(0);
 
   const studentSource = studentData?.isPreview
-    ? (studentData || semesterRecord || {})
-    : (semesterRecord || studentData || {});
+    ? (studentData || fetchedStudent || semesterRecord || {})
+    : (semesterRecord || studentData || fetchedStudent || {});
   const studentId = studentSource?.studentId || studentSource?._id || studentSource?.id || '';
   const currentSemester = studentSource?.currentSemester || studentSource?.semester || '';
   const displayName = studentSource?.name
@@ -78,7 +82,7 @@ const CoordinatorManageStudentView = ({ onLogout, onViewChange }) => {
     examDate: studentSource?.examDate || '',
     currentSgpa: studentSource?.currentSgpa || studentSource?.sgpa || '',
     overallCgpa: studentSource?.overallCgpa || studentSource?.cgpa || '',
-    published: studentSource?.examDate || studentSource?.published || '',
+    published: studentSource?.published || '',
     attempted: studentSource?.subjects ? studentSource.subjects.length : (studentSource?.attempted ?? ''),
     cleared: studentSource?.subjects ? studentSource.subjects.filter(s => s.grade !== 'U' && s.grade !== 'RA').length : (studentSource?.cleared ?? ''),
     pending: studentSource?.subjects ? (studentSource.subjects.length - studentSource.subjects.filter(s => s.grade !== 'U' && s.grade !== 'RA').length) : (studentSource?.pending ?? '')
@@ -250,9 +254,31 @@ const CoordinatorManageStudentView = ({ onLogout, onViewChange }) => {
       try {
         loadStartedAtRef.current = Date.now();
         setIsLoading(true);
-        const reg = studentData?.regNo || studentData?.registerNumber || '';
-        const sem = studentData?.currentSemester || studentData?.semester || '';
-        const yr = studentData?.currentYear || studentData?.year || '';
+
+        let activeStudent = studentData;
+        if (!activeStudent && paramStudentId) {
+          console.log('🔍 [View Page] Loading student profile from API for ID:', paramStudentId);
+          try {
+            const completeData = await fastDataService.getCompleteStudentData(paramStudentId);
+            if (completeData && completeData.student) {
+              activeStudent = completeData.student;
+            } else {
+              const fallbackData = await mongoDBService.getStudentById(paramStudentId);
+              if (fallbackData) {
+                activeStudent = fallbackData;
+              }
+            }
+            if (activeStudent) {
+              setFetchedStudent(activeStudent);
+            }
+          } catch (err) {
+            console.error('❌ Failed to fetch student profile:', err);
+          }
+        }
+
+        const reg = activeStudent?.regNo || activeStudent?.registerNumber || '';
+        const sem = activeStudent?.currentSemester || activeStudent?.semester || '';
+        const yr = activeStudent?.currentYear || activeStudent?.year || '';
 
         if (!sem) {
           if (Array.isArray(initialSubjects) && initialSubjects.length > 0) {
@@ -268,17 +294,17 @@ const CoordinatorManageStudentView = ({ onLogout, onViewChange }) => {
         });
 
         const fallbackSubjects = Array.isArray(initialSubjects) ? initialSubjects : [];
-        const previewSubjects = Array.isArray(studentData?.subjects) ? studentData.subjects : fallbackSubjects;
-        const isPreviewData = Boolean(studentData?.isPreview) && !location.state?.refresh && !location.state?.discard;
+        const previewSubjects = Array.isArray(activeStudent?.subjects) ? activeStudent.subjects : fallbackSubjects;
+        const isPreviewData = Boolean(activeStudent?.isPreview) && !location.state?.refresh && !location.state?.discard;
 
         // Skip DB lookups entirely if we know this is unsaved preview data
         if (isPreviewData && previewSubjects.length > 0) {
           console.log('✅ Unsaved extracted data detected. Loading preview data.', {
-            isPreview: studentData?.isPreview,
+            isPreview: activeStudent?.isPreview,
             subjectsCount: previewSubjects.length,
-            regNo: studentData?.regNo
+            regNo: activeStudent?.regNo
           });
-          setSemesterRecord(studentData);
+          setSemesterRecord(activeStudent);
           setStudents(previewSubjects);
           console.log('✅ Preview data loaded:', previewSubjects.length, 'subjects');
           await finishLoading();
@@ -305,7 +331,7 @@ const CoordinatorManageStudentView = ({ onLogout, onViewChange }) => {
     };
 
     loadSemesterData();
-  }, [location.key, fetchLatestStudentMarksheet, finishLoading]);
+  }, [location.key, paramStudentId, studentData, fetchLatestStudentMarksheet, finishLoading]);
 
   const handleViewChange = (view) => {
     console.log('🔹 CoordinatorManageStudentView handleViewChange called with view:', view);
@@ -423,81 +449,25 @@ const CoordinatorManageStudentView = ({ onLogout, onViewChange }) => {
          document.body.appendChild(a);
          a.click();
          document.body.removeChild(a);
-         
-         // Cleanup
-         setTimeout(() => URL.revokeObjectURL(url), 100);
+         URL.revokeObjectURL(url);
       }
-    }, 500);
+    }, 400);
   };
 
-  const showLoadingCard = isLoading && !(student.name || student.regNo);
-  const renderValue = (value) => {
-    if (showLoadingCard) return 'Loading...';
-    if (value === '' || value === null || value === undefined) return '--';
-    return value;
+  const renderValue = (val) => {
+    if (val === null || val === undefined || val === '') return '--';
+    return val;
   };
+
+  const showLoadingCard = isLoading && (!student.name || !student.regNo);
 
   return (
-    <div className={styles['view-page-container']}>
-      <CertificateDownloadProgressAlert
-        isOpen={isLoading}
-        progress={loadingProgress}
-        fileLabel="student marksheet"
-        title="Loading..."
-        color="#D23B42"
-        progressColor="#D23B42"
-        messages={{
-          initial: 'Fetching student semester marksheet...',
-          mid: 'Loading latest marksheet record...',
-          final: 'Preparing page...'
-        }}
-      />
-      <Navbar onLogout={onLogout} onToggleSidebar={handleToggleSidebar} />
-      <Sidebar
-        isOpen={isSidebarOpen}
-        onLogout={onLogout}
-        currentView={'manage-students'}
-        onViewChange={handleViewChange}
-          onClose={() => setIsSidebarOpen(false)}
-        />
-
-      {/* Overlay for mobile sidebar */}
-      {isSidebarOpen && (
-        <div
-          className={styles['sidebar-overlay']}
-          onClick={() => setIsSidebarOpen(false)}
-        />
-      )}
-
-      {/* Processing Modal (Like Image 2) */}
-      {isProcessing && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 9999 }}>
-          <div style={{ backgroundColor: 'white', borderRadius: '12px', width: '350px', boxShadow: '0 4px 20px rgba(0,0,0,0.15)', overflow: 'hidden' }}>
-            <div style={{ backgroundColor: '#d32f2f', color: 'white', padding: '16px', textAlign: 'center', fontWeight: 'bold', fontSize: '18px' }}>
-              {processingType}...
-            </div>
-            
-            <div style={{ padding: '30px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <div style={{ width: '50px', height: '50px', borderRadius: '50%', border: '4px solid #f3f3f3', borderTop: '4px solid #d32f2f', animation: 'spin 1s linear infinite', marginBottom: '20px' }} />
-              <style>{`
-                @keyframes spin {
-                  0% { transform: rotate(0deg); }
-                  100% { transform: rotate(360deg); }
-                }
-              `}</style>
-              
-              <h2 style={{ margin: '0 0 10px 0', fontSize: '20px', color: '#333' }}>Loading {progress}%</h2>
-              <p style={{ margin: '0 0 5px 0', fontSize: '14px', color: '#666' }}>Fetching marksheet from original PDF...</p>
-              <p style={{ margin: 0, fontSize: '12px', color: '#999' }}>Please wait...</p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <div
-        className={styles['view-content']}
-        style={{ pointerEvents: isLoading ? 'none' : 'auto' }}
-      >
+    <div className={styles['view-container']}>
+      <Navbar onToggleSidebar={handleToggleSidebar} onLogout={onLogout} />
+      
+      <div className={styles['view-main-layout']}>
+        <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} onViewChange={handleViewChange} onLogout={onLogout} />
+        
         <div className={styles['view-content-wrapper']}>
           {/* Left Column - Student Card */}
           <div className={styles['view-left-column']}>

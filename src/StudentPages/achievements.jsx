@@ -2083,7 +2083,7 @@ Only pending records can be edited.`);
         {/* FIX: Converted className to styles.className */}
         <div className={styles['achievements-filter-card']}>
           <div className={styles['filter-header-container']}>
-            <div className={styles['filter-card-badge']}>Filter</div>
+            <div className={styles['filter-card-badge']}>Sort & Filter</div>
             {hasActiveFilters && (
               <button
                 type="button"

@@ -13,8 +13,10 @@ import { ExportProgressAlert, ExportSuccessAlert, ExportFailedAlert } from '../c
 import styles from './Coo_ReportAnalysisRW.module.css';
 import Dropdown from '../components/common/Dropdown/Dropdown.jsx';
 import Adminicon from "../assets/Adminicon.png";
-import CoordFeedbackIcon from "../assets/CoordFeedbackicon.svg";
+import AdminFeedbackIcon from "../assets/AdminFeedbackviewicon.svg";
+import StudentFeedbackIcon from "../assets/StudentFeedbackicon.svg";
 import CooRAFeedbackView from './Coo_RA_FeedbackView';
+import CooRAAdminFeedbackView from './Coo_RA_AdminFeedbackView';
 
 const cx = (...classNames) => classNames.filter(Boolean).join(' ');
 
@@ -83,11 +85,17 @@ function CoReportAnalysismain({ onLogout, onViewChange }) {
   const [exportType, setExportType] = useState('Excel');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [coordinatorBranch, setCoordinatorBranch] = useState('');
-  const [showFeedbackPopup, setShowFeedbackPopup] = useState(false);
+  const [showStudentFeedbackPopup, setShowStudentFeedbackPopup] = useState(false);
   const [selectedStudentFeedback, setSelectedStudentFeedback] = useState(null);
-  const [feedbackRoundName, setFeedbackRoundName] = useState('');
-  const [feedbackRoundNumber, setFeedbackRoundNumber] = useState(null);
-  const [feedbackDriveContext, setFeedbackDriveContext] = useState(null);
+  const [studentFeedbackRoundName, setStudentFeedbackRoundName] = useState('');
+  const [studentFeedbackRoundNumber, setStudentFeedbackRoundNumber] = useState(null);
+  const [studentFeedbackDriveContext, setStudentFeedbackDriveContext] = useState(null);
+
+  const [showAdminFeedbackPopup, setShowAdminFeedbackPopup] = useState(false);
+  const [selectedAdminFeedbackStudent, setSelectedAdminFeedbackStudent] = useState(null);
+  const [adminFeedbackRoundName, setAdminFeedbackRoundName] = useState('');
+  const [adminFeedbackRoundNumber, setAdminFeedbackRoundNumber] = useState(null);
+  const [adminFeedbackDriveContext, setAdminFeedbackDriveContext] = useState(null);
 
   const exportMenuRef = useRef(null);
 
@@ -575,13 +583,13 @@ function CoReportAnalysismain({ onLogout, onViewChange }) {
 
       const header = [
           "S.No", "Name", "RegNo", "Year-Sec", "Sem",
-          "Mobile", "Result", "Feedback"
+          "Mobile", "Result"
       ];
       
       const data = filteredData.map((item) => [
           item["S.No"], item.Name, item.RegNo,
           item["Year-Sec"], item.Sem,
-          item.Mobile, item.Result, item.Feedback || ''
+          item.Mobile, item.Result
       ]);
       
       setExportProgress(60);
@@ -616,14 +624,14 @@ function CoReportAnalysismain({ onLogout, onViewChange }) {
       
       const tableColumn = [
           "S.No", "Name", "RegNo", "Year-Sec", "Sem",
-          "Mobile", "Result", "Feedback"
+          "Mobile", "Result"
       ];
       
       setExportProgress(60);
       const tableRows = filteredData.map((item) => [
           item["S.No"], item.Name, item.RegNo,
           item["Year-Sec"], item.Sem,
-          item.Mobile, item.Result, item.Feedback || ''
+          item.Mobile, item.Result
       ]);
       
       doc.setFontSize(14);
@@ -748,18 +756,18 @@ function CoReportAnalysismain({ onLogout, onViewChange }) {
         <div className={styles["co-main-content"]}>
           <div className={styles["co-ram-filter-box"]}>
             <div className={styles["co-ram-tab-container"]}>
-              <div className={styles["co-ram-tab-active"]}>Round&nbsp;wise<br />Analysis</div>
+              <div className={styles["co-ram-tab-active"]}>Round Wise Analysis</div>
               <div
                 className={styles["co-ram-tab-inactive"]}
                 onClick={() => handleCardClick('report-analysis-cw')}
               >
-                Company&nbsp;wise<br />Analysis
+                Company Wise Analysis
               </div>
               <div
                 className={styles["co-ram-tab-inactive"]}
                 onClick={() => handleCardClick('report-analysis-sw')}
               >
-                Student&nbsp;wise<br />Analysis
+                Student Wise Analysis
               </div>
             </div>
 
@@ -857,14 +865,15 @@ function CoReportAnalysismain({ onLogout, onViewChange }) {
                     <th>Sem</th>
                     <th>Mobile</th>
                     <th>Result</th>
-                    <th>Feedback</th>
                     <th>View</th>
+                    <th>Admin Feedback</th>
+                    <th>Student Feedback</th>
                   </tr>
                 </thead>
                 <tbody>
                   {isLoading ? (
                     <tr className={styles["co-ram-loading-row"]}>
-                      <td colSpan="9" className={styles["co-ram-loading-cell"]}>
+                      <td colSpan="10" className={styles["co-ram-loading-cell"]}>
                         <div className={styles["co-ram-loading-wrapper"]}>
                           <div className={styles["co-ram-spinner"]}></div>
                           <span className={styles["co-ram-loading-text"]}>Loading students…</span>
@@ -889,11 +898,55 @@ function CoReportAnalysismain({ onLogout, onViewChange }) {
                             {student.Result}
                           </span>
                         </td>
-                        <td style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', padding: '8px 14px 8px 8px', width: '8%' }}>
+                        <td style={{ textAlign: 'center', verticalAlign: 'middle', padding: '8px', cursor: 'pointer' }} onClick={() => {
+                          const targetStudentId = student.studentId || student._id || student.id || student.RegNo;
+                          if (targetStudentId) {
+                            navigate(`/coo-manage-students/view/${targetStudentId}`, {
+                              state: { mode: 'view', from: 'report-analysis' }
+                            });
+                          }
+                        }}>
+                          <EyeIcon />
+                        </td>
+                        <td style={{ textAlign: 'center', verticalAlign: 'middle', padding: '8px' }}>
                           <img
-                            src={CoordFeedbackIcon}
-                            alt="Feedback"
-                            title={student.Feedback || 'Feedback'}
+                            src={AdminFeedbackIcon}
+                            alt="Admin Feedback"
+                            title="Admin Feedback"
+                            onClick={() => {
+                              const roundNum = Number(student.currentRound) || (selectedRound ? parseInt(String(selectedRound).split(' ')[1], 10) : null);
+                              const normalizedRoundName = String(student.roundName || '').trim();
+                              const composedRoundLabel = roundNum
+                                ? `Round ${roundNum}${normalizedRoundName ? ` (${normalizedRoundName})` : ''}`
+                                : (selectedRound || 'Round Wise Analysis');
+
+                              setSelectedAdminFeedbackStudent(student);
+                              setAdminFeedbackRoundName(composedRoundLabel);
+                              setAdminFeedbackRoundNumber(roundNum || null);
+                              setAdminFeedbackDriveContext({
+                                driveId: selectedCompanyJob?.drives?.find((d) => String(d.startingDate || d.driveStartDate || d.companyDriveDate || '') === String(startDateFilter || ''))?._id || '',
+                                companyName: selectedCompany || '',
+                                jobRole: selectedJobRole || '',
+                                startingDate: startDateFilter || ''
+                              });
+                              setShowAdminFeedbackPopup(true);
+                            }}
+                            style={{
+                              width: '22px',
+                              height: '22px',
+                              objectFit: 'contain',
+                              display: 'inline-block',
+                              verticalAlign: 'middle',
+                              margin: '0 auto',
+                              cursor: 'pointer'
+                            }}
+                          />
+                        </td>
+                        <td style={{ textAlign: 'center', verticalAlign: 'middle', padding: '8px' }}>
+                          <img
+                            src={StudentFeedbackIcon}
+                            alt="Student Feedback"
+                            title="Student Feedback"
                             onClick={() => {
                               const roundNum = Number(student.currentRound) || (selectedRound ? parseInt(String(selectedRound).split(' ')[1], 10) : null);
                               const normalizedRoundName = String(student.roundName || '').trim();
@@ -902,38 +955,32 @@ function CoReportAnalysismain({ onLogout, onViewChange }) {
                                 : (selectedRound || 'Round Wise Analysis');
 
                               setSelectedStudentFeedback(student);
-                              setFeedbackRoundName(composedRoundLabel);
-                              setFeedbackRoundNumber(roundNum || null);
-                              setFeedbackDriveContext({
+                              setStudentFeedbackRoundName(composedRoundLabel);
+                              setStudentFeedbackRoundNumber(roundNum || null);
+                              setStudentFeedbackDriveContext({
                                 driveId: selectedCompanyJob?.drives?.find((d) => String(d.startingDate || d.driveStartDate || d.companyDriveDate || '') === String(startDateFilter || ''))?._id || '',
                                 companyName: selectedCompany || '',
                                 jobRole: selectedJobRole || '',
                                 startingDate: startDateFilter || ''
                               });
-                              setShowFeedbackPopup(true);
+                              setShowStudentFeedbackPopup(true);
                             }}
                             style={{
                               width: '22px',
                               height: '22px',
                               objectFit: 'contain',
-                              display: 'block',
+                              display: 'inline-block',
+                              verticalAlign: 'middle',
                               margin: '0 auto',
                               cursor: 'pointer'
                             }}
                           />
                         </td>
-                        <td style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', padding: '8px 14px 8px 8px', cursor: 'pointer' }} onClick={() => {
-                          if (student.studentId) {
-                            navigate(`/coo-profile/${student.studentId}`);
-                          }
-                        }}>
-                          <EyeIcon />
-                        </td>
                       </tr>
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="9" style={{ textAlign: 'center', padding: '20px' }}>
+                      <td colSpan="10" style={{ textAlign: 'center', padding: '20px' }}>
                         {selectedCompanyJob ? `No ${coordinatorBranch || ''} students found for this round.` : 'Please select a company and drive to view students.'}
                       </td>
                     </tr>
@@ -944,20 +991,38 @@ function CoReportAnalysismain({ onLogout, onViewChange }) {
           </div>
         </div>
 
-        {showFeedbackPopup && (
+        {showAdminFeedbackPopup && (
+          <CooRAAdminFeedbackView
+            roundName={adminFeedbackRoundName}
+            roundNumber={adminFeedbackRoundNumber}
+            driveContext={adminFeedbackDriveContext}
+            selectedStartDate={startDateFilter}
+            selectedJobRole={selectedJobRole}
+            selectedCompany={selectedCompany}
+            studentData={selectedAdminFeedbackStudent}
+            onClose={() => {
+              setShowAdminFeedbackPopup(false);
+              setSelectedAdminFeedbackStudent(null);
+              setAdminFeedbackRoundNumber(null);
+              setAdminFeedbackDriveContext(null);
+            }}
+          />
+        )}
+
+        {showStudentFeedbackPopup && (
           <CooRAFeedbackView
-            roundName={feedbackRoundName}
-            roundNumber={feedbackRoundNumber}
-            driveContext={feedbackDriveContext}
+            roundName={studentFeedbackRoundName}
+            roundNumber={studentFeedbackRoundNumber}
+            driveContext={studentFeedbackDriveContext}
             selectedStartDate={startDateFilter}
             selectedJobRole={selectedJobRole}
             selectedCompany={selectedCompany}
             studentData={selectedStudentFeedback}
             onClose={() => {
-              setShowFeedbackPopup(false);
+              setShowStudentFeedbackPopup(false);
               setSelectedStudentFeedback(null);
-              setFeedbackRoundNumber(null);
-              setFeedbackDriveContext(null);
+              setStudentFeedbackRoundNumber(null);
+              setStudentFeedbackDriveContext(null);
             }}
           />
         )}

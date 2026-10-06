@@ -298,9 +298,11 @@
 @media (max-width: 1024px) {
     .Coo-cp-page-main {
         margin-left: 0;
+        margin-top: 65px;
         width: 100%;
-        padding: 10px 10px 10px 20px;
+        padding: 12px 14px 20px 14px;
         height: calc(100vh - 65px);
+        height: calc(100dvh - 65px);
     }
 
     .Coo-cp-page-grid {
@@ -309,39 +311,107 @@
 }
 
 @media (max-width: 768px) {
+    .Coo-cp-page-layout {
+        position: fixed !important;
+        inset: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        height: 100dvh !important;
+        overflow: hidden !important;
+        flex-direction: column !important;
+        background: #f6f8fb !important;
+    }
+
     .Coo-cp-page-main {
-        margin: 70px 0 0 0;
-        padding: 10px 10px 10px 20px;
-        height: calc(100vh - 70px);
+        margin: 65px 0 0 0 !important;
+        padding: 12px 12px calc(env(safe-area-inset-bottom, 15px) + 30px) 12px !important;
+        height: calc(100vh - 65px) !important;
+        height: calc(100dvh - 65px) !important;
+        max-height: calc(100dvh - 65px) !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        -webkit-overflow-scrolling: touch !important;
+        box-sizing: border-box !important;
+        width: 100% !important;
     }
 
     .Coo-cp-page-card {
-        border-radius: 14px;
+        border-radius: 14px !important;
+        padding: 16px 14px 20px 14px !important;
+        margin-bottom: 20px !important;
+        box-sizing: border-box !important;
+        width: 100% !important;
     }
 
     .Coo-cp-page-header {
-        padding: 14px 14px 10px;
-        flex-wrap: nowrap !important;
+        padding: 0 0 10px 0 !important;
+        margin-bottom: 1.2rem !important;
         display: flex !important;
         justify-content: space-between !important;
         align-items: center !important;
+        width: 100% !important;
     }
 
     .Coo-cp-page-header h1 {
-        font-size: 1.5rem;
+        font-size: 1.2rem !important;
+        white-space: nowrap !important;
+        margin: 0 !important;
+        padding-bottom: 4px !important;
+    }
+
+    .Coo-cp-page-header h1::after {
+        width: 32px !important;
+        height: 3px !important;
     }
 
     .Coo-cp-page-header-back-btn {
+        height: 34px !important;
+        min-width: 72px !important;
         width: auto !important;
-        min-width: 120px;
+        padding: 0 14px !important;
+        font-size: 0.85rem !important;
+        border-radius: 6px !important;
+        flex-shrink: 0 !important;
+        box-shadow: 0 2px 8px rgba(210, 59, 66, 0.25) !important;
     }
 
     .Coo-cp-page-form {
-        padding: 0;
+        padding: 0 !important;
     }
 
     .Coo-cp-page-grid {
-        grid-template-columns: 1fr;
-        gap: 1rem;
+        grid-template-columns: 1fr !important;
+        gap: 14px !important;
+    }
+
+    .Coo-cp-page-field input,
+    .Coo-cp-page-field select,
+    .Coo-cp-page-date-input,
+    .Coo-cp-page-field .Coo-cp-input-affix-wrapper {
+        height: 46px !important;
+        min-height: 46px !important;
+        font-size: 0.95rem !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .Coo-cp-page-main {
+        padding: 10px 10px calc(env(safe-area-inset-bottom, 15px) + 25px) 10px !important;
+    }
+
+    .Coo-cp-page-card {
+        padding: 14px 12px 18px 12px !important;
+        margin-bottom: 15px !important;
+    }
+
+    .Coo-cp-page-header h1 {
+        font-size: 1.1rem !important;
+    }
+
+    .Coo-cp-page-header-back-btn {
+        height: 32px !important;
+        min-width: 68px !important;
+        padding: 0 12px !important;
+        font-size: 0.82rem !important;
     }
 }

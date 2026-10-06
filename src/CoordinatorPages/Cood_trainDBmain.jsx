@@ -5,10 +5,6 @@ import Sidebar from "../components/Sidebar/Cosidebar.js";
 import { useNavigate } from "react-router-dom";
 import mongoDBService from "../services/mongoDBService.jsx";
 import styles from "./Cood_trainDBmain.module.css";
-import manageStudentsIcon from "../assets/Coo_ManagestudentsCardicon.svg";
-import quillsnoozmonth from "../assets/quillsnoozmonth.svg";
-import bicollection from "../assets/bicollection.svg";
-import Dropdown from "../components/common/Dropdown/Dropdown.jsx";
 
 const cx = (...classNames) => classNames.filter(Boolean).join(" ");
 
@@ -42,14 +38,6 @@ export default function CoodTrainDBMain({ onLogout, onViewChange }) {
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const navigate = useNavigate();
-
-  const handleManageStudentsClick = () => {
-    if (onViewChange && typeof onViewChange === "function") {
-      onViewChange("manage-students");
-    } else {
-      navigate("/coo-manage-students");
-    }
-  };
 
   const [selectedCompany, setSelectedCompany] = useState("");
   const [selectedPhase, setSelectedPhase] = useState("");
@@ -339,6 +327,46 @@ export default function CoodTrainDBMain({ onLogout, onViewChange }) {
     };
   }, [filteredTrainingCards]);
 
+  const calculatedDuration = useMemo(() => {
+    if (selectedStartDate && selectedEndDate) {
+      const start = new Date(selectedStartDate);
+      const end = new Date(selectedEndDate);
+      if (!Number.isNaN(start.getTime()) && !Number.isNaN(end.getTime())) {
+        const diffMs = end.getTime() - start.getTime();
+        const days = Math.max(1, Math.floor(diffMs / (24 * 60 * 60 * 1000)) + 1);
+        return `${days} Day${days > 1 ? "s" : ""}`;
+      }
+    }
+
+    if (selectedCompany) {
+      const matched = filteredTrainingCards.find((card) => card.companyName === selectedCompany) ||
+                      trainingCards.find((card) => card.companyName === selectedCompany);
+      if (matched?.durationText && matched.durationText !== "-") {
+        return matched.durationText;
+      }
+    }
+
+    return "";
+  }, [selectedStartDate, selectedEndDate, selectedCompany, filteredTrainingCards, trainingCards]);
+
+  const hasActiveFilters = useMemo(() => {
+    return Boolean(
+      selectedCompany ||
+      selectedPhase ||
+      selectedYear ||
+      selectedStartDate ||
+      selectedEndDate
+    );
+  }, [selectedCompany, selectedPhase, selectedYear, selectedStartDate, selectedEndDate]);
+
+  const handleClearFilters = () => {
+    setSelectedCompany("");
+    setSelectedPhase("");
+    setSelectedYear("");
+    setSelectedStartDate("");
+    setSelectedEndDate("");
+  };
+
   return (
     <div className={styles['coordinator-main-wrapper']}>
       <Navbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
@@ -355,41 +383,20 @@ export default function CoodTrainDBMain({ onLogout, onViewChange }) {
             <div className={styles['coo-training-dashboard-area']}>
               <div className={styles.rows}>
                 <div className={styles.row1}>
-                  {/* Manage Students Card */}
-                  <div
-                    className={styles.manageCard}
-                    role="button"
-                    tabIndex={0}
-                    onClick={handleManageStudentsClick}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter" || event.key === " ") {
-                        event.preventDefault();
-                        handleManageStudentsClick();
-                      }
-                    }}
-                  >
-                    <div className={styles.manageIconWrapper}>
-                      <img src={manageStudentsIcon} alt="Manage" />
-                    </div>
-                    <h2>Manage Students</h2>
-                    <p>Access and manage student information.</p>
+                  <div className={cx(styles.card, styles.trainingSummaryCard, styles.trainingSummaryOngoingCard)}>
+                    <div className={styles.trainingSummaryLabel}>This Month Trainings</div>
+                    <div className={styles.trainingSummaryValue}>{trainingSummaryCounts.ongoing}</div>
+                    <div className={styles.trainingSummaryHint}>Currently active trainings</div>
                   </div>
 
-                  {/* Training Filters Card */}
                   <div className={cx(styles.card, styles.trainingFiltersCard)}>
-                    <div className={styles.trainingFilterHeaderContainer}>
+                    <div className={styles.trainingFiltersHeaderContainer}>
                       <div className={styles.trainingFiltersTitle}>Training Filters</div>
-                      {(selectedCompany || selectedPhase || selectedYear || selectedStartDate || selectedEndDate) && (
+                      {hasActiveFilters && (
                         <button
                           type="button"
-                          className={styles.clearBtnHeader}
-                          onClick={() => {
-                            setSelectedCompany("");
-                            setSelectedPhase("");
-                            setSelectedYear("");
-                            setSelectedStartDate("");
-                            setSelectedEndDate("");
-                          }}
+                          className={styles.trainingFiltersClearBtn}
+                          onClick={handleClearFilters}
                         >
                           Clear
                         </button>
@@ -398,183 +405,179 @@ export default function CoodTrainDBMain({ onLogout, onViewChange }) {
                     <div className={styles.trainingFiltersGrid}>
                       <div className={styles.trainingFilterField}>
                         <label className={styles.trainingFilterLabel}>Company Name</label>
-                        <Dropdown
-                          options={companyOptions}
-                          selectedOption={selectedCompany}
-                          onSelect={(val) => {
-                            setSelectedCompany(val || "");
+                        <select
+                          className={styles.trainingFilterControl}
+                          value={selectedCompany}
+                          onChange={(e) => {
+                            setSelectedCompany(e.target.value);
                             setSelectedYear("");
                             setSelectedPhase("");
                             setSelectedStartDate("");
                             setSelectedEndDate("");
                           }}
-                          placeholder="Select Company"
-                          role="coordinator"
-                          className={styles.trainingDropdownWrapper}
-                          headerClassName={styles.trainingDropdownHeader}
-                        />
+                        >
+                          <option value="">Select Company</option>
+                          {companyOptions.map((companyName) => (
+                            <option key={companyName} value={companyName}>{companyName}</option>
+                          ))}
+                        </select>
                       </div>
 
                       <div className={styles.trainingFilterField}>
                         <label className={styles.trainingFilterLabel}>Phase</label>
-                        <Dropdown
-                          options={phaseOptions.map((phase) => ({ label: `Phase ${phase}`, value: phase }))}
-                          selectedOption={selectedPhase}
-                          onSelect={(val) => {
-                            setSelectedPhase(val || "");
+                        <select
+                          className={styles.trainingFilterControl}
+                          value={selectedPhase}
+                          onChange={(e) => {
+                            setSelectedPhase(e.target.value);
                             setSelectedStartDate("");
                             setSelectedEndDate("");
                           }}
-                          placeholder="Select Phase"
-                          role="coordinator"
-                          className={styles.trainingDropdownWrapper}
-                          headerClassName={styles.trainingDropdownHeader}
-                        />
+                        >
+                          <option value="">Select Phase</option>
+                          {phaseOptions.map((phaseValue) => (
+                            <option key={phaseValue} value={phaseValue}>{`Phase ${phaseValue}`}</option>
+                          ))}
+                        </select>
                       </div>
 
                       <div className={styles.trainingFilterField}>
                         <label className={styles.trainingFilterLabel}>Year</label>
-                        <Dropdown
-                          options={yearOptions}
-                          selectedOption={selectedYear}
-                          onSelect={(val) => {
-                            setSelectedYear(val || "");
+                        <select
+                          className={styles.trainingFilterControl}
+                          value={selectedYear}
+                          onChange={(e) => {
+                            setSelectedYear(e.target.value);
                             setSelectedPhase("");
                             setSelectedStartDate("");
                             setSelectedEndDate("");
                           }}
-                          placeholder="Select Year"
-                          role="coordinator"
-                          className={styles.trainingDropdownWrapper}
-                          headerClassName={styles.trainingDropdownHeader}
-                        />
+                        >
+                          <option value="">Select Year</option>
+                          {yearOptions.map((yearValue) => (
+                            <option key={yearValue} value={yearValue}>{yearValue}</option>
+                          ))}
+                        </select>
                       </div>
 
                       <div className={styles.trainingFilterField}>
                         <label className={styles.trainingFilterLabel}>Start Date</label>
-                        <Dropdown
-                          options={startDateOptions.map((dateVal) => ({ label: formatDateForDisplay(dateVal), value: dateVal }))}
-                          selectedOption={selectedStartDate}
-                          onSelect={(val) => {
-                            setSelectedStartDate(val || "");
+                        <select
+                          className={styles.trainingFilterControl}
+                          value={selectedStartDate}
+                          onChange={(e) => {
+                            setSelectedStartDate(e.target.value);
                             setSelectedEndDate("");
                           }}
                           disabled={startDateOptions.length === 0}
-                          placeholder="Select Start Date"
-                          role="coordinator"
-                          className={styles.trainingDropdownWrapper}
-                          headerClassName={styles.trainingDropdownHeader}
-                        />
+                        >
+                          <option value="">Select Start Date</option>
+                          {startDateOptions.map((dateValue) => (
+                            <option key={dateValue} value={dateValue}>{formatDateForDisplay(dateValue)}</option>
+                          ))}
+                        </select>
                       </div>
 
                       <div className={styles.trainingFilterField}>
                         <label className={styles.trainingFilterLabel}>End Date</label>
-                        <Dropdown
-                          options={endDateOptions.map((dateVal) => ({ label: formatDateForDisplay(dateVal), value: dateVal }))}
-                          selectedOption={selectedEndDate}
-                          onSelect={(val) => setSelectedEndDate(val || "")}
+                        <select
+                          className={styles.trainingFilterControl}
+                          value={selectedEndDate}
+                          onChange={(e) => setSelectedEndDate(e.target.value)}
                           disabled={endDateOptions.length === 0}
-                          placeholder="Select End Date"
-                          role="coordinator"
-                          className={styles.trainingDropdownWrapper}
-                          headerClassName={styles.trainingDropdownHeader}
+                        >
+                          <option value="">Select End Date</option>
+                          {endDateOptions.map((dateValue) => (
+                            <option key={dateValue} value={dateValue}>{formatDateForDisplay(dateValue)}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className={styles.trainingFilterField}>
+                        <label className={styles.trainingFilterLabel}>Duration</label>
+                        <input
+                          type="text"
+                          className={styles.trainingFilterControl}
+                          placeholder="Duration"
+                          value={calculatedDuration || ""}
+                          readOnly
                         />
                       </div>
                     </div>
                   </div>
 
-                  {/* This Month Trainings Card */}
-                  <div className={cx(styles.card, styles.trainingStatusCard)}>
-                    <div className={styles.trainingStatusIcon}>
-                      <img src={quillsnoozmonth} alt="This Month" />
-                    </div>
-                    <div className={styles.trainingStatusTitle}>
-                      This Month <span>Trainings</span>
-                    </div>
-                    <div className={styles.trainingStatusCount}>
-                      {trainingSummaryCounts.ongoing}
-                    </div>
-                  </div>
-
-                  {/* Total Trainings Card */}
-                  <div className={cx(styles.card, styles.trainingStatusCard)}>
-                    <div className={styles.trainingStatusIcon}>
-                      <img src={bicollection} alt="Total Trainings" />
-                    </div>
-                    <div className={styles.trainingStatusTitle}>
-                      Total <span>Trainings</span>
-                    </div>
-                    <div className={styles.trainingStatusCount}>
-                      {trainingSummaryCounts.total}
-                    </div>
+                  <div className={cx(styles.card, styles.trainingSummaryCard, styles.trainingSummaryTotalCard)}>
+                    <div className={styles.trainingSummaryLabel}>Total Trainings</div>
+                    <div className={styles.trainingSummaryValue}>{trainingSummaryCounts.total}</div>
+                    <div className={styles.trainingSummaryHint}>Visible for the selected filters</div>
                   </div>
                 </div>
 
                 <div className={styles.row2}>
-                  <div className={cx(styles.card, styles.trainingsCard)}>
-                    <div className={styles.trainingsHeader}>Trainings</div>
-                    <div className={styles.trainingsInner}>
-                      {filteredTrainingCards.length === 0 ? (
-                        <div className={styles.trainingsEmpty}>No trainings found for selected filters.</div>
-                      ) : (
-                        filteredTrainingCards.map((card, index) => {
-                          const handleTrainingCardClick = () => {
-                            let cardTrainingDayLabel = "Training Day -";
-                            if (card.startDate) {
-                              const start = new Date(card.startDate);
-                              const today = new Date();
-                              start.setHours(0, 0, 0, 0);
-                              today.setHours(0, 0, 0, 0);
-                              if (!Number.isNaN(start.getTime())) {
-                                const dayDiff = Math.floor((today.getTime() - start.getTime()) / (24 * 60 * 60 * 1000)) + 1;
-                                const clampedDay = Math.max(1, dayDiff);
-                                cardTrainingDayLabel = `Training Day ${clampedDay}`;
-                              }
-                            }
+              <div className={cx(styles.card, styles.trainingsCard)}>
+                <div className={styles.trainingsHeader}>Trainings</div>
+                <div className={styles.trainingsInner}>
+                  {filteredTrainingCards.length === 0 ? (
+                    <div className={styles.trainingsEmpty}>No trainings found for selected filters.</div>
+                  ) : (
+                    filteredTrainingCards.map((card, index) => {
+                      const handleTrainingCardClick = () => {
+                        let cardTrainingDayLabel = "Training Day -";
+                        if (card.startDate) {
+                          const start = new Date(card.startDate);
+                          const today = new Date();
+                          start.setHours(0, 0, 0, 0);
+                          today.setHours(0, 0, 0, 0);
+                          if (!Number.isNaN(start.getTime())) {
+                            const dayDiff = Math.floor((today.getTime() - start.getTime()) / (24 * 60 * 60 * 1000)) + 1;
+                            const clampedDay = Math.max(1, dayDiff);
+                            cardTrainingDayLabel = `Training Day ${clampedDay}`;
+                          }
+                        }
 
-                            navigate("/coo-train-attendance-stuinfo", {
-                              state: {
-                                company: card.companyName,
-                                course: card.courseName,
-                                companyName: card.companyName,
-                                courseName: card.courseName,
-                                startDate: card.startDate,
-                                endDate: card.endDate,
-                                todayDate,
-                                trainingDayLabel: cardTrainingDayLabel,
-                              },
-                            });
-                          };
+                        navigate("/coo-train-attendance-stuinfo", {
+                          state: {
+                            company: card.companyName,
+                            course: card.courseName,
+                            companyName: card.companyName,
+                            courseName: card.courseName,
+                            startDate: card.startDate,
+                            endDate: card.endDate,
+                            todayDate,
+                            trainingDayLabel: cardTrainingDayLabel,
+                          },
+                        });
+                      };
 
-                          return (
-                            <div
-                              key={card.id}
-                              className={cx(styles.trainingTile, styles.trainingTileClickable, trainingTileClassByIndex[index % trainingTileClassByIndex.length])}
-                              role="button"
-                              tabIndex={0}
-                              onClick={handleTrainingCardClick}
-                              onKeyDown={(event) => {
-                                if (event.key === "Enter" || event.key === " ") {
-                                  event.preventDefault();
-                                  handleTrainingCardClick();
-                                }
-                              }}
-                            >
-                              <div className={cx(styles.trainingIconCircle, index % 2 === 1 && styles.trainingIconCircleAlt)}>{card.logoText}</div>
-                              <div className={styles.trainingTileText}>
-                                <div className={styles.trainingTitle}>{card.companyName}</div>
-                                <div className={styles.trainingMeta}>Year: {card.yearText}</div>
-                                <div className={styles.trainingMeta}>Phase: {card.phaseText}</div>
-                                <div className={styles.trainingMeta}>Start Date: {formatDateForDisplay(card.startDate)}</div>
-                                <div className={styles.trainingMeta}>End Date: {formatDateForDisplay(card.endDate)}</div>
-                                <div className={styles.trainingMeta}>Duration: {card.durationText}</div>
-                              </div>
-                            </div>
-                          );
-                        })
-                      )}
-                    </div>
-                  </div>
+                      return (
+                      <div
+                        key={card.id}
+                        className={cx(styles.trainingTile, styles.trainingTileClickable, trainingTileClassByIndex[index % trainingTileClassByIndex.length])}
+                        role="button"
+                        tabIndex={0}
+                        onClick={handleTrainingCardClick}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter" || event.key === " ") {
+                            event.preventDefault();
+                            handleTrainingCardClick();
+                          }
+                        }}
+                      >
+                        <div className={styles.trainingIconCircle}>{card.logoText}</div>
+                        <div className={styles.trainingTileText}>
+                          <div className={styles.trainingTitle}>{card.companyName}</div>
+                          <div className={styles.trainingMeta}>Year: {card.yearText}</div>
+                          <div className={styles.trainingMeta}>Phase: {card.phaseText}</div>
+                          <div className={styles.trainingMeta}>Start Date: {formatDateForDisplay(card.startDate)}</div>
+                          <div className={styles.trainingMeta}>End Date: {formatDateForDisplay(card.endDate)}</div>
+                          <div className={styles.trainingMeta}>Duration: {card.durationText}</div>
+                        </div>
+                      </div>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
                 </div>
               </div>
             </div>

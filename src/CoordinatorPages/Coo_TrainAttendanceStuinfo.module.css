@@ -63,8 +63,6 @@
   min-height: 0;
   height: 245px;
   align-items: stretch;
-  position: relative;
-  z-index: 10;
 }
 
 /* Filter Card (Left Side) */
@@ -79,11 +77,9 @@
   align-items: center;
   gap: 12px;
   min-height: 0;
-  overflow: visible;
+  overflow: hidden;
   height: 245px;
   box-sizing: border-box;
-  position: relative;
-  z-index: 15;
 }
 
 /* Buttons Section (Right Side - no card) */
@@ -142,6 +138,8 @@
    padding: 9px 0px 9px 0px;
    width: 220px;
    height: 37.4px;
+   position: relative;
+  top: -15px;
  }
 
  .ta-clear-btn-header {
@@ -530,9 +528,9 @@ select.ta-filter-input {
 }
 
 .date-box-active {
-  background-color: #1e88e5 !important;
-  color: #fff !important;
-  border-color: #1e88e5 !important;
+  background-color: #1e88e5;
+  color: #fff;
+  border-color: #1e88e5;
 }
 
 .date-placeholder {
@@ -1251,24 +1249,30 @@ select.ta-filter-input {
     inset: 0 !important;
     width: 100% !important;
     height: 100% !important;
+    height: 100dvh !important;
     overflow: hidden !important;
     flex-direction: column !important;
     background-color: #f6f8fb;
   }
 
   .train-attendance-page .coordinator-content-area {
-    padding: 15px 20px 20px 20px !important;
-    overflow-y: auto;
-    height: calc(100vh - 65px);
-    margin-top: 65px;
-    box-sizing: border-box;
+    padding: 10px 10px calc(env(safe-area-inset-bottom, 15px) + 25px) 10px !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+    height: calc(100vh - 65px) !important;
+    height: calc(100dvh - 65px) !important;
+    max-height: calc(100dvh - 65px) !important;
+    margin-top: 65px !important;
+    box-sizing: border-box !important;
   }
 
   .train-attendance-container {
-    height: auto;
-    overflow: visible;
+    height: auto !important;
+    overflow: visible !important;
     gap: 15px;
     flex-direction: column;
+    padding-bottom: 10px;
   }
 
   /* Hide scrollbar on mobile for main content area */
@@ -1279,11 +1283,6 @@ select.ta-filter-input {
   .train-attendance-page .coordinator-content-area {
     -ms-overflow-style: none;
     scrollbar-width: none;
-  }
-
-  .train-attendance-container {
-    gap: 15px;
-    flex-direction: column;
   }
 
   /* Top row - stack vertically on mobile (filter on top, buttons below) */
@@ -1306,17 +1305,59 @@ select.ta-filter-input {
     order: 1;
   }
 
+  /* Filter tabs header & clear button on mobile - centered heading */
+  .ta-filter-tabs-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    width: 100%;
+  }
+
+  .ta-filter-tab-button {
+    width: auto;
+    min-width: 140px;
+    max-width: 200px;
+    height: 34px;
+    padding: 6px 20px;
+    font-size: 0.85rem;
+    border-radius: 20px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    position: relative;
+        top: -10px;
+  }
+
+  .ta-clear-btn-header {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 32px;
+    line-height: 32px;
+    padding: 0 12px;
+    font-size: 0.8rem;
+    border-radius: 20px;
+    flex-shrink: 0;
+  }
+
   /* Filter fields stack one by one */
   .ta-filter-fields-container {
     flex-direction: column;
-    gap: 35px;
-    margin-top: 10px;
+    gap: 32px;
+    margin-top: 8px;
+    width: 100%;
   }
 
   .ta-filter-fields-row {
     flex-direction: column;
-    gap: 35px;
+    gap: 32px;
     height: auto;
+    width: 100%;
+    margin-top: 0;
   }
 
   .ta-filter-input-wrapper {
@@ -1324,14 +1365,27 @@ select.ta-filter-input {
     min-width: 0 !important;
     max-width: none !important;
     height: 45px !important;
-    position: relative !important;
+    position: relative;
+    box-sizing: border-box !important;
   }
 
   .ta-filter-input {
     width: 100% !important;
+    height: 45px !important;
     max-width: none !important;
     min-width: 0 !important;
-    height: 45px !important;
+    border-radius: 8px;
+    border: 3px solid #ccc;
+    padding: 0 15px;
+    font-size: 0.95rem;
+    box-sizing: border-box !important;
+    background: #fff;
+  }
+
+  .ta-filter-input::placeholder {
+    font-size: 0.95rem;
+    color: #9a9a9a;
+    opacity: 1;
   }
 
   /* Buttons section - full width, below filter */
@@ -1381,10 +1435,12 @@ select.ta-filter-input {
 
   /* Attendance table section - below buttons */
   .attendance-table-section {
-    padding: 10px;
+    padding: 12px 10px 14px 10px !important;
     height: auto;
-    min-height: 300px;
+    min-height: 250px;
+    margin-bottom: 10px;
     order: 3;
+    box-sizing: border-box;
   }
 
   /* Limit table to 4 rows with vertical scrolling on mobile */
@@ -1451,33 +1507,53 @@ select.ta-filter-input {
     font-size: 0.9rem;
   }
 
-  /* Bottom actions - below table */
+  /* Bottom actions - below table, side-by-side on mobile */
   .bottom-actions {
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    gap: 12px !important;
-    margin-top: 20px !important;
-    width: 100% !important;
-    padding-right: 0 !important;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 12px;
+    margin-top: 14px;
+    margin-bottom: 4px;
+    width: 100%;
+    order: 4;
+    margin-left: -18px;
   }
 
   .discard-btn {
-    width: 80% !important;
-    max-width: 280px !important;
-    padding: 12px !important;
-    margin: 0 auto !important;
-    position: static !important;
-    text-align: center !important;
+    width: auto;
+    min-width: 110px;
+    padding: 10px 20px;
+    position: static;
+    top: auto;
+    margin: 0;
+    font-size: 14px;
   }
 
   .update-btn {
-    width: 80% !important;
-    max-width: 280px !important;
-    padding: 12px !important;
-    margin: 0 auto !important;
-    position: static !important;
-    text-align: center !important;
+    width: auto;
+    min-width: 110px;
+    padding: 10px 20px;
+    position: static;
+    bottom: auto;
+    margin: 0;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .train-attendance-page .coordinator-content-area {
+    padding: 10px 10px calc(env(safe-area-inset-bottom, 15px) + 25px) 10px !important;
+  }
+
+  .train-attendance-container {
+    padding-bottom: 10px !important;
+  }
+
+  .attendance-table-section {
+    padding: 12px 10px 14px 10px !important;
+    margin-bottom: 10px !important;
   }
 }
 
@@ -1563,6 +1639,43 @@ select.ta-filter-input {
 @keyframes Edit-stroke { 100% { stroke-dashoffset: 0; } }
 @keyframes Edit-scale { 0%, 100% { transform: none; } 50% { transform: scale3d(1.1, 1.1, 1); } }
 @keyframes Edit-fill { 100% { box-shadow: inset 0 0 0 40px #4bb71b; } }
+
+/* Edit Error Icon */
+.Edit-error-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: block;
+  stroke-width: 2;
+  stroke: #fff;
+  stroke-miterlimit: 10;
+  margin: 0 auto;
+  box-shadow: inset 0 0 0 #FF4444;
+  animation: Edit-error-fill 0.4s ease-in-out 0.4s forwards, Edit-scale 0.3s ease-in-out 0.9s both;
+}
+
+.Edit-error-icon--circle {
+  stroke-dasharray: 166;
+  stroke-dashoffset: 166;
+  stroke-width: 2;
+  stroke-miterlimit: 10;
+  stroke: #FF4444;
+  fill: none;
+  animation: Edit-stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}
+
+.Edit-error-icon--cross {
+  transform-origin: 50% 50%;
+  stroke-dasharray: 48;
+  stroke-dashoffset: 48;
+  animation: Edit-stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+}
+
+@keyframes Edit-error-fill {
+  100% {
+    box-shadow: inset 0 0 0 40px #FF4444;
+  }
+}
 
 /* Custom Dropdown Overrides */
 .ta-dropdown-wrapper {

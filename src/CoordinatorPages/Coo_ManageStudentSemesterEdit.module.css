@@ -834,6 +834,20 @@
     transform: scale(0.98);
 }
 
+.fieldButton:disabled {
+    background-color: #f5f5f5;
+    border-color: #ccc;
+    color: #999;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.fieldButton:disabled:hover {
+    background-color: #f5f5f5;
+    color: #999;
+    box-shadow: none;
+}
+
 .personalInfoFields>.field:has(.fieldButton) {
     margin-top: -1.1rem;
 }
@@ -922,10 +936,10 @@
 }
 
 .discardBtn:disabled {
-    opacity: 1;
+    opacity: 0.7;
     cursor: not-allowed;
-    background-color: #5555;
-    color: #ffffff;
+    background-color: #e8e8e8;
+    color: #666;
 }
 
 
@@ -1447,13 +1461,16 @@
     }
 
     .actionButtons {
-        flex-direction: column;
+        display: flex;
+        flex-direction: row;
         gap: 1rem;
         margin-bottom: calc(env(safe-area-inset-bottom, 0px) + 40px);
     }
 
     .actionButtons button {
-        width: 100%;
+        flex: 1;
+        width: auto;
+        min-width: 0;
         padding: 1rem;
         font-size: 1.1rem;
     }
@@ -1505,8 +1522,8 @@
     justify-content: center;
     min-width: 90px;
     padding: 0.75rem 1.1rem;
-    background: #dde6f4;
-    color: #B84349;
+    background:#D73D3D;
+    color: #ffffff;
     font-size: 1.5rem;
     font-weight: 800;
     flex-shrink: 0;
@@ -2555,6 +2572,7 @@
 
     /* Stack pie and right panel vertically */
     .anlsGrid {
+        display: grid;
         grid-template-columns: 1fr;
         gap: 12px;
         width: 100%;
@@ -2569,13 +2587,12 @@
         width: 100%;
         overflow: hidden;
         box-sizing: border-box;
+        order: 2;
     }
 
-    /* Right col takes full width below pie */
+    /* Right col displays contents, so its children layout directly under anlsGrid */
     .anlsRightCol {
-        width: 100%;
-        max-width: 100%;
-        box-sizing: border-box;
+        display: contents;
     }
 
     /* Stack stats and achievement column vertically */
@@ -2583,6 +2600,11 @@
         grid-template-columns: 1fr;
         gap: 10px;
         width: 100%;
+        order: 1;
+    }
+
+    .anlsLegendBox {
+        order: 3;
     }
 
     /* Stats: 2 columns on mobile */
@@ -3041,6 +3063,12 @@
     .cropBtn {
         flex: 1;
     }
+    .successRateLabel {
+    font-size: 0.7rem;
+    color: #555;
+    font-weight: 500;
+    line-height: 1.3;
+}
 }
 
 @media (max-width: 480px) {
@@ -3264,7 +3292,7 @@
 
     .actionButtons {
         display: flex !important;
-        flex-direction: column !important;
+        flex-direction: row !important;
         gap: 1rem !important;
         width: 100% !important;
         max-width: calc(100% - 20px) !important;
@@ -3275,7 +3303,9 @@
 
     .discardBtn,
     .saveBtn {
-        width: 100% !important;
+        flex: 1 !important;
+        width: auto !important;
+        min-width: 0 !important;
         padding: 1rem 0 !important;
         font-size: 1.1rem !important;
         border-radius: 12px !important;
